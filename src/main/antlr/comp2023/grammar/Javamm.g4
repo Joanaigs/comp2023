@@ -9,7 +9,8 @@ ID : [a-zA-Z_][a-zA-Z_0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
-program: importDeclaration classDeclaration EOF;
+program:
+        importDeclaration classDeclaration EOF;
 
 importDeclaration : ('import' ID ( '.' ID )* ';' )*;
 
@@ -31,15 +32,18 @@ statement   : '{' ( statement )* '}'
             | expression ';'
             | ID '=' expression ';'
             | ID '[' expression ']' '=' expression ';';
-            
-expression  : expression op=('&&' | '<' | '+' | '-' | '*' | '/' ) expression
-            | expression '[' expression ']'
-            | expression '.' 'length'
-            | expression '.' ID '(' ( expression ( ',' expression )* )? ')'
-            | 'new' 'int' '[' expression ']'
+
+expression:   'new' 'int' '[' expression ']'
             | 'new' ID '(' ')'
             | '!'
             | '(' expression ')'
+            | expression '[' expression ']'
+            | expression '.' ID '(' ( expression ( ',' expression )* )? ')'
+            | expression '.' 'length'
+            | expression op=( '*' | '/') expression
+            | expression op=( '+' | '-') expression
+            | expression op='<' expression
+            | expression op='&&' expression
             | INT
             | 'true'
             | 'false'
