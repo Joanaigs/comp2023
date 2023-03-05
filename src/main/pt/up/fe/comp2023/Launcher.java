@@ -42,9 +42,10 @@ public class Launcher {
         // Check if there are parsing errors
         TestUtils.noErrors(parserResult.getReports());
 
-        SymbolTableGenerator symbolTable = new SymbolTableGenerator();
-        symbolTable.visit(parserResult.getRootNode(), null);
-
+        SymbolTableGenerator symbolTableGenerator = new SymbolTableGenerator();
+        symbolTableGenerator.visit(parserResult.getRootNode(), null);
+        SymbolTable symbolTable= new SymbolTable(symbolTableGenerator.get_super(), symbolTableGenerator.getClassName(), symbolTableGenerator.getImports(), symbolTableGenerator.getFields(), symbolTableGenerator.getMethods());
+        System.out.println(symbolTable.print());
         // ... add remaining stages
     }
 

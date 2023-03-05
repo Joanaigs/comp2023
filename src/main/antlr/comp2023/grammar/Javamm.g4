@@ -28,20 +28,24 @@ varDeclaration
     :varType=type name=ID ';'
     ;
 
-//adicionei aqui private public protected and none
 methodDeclaration
-    : ('public' | 'private' | 'protected') type methodName=ID '(' ( type var=ID ( ','type var=ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
-    | 'public' 'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
-    |  type methodName=ID '(' ( type var=ID ( ','type var=ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
-    |  'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}' 
+    : 'public' (instanceMethodDeclaration|mainMethodDeclaration) ;
 
+instanceMethodDeclaration
+    : type methodName=ID '(' ( fieldDeclaration ( ','fieldDeclaration )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
+;
+mainMethodDeclaration
+    : 'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
     ;
-    //static void main(String[] args) {}
 
+fieldDeclaration
+    :type name=ID
+    ;
 type
     : typeDeclaration='int'array='[' ']'
     | typeDeclaration='boolean'
     | typeDeclaration='int'
+    | typeDeclaration='String'
     | typeDeclaration=ID
     ;
 
@@ -74,5 +78,3 @@ expression
     | value = ID                            #Identifier
     | 'this'                                #This
     ;
-
-//falta aceitar metodo vazio

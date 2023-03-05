@@ -11,6 +11,7 @@ class Fac{
         return num_aux ;
     }
     public static void main ( String [] args ){
+        int a;
         io. println ( new Fac (). computeFac (10)); // assuming the existence
         // of the classfile io. class
     }

@@ -2,22 +2,15 @@ package pt.up.fe.comp2023;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Method {
     private String name;
     private Type returnType;
     private List<SymbolExtended> variables; //true if local variable false if parameter
 
-    public Method() {
-        this(null, null, null);
-    }
-
     public Method(String name, Type returnType) {
-        this(name, returnType, null);
+        this(name, returnType, new LinkedList<>());
     }
 
     public Method(String name, Type returnType, List<SymbolExtended> variables) {
@@ -39,7 +32,7 @@ public class Method {
     }
 
     public List<SymbolExtended> getParameters() {
-        List<SymbolExtended> parameters = null;
+        List<SymbolExtended> parameters = new LinkedList<>();
         for(SymbolExtended symbol: this.variables){
             if(!symbol.getLocal()){
                 parameters.add(symbol);
@@ -49,7 +42,7 @@ public class Method {
     }
 
     public List<SymbolExtended> getLocalVariables() {
-        List<SymbolExtended> parameters = null;
+        List<SymbolExtended> parameters = new LinkedList<>();
         for(SymbolExtended symbol: this.variables){
             if(symbol.getLocal()){
                 parameters.add(symbol);
