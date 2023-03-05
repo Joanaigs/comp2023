@@ -10,17 +10,9 @@ public class Method {
     private List<SymbolExtended> variables; //true if local variable false if parameter
 
     public Method(String name, Type returnType) {
-        this(name, returnType, new LinkedList<>());
-    }
-
-    public Method(String name, Type returnType, List<SymbolExtended> variables) {
         this.name = name;
         this.returnType = returnType;
-        this.variables = variables;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+        this.variables= new LinkedList<>();
     }
 
     public String getName() {
@@ -49,10 +41,6 @@ public class Method {
             }
         }
         return parameters;
-    }
-
-    public List<SymbolExtended> getVariables() {
-        return variables;
     }
 
     public void addVariable(SymbolExtended variable) {

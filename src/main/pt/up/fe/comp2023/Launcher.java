@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
+import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.specs.util.SpecsIo;
@@ -42,10 +43,9 @@ public class Launcher {
         // Check if there are parsing errors
         TestUtils.noErrors(parserResult.getReports());
 
-        SymbolTableGenerator symbolTableGenerator = new SymbolTableGenerator();
-        symbolTableGenerator.visit(parserResult.getRootNode(), null);
-        SymbolTable symbolTable= new SymbolTable(symbolTableGenerator.get_super(), symbolTableGenerator.getClassName(), symbolTableGenerator.getImports(), symbolTableGenerator.getFields(), symbolTableGenerator.getMethods());
-        System.out.println(symbolTable.print());
+        SemanticAnalysis semanticAnalysis= new SemanticAnalysis();
+        JmmSemanticsResult jmmSemanticsResult= semanticAnalysis.semanticAnalysis(parserResult);
+        System.out.println(jmmSemanticsResult.getSymbolTable().print());
         // ... add remaining stages
     }
 
