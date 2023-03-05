@@ -3,6 +3,7 @@ package pt.up.fe.comp2023;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
+import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.antlr.AntlrParser;
 import pt.up.fe.comp.jmm.ast.antlr.ThrowingErrorListener;
 import pt.up.fe.comp.jmm.parser.JmmParser;
@@ -13,6 +14,7 @@ import pt.up.fe.comp.jmm.report.Stage;
 
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,11 +44,11 @@ public class SimpleParser implements JmmParser {
             // Convert code string into a character stream
             var input = new ANTLRInputStream(jmmCode);
             // Transform characters into tokens using the lexer
-            var lex = new JavammLexer(input);
+            var lex = new pt.up.fe.comp2023.JavammLexer(input);
             // Wrap lexer around a token stream
             var tokens = new CommonTokenStream(lex);
             // Transforms tokens into a parse tree
-            var parser = new JavammParser(tokens);
+            var parser = new pt.up.fe.comp2023.JavammParser(tokens);
 
             // Convert ANTLR CST to JmmNode AST
             return AntlrParser.parse(lex, parser, startingRule)
@@ -54,7 +56,7 @@ public class SimpleParser implements JmmParser {
                     .map(root -> new JmmParserResult(root, Collections.emptyList(), config))
                     // If there were errors, create an error JmmParserResult without root node
                     .orElseGet(() -> JmmParserResult.newError(new Report(ReportType.WARNING, Stage.SYNTATIC, -1,
-                            "There were syntax errors during parsing, terminating")));
+                            "There were "+ parser.getNumberOfSyntaxErrors() + " syntax errors during parsing, terminating")));
 
         } catch (Exception e) {
             // There was an uncaught exception during parsing, create an error JmmParserResult without root node

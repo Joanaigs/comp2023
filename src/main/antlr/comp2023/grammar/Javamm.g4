@@ -9,32 +9,50 @@ ID : [a-zA-Z_][a-zA-Z_0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
+COMMENT : '/*' .*? '*/' -> skip ;
+COMMENT2 : '//' ~[\r\n]* -> skip ;
+
 program
     : statement+ EOF
     | (importDeclaration)* classDeclaration EOF;
 
-importDeclaration : 'import' ID ( '.' ID )* ';';
+importDeclaration
+    :'import' library=ID ( '.' method=ID )* ';'
+    ;
 
-classDeclaration  : 'class' ID ( 'extends' ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}';
+classDeclaration
+    :'class' className=ID ( 'extends' extendsClass=ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'
+    ;
 
-varDeclaration    : type ID ';';
+varDeclaration
+    :varType=type name=ID ';'
+    ;
 
-methodDeclaration : 'public' type ID '(' ( type ID ( ','type ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
-                  | 'public' 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}' ;
+//adicionei aqui private public protected and none
+methodDeclaration
+    : ('public' | 'private' | 'protected') type methodName=ID '(' ( type var=ID ( ','type var=ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
+    | 'public' 'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
+    |  type methodName=ID '(' ( type var=ID ( ','type var=ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
+    |  'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}' 
 
-type        : 'int' '[' ']'
-            | 'boolean'
-            | 'int'
-            | ID;
+    ;
+    //static void main(String[] args) {}
+
+type
+    : typeDeclaration='int'array='[' ']'
+    | typeDeclaration='boolean'
+    | typeDeclaration='int'
+    | typeDeclaration=ID
+    ;
 
 statement
-    :  '{' ( statement )* '}' #BrStmt
+    :  '{' ( statement )* '}' #CodeBlockStmt
     | 'if' '(' expression ')' statement 'else' statement #IfStmt
     | 'while' '(' expression ')' statement #WhileSTmt
     | expression ';' #ExprStmt
     | var=ID '=' expression ';'  #Assignment
     | var=ID '=' value=INTEGER ';' #Assignment
-    | var=ID '[' expression ']' '=' expression ';' #ArrayAssign
+    | var=ID '[' expression ']' '=' expression ';' #ArrayAssignStmt
     ;
 
 
@@ -42,7 +60,7 @@ expression
     : 'new' 'int' '[' expression ']'        #CreateArray
     | 'new' value=ID '(' ')'                #InitializeClass
     | '!' expression                        #NegateExpr
-    | '(' expression ')'                    #ParenExpr
+    | '(' expression ')'                    #ParenthesisExpr
     | expression '[' expression ']'         #ArrayExp
     | expression '.' value=ID '(' ( expression ( ',' expression )* )? ')' #CallFnc
     | expression '.' 'length'               #GetLenght
@@ -51,8 +69,10 @@ expression
     | expression op='<' expression          #BinaryOp
     | expression op='&&' expression         #BinaryOp
     | value = INTEGER                       #Integer
-    | bool = 'true'                                #Boolean
-    | bool = 'false'                               #Boolean
+    | bool = 'true'                         #Boolean
+    | bool = 'false'                        #Boolean
     | value = ID                            #Identifier
     | 'this'                                #This
     ;
+
+//falta aceitar metodo vazio
