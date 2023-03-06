@@ -29,7 +29,7 @@ varDeclaration
     ;
 
 methodDeclaration
-    : 'public' (instanceMethodDeclaration|mainMethodDeclaration) ;
+    : (('public'|'private'|'protected') instanceMethodDeclaration|'public' mainMethodDeclaration) ;
 
 instanceMethodDeclaration
     : type methodName=ID '(' ( fieldDeclaration ( ','fieldDeclaration )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
@@ -41,40 +41,49 @@ mainMethodDeclaration
 fieldDeclaration
     :type name=ID
     ;
-type
-    : typeDeclaration='int'array='[' ']'
-    | typeDeclaration='boolean'
-    | typeDeclaration='int'
+
+type locals[boolean isArray=false, boolean isPrimitive=true]
+    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')array='[' ']' {$isArray=true;}
+    | typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')
     | typeDeclaration='String'
     | typeDeclaration=ID
     ;
 
 statement
-    :  '{' ( statement )* '}' #CodeBlockStmt
-    | 'if' '(' expression ')' statement 'else' statement #IfStmt
-    | 'while' '(' expression ')' statement #WhileSTmt
-    | expression ';' #ExprStmt
-    | var=ID '=' expression ';'  #Assignment
-    | var=ID '=' value=INTEGER ';' #Assignment
-    | var=ID '[' expression ']' '=' expression ';' #ArrayAssignStmt
+    :  '{' ( statement )* '}'                               #CodeBlockStmt
+    | 'if' '(' expression ')' statement 'else' statement    #IfStmt
+    | 'while' '(' expression ')' statement                  #WhileSTmt
+    | expression ';'                                        #ExprStmt
+    | var=ID '=' expression ';'                             #Assignment
+    | var=ID '=' value=INTEGER ';'                          #Assignment
+    | var=ID '[' expression ']' '=' expression ';'          #ArrayAssignStmt
     ;
 
 
 expression
-    : 'new' 'int' '[' expression ']'        #CreateArray
-    | 'new' value=ID '(' ')'                #InitializeClass
-    | '!' expression                        #NegateExpr
-    | '(' expression ')'                    #ParenthesisExpr
-    | expression '[' expression ']'         #ArrayExp
+    : 'new' 'int' '[' expression ']'                                      #CreateArray
+    | 'new' value=ID '(' ')'                                              #InitializeClass
+    | '!' expression                                                      #NegateExpr
+    | '(' expression ')'                                                  #ParenthesisExpr
+    | expression '[' expression ']'                                       #ArrayExp
     | expression '.' value=ID '(' ( expression ( ',' expression )* )? ')' #CallFnc
-    | expression '.' 'length'               #GetLenght
-    | expression op=( '*' | '/') expression #BinaryOp
-    | expression op=( '+' | '-') expression #BinaryOp
-    | expression op='<' expression          #BinaryOp
-    | expression op='&&' expression         #BinaryOp
-    | value = INTEGER                       #Integer
-    | bool = 'true'                         #Boolean
-    | bool = 'false'                        #Boolean
-    | value = ID                            #Identifier
-    | 'this'                                #This
+    | expression '.' 'length'                                             #GetLenght
+    | expression op=( '++' |'--')                                         #PostfixOp
+    | op=( '++' |'--'|'+'|'-'|'~') expression                             #UnaryOp
+    | expression op=( '*' | '/') expression                               #BinaryOp
+    | expression op=( '+' | '-') expression                               #BinaryOp
+    | expression op=('<<'|'>>'|'>>>') expression                          #BinaryOp
+    | expression op=('<'|'>'|'<='|'>='|'instanceof') expression           #BinaryOp
+    | expression op=('=='|'!=') expression                                #BinaryOp
+    | expression op='&' expression                                        #BinaryOp
+    | expression op='^' expression                                        #BinaryOp
+    | expression op='|' expression                                        #BinaryOp
+    | expression op='&&' expression                                       #BinaryOp
+    | expression op='||' expression                                       #BinaryOp
+    | expression op='? :' expression                                      #BinaryOp
+    | value = INTEGER                                                     #Integer
+    | bool = 'true'                                                       #Boolean
+    | bool = 'false'                                                      #Boolean
+    | value = ID                                                          #Identifier
+    | 'this'                                                              #This
     ;
