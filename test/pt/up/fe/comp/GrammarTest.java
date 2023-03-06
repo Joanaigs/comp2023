@@ -42,6 +42,9 @@ public class GrammarTest {
     @Test
     public void testVarDecls() {
         TestUtils.parseVerbose("class Foo {int a; int[] b; int c; boolean d; Bar e;}");
+        var root = TestUtils.parse("class Foo {int a; int[] b; int c; boolean d; Bar e;}").getRootNode();
+
+        System.out.println("TEST: " + root.getJmmChild(0).getJmmChild(0).getJmmChild(0).getObject("isArray").getClass());
     }
 
    /*@Test

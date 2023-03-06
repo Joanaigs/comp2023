@@ -65,7 +65,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     private String instanceMethodDeclaration ( JmmNode jmmNode , String s) {
         String nameType =jmmNode.getJmmChild(0).get("typeDeclaration");
         Boolean isArray=false;
-        if(jmmNode.getJmmChild(0).hasAttribute("array"))
+        if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
             isArray=true;
         Method method = new Method(jmmNode.get("methodName"), new Type(nameType, isArray));
         methods.put(jmmNode.get("methodName"), method);
@@ -78,12 +78,12 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     private String fieldDeclaration ( JmmNode jmmNode , String s) {
         String nameType =jmmNode.getJmmChild(0).get("typeDeclaration");
         Boolean isArray=false;
-        if(jmmNode.getJmmChild(0).hasAttribute("array"))
+        if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
             isArray=true;
         Type type= new Type(nameType, isArray);
         Method method = methods.get(s);
-        SymbolExtended symbol2 = new SymbolExtended(type, jmmNode.get("name"), false);
-        method.addVariable(symbol2);
+        SymbolExtended symbol = new SymbolExtended(type, jmmNode.get("name"), false);
+        method.addVariable(symbol);
         methods.put(s, method);
         return null;
     }
@@ -103,7 +103,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     private String varDeclaration ( JmmNode jmmNode , String s) {
         String nameType =jmmNode.getJmmChild(0).get("typeDeclaration");
         Boolean isArray=false;
-        if(jmmNode.getJmmChild(0).hasAttribute("array"))
+        if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
             isArray=true;
         Type type= new Type(nameType, isArray);
         if(s==null){
@@ -112,8 +112,8 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
         }
         else{
             Method method = methods.get(s);
-            SymbolExtended symbol2 = new SymbolExtended(type, jmmNode.get("name"), true );
-            method.addVariable(symbol2);
+            SymbolExtended symbolExtended = new SymbolExtended(type, jmmNode.get("name"), true );
+            method.addVariable(symbolExtended);
             methods.put(s, method);
         }
         return null;
