@@ -17,7 +17,7 @@ program
     | (importDeclaration)* classDeclaration EOF;
 
 importDeclaration
-    :'import' library=ID ( '.' method=ID )* ';'
+    :'import' library+=ID ( '.' library+=ID )* ';'
     ;
 
 classDeclaration

@@ -40,7 +40,12 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     }
 
     private String importDeclaration ( JmmNode jmmNode , String s) {
-        imports.add(jmmNode.get("library"));
+        String imp= "";
+        var lib =  (List<?>) jmmNode.getObject("library");
+        for (int i =0; i<lib.size()-1; i++){
+            imp+= lib.get(i)+ ".";
+        }
+        imports.add(imp+lib.get(lib.size()-1));
         return null;
     }
 

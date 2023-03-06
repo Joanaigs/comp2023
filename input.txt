@@ -1,4 +1,4 @@
-import io;
+import io.ola.adeus;
 class Fac{
     int a;
     public int computeFac (int num,  boolean a){
