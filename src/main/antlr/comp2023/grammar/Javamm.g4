@@ -13,8 +13,7 @@ COMMENT : '/*' .*? '*/' -> skip ;
 COMMENT2 : '//' ~[\r\n]* -> skip ;
 
 program
-    : statement+ EOF
-    | (importDeclaration)* classDeclaration EOF;
+    :  (importDeclaration)* classDeclaration EOF;
 
 importDeclaration
     :'import' library+=ID ( '.' library+=ID )* ';'
