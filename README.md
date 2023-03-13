@@ -45,3 +45,24 @@ The testing framework, which uses the class ``pt.up.fe.comp.TestUtils``, has met
 In order for the test class to find your implementations for the stages, it uses the file ``config.properties`` that is in root of your repository. It has four fields, one for each stage (i.e. ``ParserClass``, ``AnalysisClass``, ``OptimizationClass``, ``BackendClass``), and initially it only has one value, ``pt.up.fe.comp2023.SimpleParser``, associated with the first stage.
 
 During the development of your compiler you will update this file in order to setup the classes that implement each of the compilation stages.
+
+## Checkpoint 1 
+In checkpoint 1 we added more operators to the grammar and added tests to check their priority and precedence.
+
+| Operatores            | Precedence               |
+|-----------------------|--------------------------|
+| postfix	              | expr++ expr--            |
+| unary                 | 	++expr --expr +expr -expr |
+| multiplicative        | 	* / %                   |
+| additive              | 	+ -                     |
+| shift                 | 	<< >>                   |
+| relational	           | < > <= >=                |
+| equality              | 	== !=                   |
+| bitwise AND	          | &                        |
+| bitwise exclusive OR	 | ^                        |
+| bitwise  inclusive OR | &#124;                   |
+| logical AND              | 	&&                      |
+| logical OR	              | &#124;&#124;             |
+| ternary               | 	? :                     |
+
+We also added the following objets types to type Declaration: 'byte','short','int','long','float','double','boolean','char'
