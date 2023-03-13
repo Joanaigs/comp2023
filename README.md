@@ -63,6 +63,5 @@ In checkpoint 1 we added more operators to the grammar and added tests to check 
 | bitwise  inclusive OR | &#124;                   |
 | logical AND              | 	&&                      |
 | logical OR	              | &#124;&#124;             |
-| ternary               | 	? :                     |
 
 We also added the following objets types to type Declaration: 'byte','short','int','long','float','double','boolean','char'
