@@ -24,11 +24,11 @@ classDeclaration
     ;
 
 varDeclaration
-    :varType=type name=ID ';'
+    :type name=ID ';'
     ;
 
 methodDeclaration
-    : (('public'|'private'|'protected') instanceMethodDeclaration|'public' mainMethodDeclaration) ;
+    : (('public'|'private'|'protected')? instanceMethodDeclaration | ('public')? mainMethodDeclaration) ;
 
 instanceMethodDeclaration
     : type methodName=ID '(' ( fieldDeclaration ( ','fieldDeclaration )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
@@ -54,7 +54,6 @@ statement
     | 'while' '(' expression ')' statement                  #WhileSTmt
     | expression ';'                                        #ExprStmt
     | var=ID '=' expression ';'                             #Assignment
-    | var=ID '=' value=INTEGER ';'                          #Assignment
     | var=ID '[' expression ']' '=' expression ';'          #ArrayAssignStmt
     ;
 
@@ -67,19 +66,18 @@ expression
     | expression '[' expression ']'                                       #ArrayExp
     | expression '.' value=ID '(' ( expression ( ',' expression )* )? ')' #CallFnc
     | expression '.' 'length'                                             #GetLenght
-    | expression op=( '++' |'--')                                         #PostfixOp
-    | op=( '++' |'--'|'+'|'-'|'~') expression                             #UnaryOp
-    | expression op=( '*' | '/') expression                               #BinaryOp
+    | expression op=('++'|'--')                                           #PostfixOp
+    | op=('++'|'--'|'+'|'-') expression                                   #UnaryOp
+    | expression op=( '*' | '/' | '%') expression                         #BinaryOp
     | expression op=( '+' | '-') expression                               #BinaryOp
-    | expression op=('<<'|'>>'|'>>>') expression                          #BinaryOp
-    | expression op=('<'|'>'|'<='|'>='|'instanceof') expression           #BinaryOp
+    | expression op=('<<'|'>>') expression                                #BinaryOp
+    | expression op=('<'|'>'|'<='|'>=') expression                        #BinaryOp
     | expression op=('=='|'!=') expression                                #BinaryOp
     | expression op='&' expression                                        #BinaryOp
     | expression op='^' expression                                        #BinaryOp
     | expression op='|' expression                                        #BinaryOp
     | expression op='&&' expression                                       #BinaryOp
     | expression op='||' expression                                       #BinaryOp
-    | expression op='? :' expression                                      #BinaryOp
     | value = INTEGER                                                     #Integer
     | bool = 'true'                                                       #Boolean
     | bool = 'false'                                                      #Boolean

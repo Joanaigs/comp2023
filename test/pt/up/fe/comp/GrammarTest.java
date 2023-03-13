@@ -240,4 +240,22 @@ public class GrammarTest {
         TestUtils.parseVerbose("1 && 2 < 3 + 4 - 5 * 6 / 7", EXPRESSION);
     }
 
+    @Test
+    public void testAddedOps1() {
+        TestUtils.parseVerbose("-(3) - ++a * --b % c", EXPRESSION);
+    }
+
+    @Test
+    public void testAddedOps2() { TestUtils.parseVerbose("1 || 2 || 3 && 4 >= 0 || 10 <= 5", EXPRESSION);}
+
+    @Test
+    public void testAddedOps3() { TestUtils.parseVerbose("5*1-3 != 0", EXPRESSION);}
+
+    @Test
+    public void testAddedOps4() { TestUtils.parseVerbose("60 >> 1 << 2 == 120", EXPRESSION);}
+
+    @Test
+    public void testAddedOps5() { TestUtils.parseVerbose("(5 ^ 7) == 2 && (5 | 7) != 2 && (5 & 7) == 5", EXPRESSION);}
+
+
 }
