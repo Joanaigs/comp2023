@@ -34,7 +34,7 @@ instanceMethodDeclaration
     : ('public'|'private'|'protected')?  type methodName=ID '(' ( fieldDeclaration ( ','fieldDeclaration )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
 ;
 mainMethodDeclaration
-    : ('public')? 'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
+    : ('public')? 'static' 'void' methodName='main' '(' ID '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
     ;
 
 fieldDeclaration
@@ -42,10 +42,9 @@ fieldDeclaration
     ;
 
 type locals[boolean isArray=false, boolean isPrimitive=true]
-    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean')array='[' ']' {$isArray=true;}
-    | typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean')
-    | typeDeclaration='String'
-    | typeDeclaration=ID
+    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')array='[' ']' {$isArray=true;}
+    | typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')
+    | typeDeclaration=ID {$isPrimitive=false;}
     ;
 
 

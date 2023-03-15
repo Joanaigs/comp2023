@@ -3,7 +3,7 @@ class Fac{
     int a;
     public int computeFac (int num,  boolean a){
         int num_aux ;
-        int char;
+        char a;
         if ( num < 1){
             num_aux = 1;
             }
