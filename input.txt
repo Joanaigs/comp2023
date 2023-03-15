@@ -2,10 +2,11 @@ import io.ola.adeus;
 class Fac{
     int a;
     public int computeFac (int num,  boolean a){
-
         int num_aux ;
-        if ( num < 1)
+        intt a;
+        if ( num < 1){
             num_aux = 1;
+            }
         else
             num_aux = num * ( this . computeFac (num -1));
         return num_aux ;

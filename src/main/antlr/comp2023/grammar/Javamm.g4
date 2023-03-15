@@ -34,7 +34,7 @@ instanceMethodDeclaration
     : ('public'|'private'|'protected')?  type methodName=ID '(' ( fieldDeclaration ( ','fieldDeclaration )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
 ;
 mainMethodDeclaration
-    : ('public')? 'static' 'void' methodName='main' '(' type var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
+    : ('public')? 'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
     ;
 
 fieldDeclaration
@@ -42,11 +42,12 @@ fieldDeclaration
     ;
 
 type locals[boolean isArray=false, boolean isPrimitive=true]
-    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char') '[' ']' {$isArray=true;}
+    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')array='[' ']' {$isArray=true;}
     | typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')
+    | typeDeclaration='String'
     | typeDeclaration=ID
-    | typeDeclaration=ID '[' ']' {$isArray=true;}
     ;
+
 
 statement
     :  '{' ( statement )* '}'                               #CodeBlockStmt
