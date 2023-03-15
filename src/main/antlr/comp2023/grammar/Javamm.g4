@@ -4,7 +4,7 @@ grammar Javamm;
     package pt.up.fe.comp2023;
 }
 
-INTEGER : [0-9]+ ;
+INTEGER : ([0-9] | [1-9][0-9]*) ;
 ID : [$_a-zA-Z_][$_a-zA-Z_0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
