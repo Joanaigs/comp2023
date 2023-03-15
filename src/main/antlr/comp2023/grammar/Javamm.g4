@@ -42,8 +42,8 @@ fieldDeclaration
     ;
 
 type locals[boolean isArray=false, boolean isPrimitive=true]
-    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')array='[' ']' {$isArray=true;}
-    | typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')
+    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean')array='[' ']' {$isArray=true;}
+    | typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean')
     | typeDeclaration='String'
     | typeDeclaration=ID
     ;
