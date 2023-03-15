@@ -79,6 +79,7 @@ expression
     | expression op='|' expression                                        #BinaryOp
     | expression op='&&' expression                                       #BinaryOp
     | expression op='||' expression                                       #BinaryOp
+    | '-' value = INTEGER                                                 #NegativeInteger
     | value = INTEGER                                                     #Integer
     | bool = 'true'                                                       #Boolean
     | bool = 'false'                                                      #Boolean

@@ -4,7 +4,8 @@ class Fac{
     public int computeFac (int num,  boolean a){
         int num_aux ;
         char a;
-        a=new int[1123.213];
+        a=new int[1123];
+        b=-3;
         if ( num < 1){
             num_aux = 1;
             }
