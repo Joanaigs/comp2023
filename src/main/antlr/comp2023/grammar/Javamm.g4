@@ -62,6 +62,7 @@ statement
 expression
     : 'new' 'int' '[' expression ']'                                      #CreateArray
     | 'new' value=ID '(' ')'                                              #InitializeClass
+    | 'return' expression                                                 #ReturnOp
     | '!' expression                                                      #NegateExpr
     | '(' expression ')'                                                  #ParenthesisExpr
     | expression '[' expression ']'                                       #ArrayExp

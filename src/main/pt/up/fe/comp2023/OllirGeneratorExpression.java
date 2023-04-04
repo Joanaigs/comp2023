@@ -32,7 +32,17 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         addVisit("Integer", this::visitInteger);
         addVisit("Boolean", this::visitBoolean);
         addVisit("Identifier", this::visitIdentifier);
+        addVisit("Return", this::visitReturn);
         addVisit("This", this::visitThis);
+    }
+
+    private String visitReturn(JmmNode jmmNode, String s) {
+        String ret = visit(jmmNode.getJmmChild(0), s);
+        code+=String.format("ret.%s %s;\n",
+                typeOllir(symbolTable.getReturnType(s)),
+                ret
+        );
+        return "";
     }
 
     public static String typeOllir(Type type) {
