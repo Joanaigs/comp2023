@@ -13,10 +13,15 @@ import java.util.Map;
 
 public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     private List<String> imports= new LinkedList<>();
-    private String _super=null;
+    private String superName=null;
     private String className= "";//nome da classe
     private Map<String, Symbol> fields = new HashMap<String, Symbol>();
     private Map<String, Method> methods = new HashMap<String, Method>();
+
+    public SymbolTable build(pt.up.fe.comp.jmm.ast.JmmNode root_node) {
+        this.visit(root_node, null);
+        return new SymbolTable(superName, className, imports, fields, methods);
+    }
     protected void buildVisitor() {
         addVisit ("Program", this::dealWithProgram );
         addVisit ("ImportDeclaration", this::importDeclaration );
@@ -40,19 +45,16 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     }
 
     private String importDeclaration ( JmmNode jmmNode , String s) {
-        String imp= "";
-        var lib =  (List<?>) jmmNode.getObject("library");
-        for (int i =0; i<lib.size()-1; i++){
-            imp+= lib.get(i)+ ".";
-        }
-        imports.add(imp+lib.get(lib.size()-1));
+        var lib = (List<?>) jmmNode.getObject("library");
+        String imp = String.join(".", (CharSequence) lib);
+        imports.add(imp);
         return null;
     }
 
     private String classDeclaration ( JmmNode jmmNode , String s) {
         className=jmmNode.get("className");
         if(jmmNode.hasAttribute("extendsClass"))
-            _super= jmmNode.get("extendsClass");
+            superName= jmmNode.get("extendsClass");
         for (JmmNode child: jmmNode.getChildren()){
             visit(child , null);
         }
@@ -124,24 +126,4 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
         return null;
     }
 
-
-    public List<String> getImports() {
-        return imports;
-    }
-
-    public String get_super() {
-        return _super;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public Map<String, Symbol> getFields() {
-        return fields;
-    }
-
-    public Map<String, Method> getMethods() {
-        return methods;
-    }
 }
