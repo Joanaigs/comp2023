@@ -3,19 +3,12 @@ class Fac{
     int a;
     public int computeFac (int num,  boolean a){
         int num_aux ;
-        char a;
-        a=new int[1123];
-        b=-3;
-        if ( num < 1){
-            num_aux = 1;
-            }
-        else
-            num_aux = num * ( this . computeFac (num -1));
+        char b;
+        b=1+2;
         return num_aux ;
     }
     public static void main ( String [] args ){
         int a;
-        io. println ( new Fac (). computeFac (10)); // assuming the existence
-        // of the classfile io. class
+        a=2;        // of the classfile io. class
     }
 }

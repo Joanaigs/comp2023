@@ -15,7 +15,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     private List<String> imports= new LinkedList<>();
     private String _super=null;
     private String className= "";//nome da classe
-    private Map<String, Symbol> fields = new HashMap<String, Symbol>();
+    private Map<String, SymbolExtended> fields = new HashMap<String, SymbolExtended>();
     private Map<String, Method> methods = new HashMap<String, Method>();
     protected void buildVisitor() {
         addVisit ("Program", this::dealWithProgram );
@@ -112,7 +112,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
             isArray=true;
         Type type= new Type(nameType, isArray);
         if(s==null){
-            Symbol symbol= new Symbol(type, jmmNode.get("name"));
+            SymbolExtended symbol= new SymbolExtended(type, jmmNode.get("name"));
             fields.put(jmmNode.get("name"), symbol);
         }
         else{
@@ -137,7 +137,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
         return className;
     }
 
-    public Map<String, Symbol> getFields() {
+    public Map<String, SymbolExtended> getFields() {
         return fields;
     }
 
