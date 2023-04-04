@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable{
-    private String _super; //nome da classe que está a "extender"
-    private String className;//nome da classe
-    private List<String> imports; //imports do ficheiro
-    private Map<String, Symbol> fields;
-    private Map<String, Method> methods;
+    final String superName; //nome da classe que está a "extender"
+    final String className;//nome da classe
+    final List<String> imports; //imports do ficheiro
+    final Map<String, Symbol> fields;
+    final Map<String, Method> methods;
 
-    public SymbolTable(String _super, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods) {
-        this._super = _super;
+    public SymbolTable(String superName, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods) {
+        this.superName = superName;
         this.className = className;
         this.imports = imports;
         this.fields = fields;
@@ -36,7 +36,7 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
 
     @Override
     public String getSuper() {
-        return this._super;
+        return this.superName;
     }
 
     @Override
