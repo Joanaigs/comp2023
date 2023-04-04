@@ -37,48 +37,51 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
     }
 
     private String Assignment(JmmNode jmmNode, String s) {
-        String result="";
         String varName = jmmNode.get("var");
-        Pair<SymbolExtended, String> info= symbolTable.getSymbol(s, varName);
-        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
-        String expr=ollirGeneratorExpression.getCode();
+        Pair<Symbol, String> info= symbolTable.getSymbol(s, varName);
+        String expr = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
+        String code = ollirGeneratorExpression.getCode();
+        ollirCode+=code;
+
         if(info.b.equals("FIELD")){
-            result +="putfield(this, "+varName+"."+typeOllir(info.a.getType())+", "+expr+").V"+";\n";
-            return result;
+            ollirCode +="putfield(this, "+varName+"."+typeOllir(info.a.getType())+", "+expr+").V"+";\n";
+            return s;
         }
-        else if(info.b.equals("METHOD"))
-            result+=varName+"."+typeOllir(info.a.getType())+" :=."+typeOllir(info.a.getType())+" "+ expr+";\n";
-        return result;
+        else if(info.b.equals("LOCAL") || info.b.equals("PARAM"))
+            ollirCode+=varName+"."+typeOllir(info.a.getType())+" :=."+typeOllir(info.a.getType())+" "+ expr+";\n";
+        return s;
     }
 
     private String ExprStmt(JmmNode jmmNode, String s) {
-        s+=ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
-        s+=";\n";
+        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
+        ollirCode+=ollirGeneratorExpression.getCode();
         return s;
     }
 
     private String WhileStmt(JmmNode jmmNode, String s) {
-        s+= "Loop: \n";
-        s+=ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
-        s+="End:\n";
+        ollirCode+= "Loop: \n";
+        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
+        ollirCode+=ollirGeneratorExpression.getCode();
+        ollirCode+="End:\n";
         return s;
     }
 
     private String IfStmt(JmmNode jmmNode, String s) {
-        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
-        String condition=ollirGeneratorExpression.getCode();
-        s+="if (!.bool"+condition+") goto else;\n";
-        s+=visit(jmmNode.getJmmChild(1));
-        s+="goto endif;\n";
-        s+="else: \n";
-        s+=visit(jmmNode.getJmmChild(2));
-        s+="endif: \n";
+        String condition = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
+        String code = ollirGeneratorExpression.getCode();
+        ollirCode+=code;
+        ollirCode+="if (!.bool"+condition+") goto else;\n";
+        ollirCode+=visit(jmmNode.getJmmChild(1));
+        ollirCode+="goto endif;\n";
+        ollirCode+="else: \n";
+        ollirCode+=visit(jmmNode.getJmmChild(2));
+        ollirCode+="endif: \n";
         return s;
     }
 
     private String CodeBlockStmt(JmmNode jmmNode, String s) {
         for (JmmNode child: jmmNode.getChildren()){
-            s+=visit(child , "");
+            ollirCode+=visit(child , "");
         }
         return s;
     }
@@ -89,7 +92,7 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
             ollirCode+="import "+ imprt+ ";\n";
         }
         for (JmmNode child: jmmNode.getChildren()){
-            ollirCode+=visit(child , "");
+            visit(child , "");
         }
         return "";
     }
@@ -104,23 +107,23 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
     }
 
     private String classDeclaration ( JmmNode jmmNode , String s) {
-        String result = symbolTable.getClassName() + (symbolTable.getSuper() != null ? ("extends" + symbolTable.getSuper()) : "") + "{\n";
+        ollirCode+= symbolTable.getClassName() + (symbolTable.getSuper() != null ? (" extends " + symbolTable.getSuper()) : "") + "{\n";
 
-        result+=getFields(symbolTable.getFields());
-        result+=".construct "+symbolTable.getClassName()+"().V {\n" +
+        ollirCode+=getFields(symbolTable.getFields());
+        ollirCode+=".construct "+symbolTable.getClassName()+"().V {\n" +
                 "invokespecial(this, \"<init>\").V;\n" +
                 "}\n";
         for (JmmNode child: jmmNode.getChildren()){
-            result+=visit(child , "");
+            visit(child , "");
         }
-        result+="}";
-        return result;
+        ollirCode+="}";
+        return s;
     }
 
     private String methodDeclaration ( JmmNode jmmNode , String s) {
 
         for (JmmNode child: jmmNode.getChildren()){
-            s+=visit(child , "");
+            visit(child , "");
         }
 
         return s;
@@ -128,7 +131,7 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
 
     private String instanceMethodDeclaration ( JmmNode jmmNode , String s) {
         String methodName = jmmNode.get("methodName");
-        s+=".method public "+methodName+" (";
+        ollirCode+=".method public "+methodName+"(";
         List<Symbol> parameters= symbolTable.getParameters(methodName);
         StringJoiner sj = new StringJoiner(", ");
 
@@ -137,22 +140,22 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         }
 
         String parameterList = sj.toString();
-        s+= parameterList + ")." + typeOllir(symbolTable.getReturnType(methodName))+ " {\n";
+        ollirCode+= parameterList + ")." + typeOllir(symbolTable.getReturnType(methodName))+ " {\n";
         for (JmmNode child: jmmNode.getChildren()) {
-            s+=visit(child, methodName);
+            visit(child, methodName);
         }
-        s+="}\n";
+        ollirCode+="}\n";
         return s;
     }
 
 
     private String mainMethodDeclaration ( JmmNode jmmNode , String s) {
-        s+=".method public static main("+jmmNode.get("var")+".array.String).V{\n";
+        ollirCode+=".method public static main("+jmmNode.get("var")+".array.String).V{\n";
 
         for (JmmNode child: jmmNode.getChildren()) {
-            s+=visit(child, "main");
+            visit(child, "main");
         }
-        s+="ret.V;\n}\n";
+        ollirCode+="ret.V;\n}\n";
         return s;
     }
 

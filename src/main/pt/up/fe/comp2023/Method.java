@@ -9,10 +9,6 @@ public class Method {
     private Type returnType;
     private List<SymbolExtended> variables; //true if local variable false if parameter
 
-    public List<SymbolExtended> getVariables() {
-        return variables;
-    }
-
     public Method(String name, Type returnType) {
         this.name = name;
         this.returnType = returnType;

@@ -4,7 +4,6 @@ import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,10 +12,10 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
     private String _super; //nome da classe que está a "extender"
     private String className;//nome da classe
     private List<String> imports; //imports do ficheiro
-    private Map<String, SymbolExtended> fields;
+    private Map<String, Symbol> fields;
     private Map<String, Method> methods;
 
-    public SymbolTable(String _super, String className, List<String> imports, Map<String, SymbolExtended> fields, Map<String, Method> methods) {
+    public SymbolTable(String _super, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods) {
         this._super = _super;
         this.className = className;
         this.imports = imports;
@@ -61,20 +60,21 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
         return new LinkedList<>(methods.get(s).getLocalVariables());
     }
 
-    public Pair<SymbolExtended, String> getSymbol(String methodName, String varName) {
-        for(SymbolExtended symbol:fields.values()){
+
+    public Pair<Symbol, String> getSymbol(String methodName, String varName) {
+        for(Symbol symbol:fields.values()){
             if(symbol.getName().equals(varName)){
                 return new Pair<>(symbol, "FIELD");
             }
         }
-        for(SymbolExtended symbol:new LinkedList<>(methods.get(methodName).getParameters())){
+        for(Symbol symbol:new LinkedList<>(methods.get(methodName).getParameters())){
             if(symbol.getName().equals(varName)){
-                new Pair<>(symbol, "PARAM");
+                return new Pair<>(symbol, "PARAM");
             }
         }
-        for(SymbolExtended symbol:new LinkedList<>(methods.get(methodName).getLocalVariables())){
+        for(Symbol symbol:new LinkedList<>(methods.get(methodName).getLocalVariables())){
             if(symbol.getName().equals(varName)){
-                new Pair<>(symbol, "LOCAL");
+                return new Pair<>(symbol, "LOCAL");
             }
         }
         return null;
@@ -84,7 +84,7 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
         for (int i = 0; i < Parameters.size(); i++) {
             SymbolExtended symbol = Parameters.get(i);
             if (symbol.getName().equals(varName)) {
-                return i;
+                return i+1;
             }
         }
         return 0;

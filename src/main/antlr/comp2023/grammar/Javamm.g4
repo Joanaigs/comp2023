@@ -65,7 +65,6 @@ expression
     | '!' expression                                                      #NegateExpr
     | '(' expression ')'                                                  #ParenthesisExpr
     | expression '[' expression ']'                                       #ArrayExp
-    | expression '.' value=ID '(' ( expression ( ',' expression )* )? ')' #CallFnc
     | expression '.' 'length'                                             #GetLenght
     | expression op=('++'|'--')                                           #PostfixOp
     | op=('++'|'--'|'+'|'-') expression                                   #UnaryOp
