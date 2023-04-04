@@ -10,6 +10,8 @@ import java.util.LinkedList;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     private List<String> imports= new LinkedList<>();
@@ -45,9 +47,12 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     }
 
     private String importDeclaration ( JmmNode jmmNode , String s) {
-        var lib = (List<?>) jmmNode.getObject("library");
-        String imp = String.join(".", (CharSequence) lib);
-        imports.add(imp);
+        String imp= "";
+        var lib =  (List<?>) jmmNode.getObject("library");
+        for (int i =0; i<lib.size()-1; i++){
+            imp+= lib.get(i)+ ".";
+        }
+        imports.add(imp+lib.get(lib.size()-1));
         return null;
     }
 
