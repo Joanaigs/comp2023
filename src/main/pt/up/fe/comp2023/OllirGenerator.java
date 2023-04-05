@@ -14,10 +14,9 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
     SymbolTable symbolTable;
     String ollirCode;
     int label=0;
-    OllirGeneratorExpression ollirGeneratorExpression;
+
     OllirGenerator(SymbolTable symbolTable) {
         this.symbolTable=symbolTable;
-        ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
         this.ollirCode="";
     }
     @Override
@@ -39,7 +38,8 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
     private String Assignment(JmmNode jmmNode, String s) {
         String varName = jmmNode.get("var");
         Pair<Symbol, String> info= symbolTable.getSymbol(s, varName);
-        String expr = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
+        OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
+        String expr = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
         String code = ollirGeneratorExpression.getCode();
         ollirCode+=code;
 
@@ -47,27 +47,33 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
             ollirCode +="putfield(this, "+varName+"."+typeOllir(info.a.getType())+", "+expr+").V"+";\n";
             return s;
         }
-        else if(info.b.equals("LOCAL") || info.b.equals("PARAM"))
+        else if(info.b.equals("LOCAL") )
             ollirCode+=varName+"."+typeOllir(info.a.getType())+" :=."+typeOllir(info.a.getType())+" "+ expr+";\n";
+        else if(info.b.equals("PARAM"))
+            ollirCode+='$'+Integer.toString(symbolTable.getSymbolIndex(s, varName))+"."+varName+"."+typeOllir(info.a.getType())+" :=."+typeOllir(info.a.getType())+" "+ expr+";\n";
         return s;
     }
 
     private String ExprStmt(JmmNode jmmNode, String s) {
-        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
+        OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
+        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
         ollirCode+=ollirGeneratorExpression.getCode();
         return s;
     }
 
     private String WhileStmt(JmmNode jmmNode, String s) {
         ollirCode+= "Loop: \n";
-        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
+        OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
+        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
         ollirCode+=ollirGeneratorExpression.getCode();
+        visit(jmmNode.getJmmChild(1), s);
         ollirCode+="End:\n";
         return s;
     }
 
     private String IfStmt(JmmNode jmmNode, String s) {
-        String condition = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0));
+        OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
+        String condition = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
         String code = ollirGeneratorExpression.getCode();
         ollirCode+=code;
         ollirCode+="if (!.bool"+condition+") goto else;\n";
@@ -81,7 +87,7 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
 
     private String CodeBlockStmt(JmmNode jmmNode, String s) {
         for (JmmNode child: jmmNode.getChildren()){
-            ollirCode+=visit(child , "");
+            ollirCode+=visit(child , s);
         }
         return s;
     }
@@ -141,10 +147,17 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
 
         String parameterList = sj.toString();
         ollirCode+= parameterList + ")." + typeOllir(symbolTable.getReturnType(methodName))+ " {\n";
-        for (JmmNode child: jmmNode.getChildren()) {
-            visit(child, methodName);
+        for (int i=0; i<jmmNode.getNumChildren()-1; i++) {
+            visit(jmmNode.getJmmChild(i), methodName);
         }
-        ollirCode+="}\n";
+        OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
+        String ret = ollirGeneratorExpression.visit(jmmNode.getJmmChild(jmmNode.getNumChildren()-1), methodName);
+        String code = ollirGeneratorExpression.getCode();
+        ollirCode+=code;
+        ollirCode+=String.format("ret.%s %s;\n}\n",
+                typeOllir(symbolTable.getReturnType(methodName)),
+                ret
+        );
         return s;
     }
 

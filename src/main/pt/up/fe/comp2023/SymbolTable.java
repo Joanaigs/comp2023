@@ -77,6 +77,13 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
                 return new Pair<>(symbol, "LOCAL");
             }
         }
+        for (var importPath: imports) {
+            String[] parts = importPath.split("-");
+            if (parts[parts.length-1].equals(varName)) {
+                return new Pair<>(new Symbol(new Type(varName, false), varName), "IMPORT");
+            }
+        }
+
         return null;
     }
     public int getSymbolIndex(String methodName, String varName) {
