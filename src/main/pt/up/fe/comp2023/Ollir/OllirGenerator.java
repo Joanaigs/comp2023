@@ -1,11 +1,11 @@
-package pt.up.fe.comp2023;
+package pt.up.fe.comp2023.Ollir;
 
 import org.antlr.v4.runtime.misc.Pair;
-import org.specs.comp.ollir.Ollir;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2023.SymbolTable;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -22,20 +22,20 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
     @Override
     protected void buildVisitor() {
         addVisit ("Program", this::dealWithProgram );
-        addVisit ("ClassDeclaration", this::classDeclaration);
-        addVisit ("MethodDeclaration", this::methodDeclaration);
-        addVisit ("InstanceMethodDeclaration", this::instanceMethodDeclaration);
-        addVisit ("MainMethodDeclaration", this::mainMethodDeclaration);
-        addVisit("CodeBlockStmt", this::CodeBlockStmt);
-        addVisit("IfStmt", this::IfStmt);
-        addVisit("WhileStmt", this::WhileStmt);
-        addVisit("ExprStmt", this::ExprStmt);
-        addVisit("Assignment", this::Assignment);
-        addVisit("ArrayAssignStmt", this::Assignment);
+        addVisit ("ClassDeclaration", this::visitClassDeclaration);
+        addVisit ("MethodDeclaration", this::visitMethodDeclaration);
+        addVisit ("InstanceMethodDeclaration", this::visitInstanceMethodDeclaration);
+        addVisit ("MainMethodDeclaration", this::visitMainMethodDeclaration);
+        addVisit("CodeBlockStmt", this::visitCodeBlockStmt);
+        addVisit("IfStmt", this::visitIfStmt);
+        addVisit("WhileStmt", this::visitWhileStmt);
+        addVisit("ExprStmt", this::visitExprStmt);
+        addVisit("Assignment", this::visitAssignment);
+        addVisit("ArrayAssignStmt", this::visitAssignment);
         setDefaultVisit(this::ignore);
     }
 
-    private String Assignment(JmmNode jmmNode, String s) {
+    private String visitAssignment(JmmNode jmmNode, String s) {
         String varName = jmmNode.get("var");
         Pair<Symbol, String> info= symbolTable.getSymbol(s, varName);
         OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
@@ -44,24 +44,24 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         ollirCode+=code;
 
         if(info.b.equals("FIELD")){
-            ollirCode +="putfield(this, "+varName+"."+typeOllir(info.a.getType())+", "+expr+").V"+";\n";
+            ollirCode +="putfield(this, "+varName+"."+Uteis.typeOllir(info.a.getType())+", "+expr+").V"+";\n";
             return s;
         }
         else if(info.b.equals("LOCAL") )
-            ollirCode+=varName+"."+typeOllir(info.a.getType())+" :=."+typeOllir(info.a.getType())+" "+ expr+";\n";
+            ollirCode+=varName+"."+Uteis.typeOllir(info.a.getType())+" :=."+Uteis.typeOllir(info.a.getType())+" "+ expr+";\n";
         else if(info.b.equals("PARAM"))
-            ollirCode+='$'+Integer.toString(symbolTable.getSymbolIndex(s, varName))+"."+varName+"."+typeOllir(info.a.getType())+" :=."+typeOllir(info.a.getType())+" "+ expr+";\n";
+            ollirCode+='$'+Integer.toString(symbolTable.getSymbolIndex(s, varName))+"."+varName+"."+Uteis.typeOllir(info.a.getType())+" :=."+Uteis.typeOllir(info.a.getType())+" "+ expr+";\n";
         return s;
     }
 
-    private String ExprStmt(JmmNode jmmNode, String s) {
+    private String visitExprStmt(JmmNode jmmNode, String s) {
         OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
         ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
         ollirCode+=ollirGeneratorExpression.getCode();
         return s;
     }
 
-    private String WhileStmt(JmmNode jmmNode, String s) {
+    private String visitWhileStmt(JmmNode jmmNode, String s) {
         ollirCode+= "Loop: \n";
         OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
         ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
@@ -71,7 +71,7 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         return s;
     }
 
-    private String IfStmt(JmmNode jmmNode, String s) {
+    private String visitIfStmt(JmmNode jmmNode, String s) {
         OllirGeneratorExpression ollirGeneratorExpression= new OllirGeneratorExpression(symbolTable);
         String condition = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
         String code = ollirGeneratorExpression.getCode();
@@ -85,7 +85,7 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         return s;
     }
 
-    private String CodeBlockStmt(JmmNode jmmNode, String s) {
+    private String visitCodeBlockStmt(JmmNode jmmNode, String s) {
         for (JmmNode child: jmmNode.getChildren()){
             ollirCode+=visit(child , s);
         }
@@ -106,13 +106,13 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
     public static String getFields(List<Symbol> fields) {
         String result="";
         for (var field: fields) {
-            result+= ".field private "+ field.getName()+'.'+ typeOllir(field.getType() )+";\n";
+            result+= ".field private "+ field.getName()+'.'+ Uteis.typeOllir(field.getType() )+";\n";
         }
         result+="\n";
         return result;
     }
 
-    private String classDeclaration ( JmmNode jmmNode , String s) {
+    private String visitClassDeclaration ( JmmNode jmmNode , String s) {
         ollirCode+= symbolTable.getClassName() + (symbolTable.getSuper() != null ? (" extends " + symbolTable.getSuper()) : "") + "{\n";
 
         ollirCode+=getFields(symbolTable.getFields());
@@ -126,7 +126,7 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         return s;
     }
 
-    private String methodDeclaration ( JmmNode jmmNode , String s) {
+    private String visitMethodDeclaration ( JmmNode jmmNode , String s) {
 
         for (JmmNode child: jmmNode.getChildren()){
             visit(child , "");
@@ -135,18 +135,18 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         return s;
     }
 
-    private String instanceMethodDeclaration ( JmmNode jmmNode , String s) {
+    private String visitInstanceMethodDeclaration ( JmmNode jmmNode , String s) {
         String methodName = jmmNode.get("methodName");
         ollirCode+=".method public "+methodName+"(";
         List<Symbol> parameters= symbolTable.getParameters(methodName);
         StringJoiner sj = new StringJoiner(", ");
 
         for (Symbol parameter: parameters){
-            sj.add(parameter.getName()+'.'+ typeOllir(parameter.getType()));
+            sj.add(parameter.getName()+'.'+ Uteis.typeOllir(parameter.getType()));
         }
 
         String parameterList = sj.toString();
-        ollirCode+= parameterList + ")." + typeOllir(symbolTable.getReturnType(methodName))+ " {\n";
+        ollirCode+= parameterList + ")." + Uteis.typeOllir(symbolTable.getReturnType(methodName))+ " {\n";
         for (int i=0; i<jmmNode.getNumChildren()-1; i++) {
             visit(jmmNode.getJmmChild(i), methodName);
         }
@@ -155,14 +155,14 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         String code = ollirGeneratorExpression.getCode();
         ollirCode+=code;
         ollirCode+=String.format("ret.%s %s;\n}\n",
-                typeOllir(symbolTable.getReturnType(methodName)),
+                Uteis.typeOllir(symbolTable.getReturnType(methodName)),
                 ret
         );
         return s;
     }
 
 
-    private String mainMethodDeclaration ( JmmNode jmmNode , String s) {
+    private String visitMainMethodDeclaration ( JmmNode jmmNode , String s) {
         ollirCode+=".method public static main("+jmmNode.get("var")+".array.String).V{\n";
 
         for (JmmNode child: jmmNode.getChildren()) {
@@ -185,24 +185,6 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         return ollirCode;
     }
 
-    public static String typeOllir(Type type) {
-        String ollirType = "";
-        if (type.isArray()) {
-            ollirType += "array.";
-        }
-        switch (type.getName()) {
-            case "int":
-                ollirType += "i32";
-                break;
-            case "void":
-            case "boolean":
-                ollirType += "bool";
-                break;
-            default:
-                ollirType += type.getName();
-                break;
-        };
-        return ollirType;
-    }
+
 }
 

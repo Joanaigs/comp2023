@@ -1,10 +1,12 @@
-package pt.up.fe.comp2023;
+package pt.up.fe.comp2023.Ollir;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2023.SymbolTable;
+
 
 import java.util.StringJoiner;
 
@@ -42,36 +44,10 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     private String visitReturn(JmmNode jmmNode, String s) {
         String ret = visit(jmmNode.getJmmChild(0), s);
         code+=String.format("ret.%s %s;\n",
-                typeOllir(symbolTable.getReturnType(s)),
+                Uteis.typeOllir(symbolTable.getReturnType(s)),
                 ret
         );
         return "";
-    }
-
-    public static boolean isVariableOrLiteral(String id){
-        return id.matches("(((_|[a-zA-z])(_|\\d|[a-zA-Z])*)\\.(([a-zA-z])(\\d|[a-zA-Z])*))|\\d|true|false|this");
-    }
-    public static String typeOllir(Type type) {
-        String ollirType = "";
-        if (type.isArray()) {
-            ollirType += "array.";
-        }
-        switch (type.getName()) {
-            case "int":
-                ollirType += "i32";
-                break;
-            case "void":
-            case "V":
-                ollirType += "V";
-                break;
-            case "boolean":
-                ollirType += "bool";
-                break;
-            default:
-                ollirType += type.getName();
-                break;
-        };
-        return ollirType;
     }
     private String visitThis(JmmNode jmmNode, String s) {
 
@@ -83,18 +59,18 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         Pair<Symbol, String> info= symbolTable.getSymbol(s, varName);
         if(info.b.equals("FIELD")){
             String newTempVar="t"+this.numTemVars++;
-            String type = typeOllir(info.a.getType());
+            String type = Uteis.typeOllir(info.a.getType());
             code+=String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n", newTempVar, type, type, varName, type, type);
-            return  String.format("%s.%s", newTempVar, typeOllir(info.a.getType()));
+            return  String.format("%s.%s", newTempVar, Uteis.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("PARAM")){
-            return  String.format("$%d.%s.%s",symbolTable.getSymbolIndex(s, varName), varName, typeOllir(info.a.getType()));
+            return  String.format("$%d.%s.%s",symbolTable.getSymbolIndex(s, varName), varName, Uteis.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("LOCAL")){
-            return  String.format("%s.%s", varName, typeOllir(info.a.getType()));
+            return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("IMPORT")){
-            return  String.format("%s.%s", varName, typeOllir(info.a.getType()));
+            return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
         }
         return  null;
     }
@@ -161,7 +137,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String name =jmmNode.getJmmChild(0).get("value");
         String index = visit(jmmNode.getJmmChild(1), s);
         String arrayIdx = index;
-        if (!isVariableOrLiteral(index)) {
+        if (!Uteis.LiteralorVariable(index)) {
             arrayIdx  = "t"+this.numTemVars++ + ".i32";
             code+=String.format("%s :=.i32 %s;\n", arrayIdx, index);
         }
@@ -196,7 +172,6 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
 
     private String visitInitializeClass(JmmNode jmmNode, String s) {
         String newTempVar="t"+this.numTemVars++;
-        //String type = OllirUtils.toOllir(node);
         String type= jmmNode.get("value");
         code+=String.format("%s.%s :=.%s new(%s).%s;\n", newTempVar, type, type, type, type);
         code+=String.format("invokespecial(%s.%s, \"<init>\").V;\n", newTempVar, type);
