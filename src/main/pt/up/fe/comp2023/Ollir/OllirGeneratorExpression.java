@@ -58,6 +58,33 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String varName = jmmNode.get("value");
         Pair<Symbol, String> info= symbolTable.getSymbol(s, varName);
         if(info.b.equals("FIELD")){
+            String type = Uteis.typeOllir(info.a.getType());
+            if(!jmmNode.getJmmParent().getKind().equals("Assignment")) {
+                String newTempVar = "t" + this.numTemVars++;
+                code += String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n", newTempVar, type, type, varName, type, type);
+                return String.format("%s.%s", newTempVar, Uteis.typeOllir(info.a.getType()));
+            }
+            else{
+                return String.format("getfield(this, %s.%s).%s", varName, type, type);
+            }
+        }
+        else if(info.b.equals("PARAM")){
+            return  String.format("$%d.%s.%s",symbolTable.getSymbolIndex(s, varName), varName, Uteis.typeOllir(info.a.getType()));
+        }
+        else if(info.b.equals("LOCAL")){
+            return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
+        }
+        else if(info.b.equals("IMPORT")){
+            return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
+        }
+        return  null;
+    }
+
+    /*
+    private String visitIdentifier(JmmNode jmmNode, String s) {
+        String varName = jmmNode.get("value");
+        Pair<Symbol, String> info= symbolTable.getSymbol(s, varName);
+        if(info.b.equals("FIELD")){
             String newTempVar="t"+this.numTemVars++;
             String type = Uteis.typeOllir(info.a.getType());
             code+=String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n", newTempVar, type, type, varName, type, type);
@@ -73,7 +100,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
         }
         return  null;
-    }
+    }*/
 
     private String visitBoolean(JmmNode jmmNode, String s) {
         if(jmmNode.get("bool").equals("true")){
@@ -88,6 +115,29 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         return jmmNode.get("value")+".i32";
     }
 
+
+    private String visitBinaryOp(JmmNode jmmNode, String s) {
+        String left = visit(jmmNode.getJmmChild(0), s);
+        String right = visit(jmmNode.getJmmChild(1), s);
+        if(!(jmmNode.getJmmParent().getKind().equals("Assignment") && !symbolTable.getSymbol(s, jmmNode.getJmmParent().get("var")).b.equals("FIELD"))){
+            String newTempVar="t"+this.numTemVars++;
+            code+=String.format("%s.i32 :=.i32 %s %s.i32 %s;\n", //mudar i32 por node.type
+                    newTempVar,
+                    left,
+                    jmmNode.get("op"),
+                    right
+            );
+            return newTempVar+".i32";
+        }
+        return String.format("%s %s.i32 %s", //mudar i32 por node.type
+                left,
+                jmmNode.get("op"),
+                right
+        );
+
+    }
+
+    /*
     private String visitBinaryOp(JmmNode jmmNode, String s) {
         String left = visit(jmmNode.getJmmChild(0), s);
         String right = visit(jmmNode.getJmmChild(1), s);
@@ -99,14 +149,23 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
                 right
         );
         return newTempVar+".i32";
+    }*/
+    private String visitGetLenght(JmmNode jmmNode, String s) {
+        String array = visit(jmmNode.getJmmChild(0), s);
+        if(!(jmmNode.getJmmParent().getKind().equals("Assignment") && !symbolTable.getSymbol(s, jmmNode.getJmmParent().get("var")).b.equals("FIELD"))) {
+            String newTempVar = "t" + this.numTemVars++;
+            code += String.format("%s.i32 :=.i32 arraylength(%s).i32;\n", newTempVar, array);
+            return newTempVar + ".i32";
+        }
+        return String.format("arraylength(%s).i32", array);
     }
-
+    /*
     private String visitGetLenght(JmmNode jmmNode, String s) {
         String array = visit(jmmNode.getJmmChild(0), s);
         String newTempVar="t"+this.numTemVars++ ;
         code+=String.format("%s.i32 :=.i32 arraylength(%s).i32;\n", newTempVar, array);
         return newTempVar+".i32";
-    }
+    }*/
 
     private String visitCallFnc(JmmNode jmmNode, String s) {
         String obj= visit(jmmNode.getJmmChild(0), s);
@@ -164,11 +223,22 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
 
     private String visitNegateExpr(JmmNode jmmNode, String s) {
         String expr = visit(jmmNode.getJmmChild(0), s);
+        if(!(jmmNode.getJmmParent().getKind().equals("Assignment") && !symbolTable.getSymbol(s, jmmNode.getJmmParent().get("var")).b.equals("FIELD"))) {
+            String newTempVar = "t" + this.numTemVars++;
+            code += String.format("%s.bool :=.bool !.bool %s;\n", newTempVar, expr);
+            return newTempVar + ".bool";
+        }
+        return String.format("!.bool %s", expr);
+
+    }
+    /*
+    private String visitNegateExpr(JmmNode jmmNode, String s) {
+        String expr = visit(jmmNode.getJmmChild(0), s);
         String newTempVar="t"+this.numTemVars++ ;
         code+=String.format("%s.bool :=.bool !.bool %s;\n", newTempVar, expr);
         return newTempVar+".bool";
 
-    }
+    }*/
 
     private String visitInitializeClass(JmmNode jmmNode, String s) {
         String newTempVar="t"+this.numTemVars++;

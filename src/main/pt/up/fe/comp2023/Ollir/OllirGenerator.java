@@ -137,7 +137,8 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
 
     private String visitInstanceMethodDeclaration ( JmmNode jmmNode , String s) {
         String methodName = jmmNode.get("methodName");
-        ollirCode+=".method public "+methodName+"(";
+        String access= jmmNode.get("access");
+        ollirCode+=".method "+access+" "+methodName+"(";
         List<Symbol> parameters= symbolTable.getParameters(methodName);
         StringJoiner sj = new StringJoiner(", ");
 

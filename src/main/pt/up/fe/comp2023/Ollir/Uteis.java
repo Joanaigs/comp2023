@@ -13,6 +13,8 @@ public class Uteis {
                 ollirType += "i32";
                 break;
             case "void":
+                ollirType += "V";
+                break;
             case "boolean":
                 ollirType += "bool";
                 break;
