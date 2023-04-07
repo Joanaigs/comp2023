@@ -1,5 +1,6 @@
 package pt.up.fe.comp2023;
 
+import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
@@ -35,9 +36,28 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
         addVisit ("InstanceMethodDeclaration", this::instanceMethodDeclaration);
         addVisit ("MainMethodDeclaration", this::mainMethodDeclaration);
         addVisit ("FieldDeclaration", this::fieldDeclaration);
+        addVisit ("Assignment", this::addScope);
+        addVisit ("ArrayAssignStmt", this::addScope);
+        addVisit ("InitializeClass", this::addScope);
+        addVisit ("CallFnc", this::addScope);
+        addVisit ("Identifier", this::addScope);
+        addVisit ("This", this::addScope);
         setDefaultVisit(this::ignore);
     }
+
+
+    private String addScope(JmmNode jmmNode, String s) {
+        jmmNode.put("scope", s);
+        for (JmmNode child: jmmNode.getChildren()){
+            visit(child , s);
+        }
+        return null;
+    }
+
     private String ignore ( JmmNode jmmNode, String s) {
+        for (JmmNode child: jmmNode.getChildren()){
+            visit(child , s);
+        }
         return null;
     }
 

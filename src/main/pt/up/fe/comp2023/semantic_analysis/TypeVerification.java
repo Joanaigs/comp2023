@@ -1,5 +1,6 @@
 package pt.up.fe.comp2023.semantic_analysis;
 
+import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -33,20 +34,63 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
         addVisit("This", this::keywordThis);
         addVisit("NegateExpr", this::negation);
         addVisit("CreateArray", this::createArray);
-        //addVisit("ArrayExp", this::arrayExp); //array access
-        //addVisit("CallFnc", this::fnCallOp);
+        addVisit("ArrayExp", this::arrayAccess);
+        addVisit("InitializeClass", this::initClass);
         addVisit("GetLength", this::getLength);
         addVisit("BinaryOp", this::binaryOp);
         addVisit("UnaryOp", this::unaryOp);
         addVisit("PostfixOp", this::unaryOp);
         addVisit("IfStm", this::loop);
         addVisit("WhileSTm", this::loop);
+        addVisit("ParenthesisExpr", this::simpleExpr);
+        addVisit("ExprStmt", this::simpleExpr);
         addVisit("Assignment", this::assignmentStm);
         addVisit("ArrayAssignStmt", this::arrayAssignStm);
+        setDefaultVisit(this::ignore);
+    }
+    private String ignore ( JmmNode jmmNode, String s) {
+        return null;
     }
 
     private void addReport(JmmNode node, String message) {
-        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("line")), Integer.parseInt(node.get("column")), message));
+        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, message));
+    }
+
+
+    // not in Util because it needs the symbol table
+    private boolean nodeIsOfType(JmmNode node, boolean isArray, String type) {
+        String nodeType = node.get("type");
+        if (node.getAttributes().contains("array") == isArray)
+            return type.equals(nodeType);
+        else if (symbolTable.getSuper() != null && symbolTable.getSuper().equals(type) && symbolTable.getClassName().equals(nodeType))
+            return true;
+        else if (symbolTable.isImported(type) && symbolTable.isImported(nodeType))
+            return true;
+        return false;
+    }
+
+    private Pair<Symbol, String> checkVariableIsDeclared(JmmNode node, String variable){
+        String scope = node.get("scope");
+        String var = node.get(variable);
+        Pair<Symbol, String> symbolStringPair = symbolTable.getSymbol(scope, var);
+        if (symbolStringPair == null) {
+            String messageReport = var + "not defined";
+            addReport(node, messageReport);
+            throw new SemanticAnalysisException();
+        }
+        return symbolStringPair;
+    }
+
+    private String initClass(JmmNode node, String s) {
+        Type type = checkVariableIsDeclared(node, "value").a.getType();
+        node.put("type", type.getName());
+        return null;
+    }
+
+    private String simpleExpr(JmmNode node, String s) {
+        JmmNode exp = node.getJmmChild(0);
+        node.put("type", exp.get("type"));
+        return null;
     }
 
     private String integer(JmmNode node, String s) {
@@ -60,14 +104,7 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
     }
 
     private String id(JmmNode node, String s) {
-        String nodeScope = node.get("scope");
-        String value = node.get("value");
-        if (symbolTable.getSymbol(nodeScope, value) == null) {
-            String messageReport = value + "not defined";
-            addReport(node, messageReport);
-            throw new SemanticAnalysisException();
-        }
-        Type type = symbolTable.getSymbol(nodeScope, value).a.getType();
+        Type type = checkVariableIsDeclared(node, "value").a.getType();
         node.put("type", type.getName());
         if (type.isArray()){
             node.put("array", "true");
@@ -76,20 +113,16 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
     }
 
     private String keywordThis(JmmNode node, String s) {
-        node.put("type", symbolTable.getClassName());
-        return null;
-    }
-
-    // not in Util because it needs the symbol table
-    private boolean nodeIsOfType(JmmNode node, boolean isArray, String type) {
-        String nodeType = node.get("type");
-        if (node.getAttributes().contains("array") == isArray)
-            return type.equals(nodeType);
-        else if (symbolTable.getSuper() != null && symbolTable.getSuper().equals(type) && symbolTable.getClassName().equals(nodeType))
-            return true;
-        else if (symbolTable.isImported(type) && symbolTable.isImported(nodeType))
-            return true;
-        return false;
+        String scope = node.get("scope");
+        if(scope.equals("main")){
+            String reportMessage = "this keyword is not allowed in main";
+            addReport(node, reportMessage);
+            throw new SemanticAnalysisException();
+        }
+        else {
+            node.put("type", symbolTable.getClassName());
+            return null;
+        }
     }
 
     private String negation(JmmNode node, String s) {
@@ -109,7 +142,6 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
         JmmNode sizeOfArray = node.getJmmChild(0);
         if (nodeIsOfType(sizeOfArray, false, "int")) {
             node.put("type", "int");
-            node.put("array", "true");
             return null;
         }
         String sizeOfArrayType = node.get("type");
@@ -120,32 +152,26 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
         throw new SemanticAnalysisException();
     }
 
-    /*private String arrayExp(JmmNode node, String scope) {
-        JmmNode underlyingVar = node.getJmmChild(0);
-        Symbol symbol = symbolTable.getSymbol(underlyingVar.get("scope"), underlyingVar.get("image"));
-        if (!symbol.getType().isArray()) {
-            reports.add(new Report(
-                    ReportType.ERROR,
-                    Stage.SEMANTIC,
-                    Integer.parseInt(node.get("line")),
-                    Integer.parseInt(node.get("column")),
-                    String.format("Tried to access '%s' as array", symbol.getType()))
-            );
-        }
-        if (!matchExpectedType(node.getJmmChild(1), "int", false)) {
-            reports.add(new Report(
-                    ReportType.ERROR,
-                    Stage.SEMANTIC,
-                    Integer.parseInt(node.get("line")),
-                    Integer.parseInt(node.get("column")),
-                    String.format("Array index must be of type int but '%s' was found instead", Util.prettyNodeTypeToString(node.getJmmChild(1)))
-            ));
+    private String arrayAccess(JmmNode node, String s) {
+        JmmNode firstChild = node.getJmmChild(0);
+        JmmNode secondChild = node.getJmmChild(1);
+        Type firstChildType = checkVariableIsDeclared(firstChild, "value").a.getType();
+        String typeName = firstChildType.getName();
+        if(!firstChildType.isArray()){
+            String reportMessage = "Array access can only be done over an array, but found " + typeName;
+            addReport(node, reportMessage);
             throw new SemanticAnalysisException();
         }
-        node.put("type", symbol.getType().getName());
+        else if (!secondChild.get("type").equals("int")){
+            String reportMessage = "Array access index must be of type Integer, but found " + secondChild.get("type") + " instead";
+            addReport(node, reportMessage);
+            throw new SemanticAnalysisException();
+        }
+        node.put("type", typeName);
         return null;
     }
-*/
+
+
     private String getLength(JmmNode node, String method) {
         JmmNode object = node.getJmmChild(0);
         if (object.getAttributes().contains("array")) {
@@ -213,7 +239,13 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
 
     private String loop(JmmNode node, String s) {
         JmmNode condition = node.getJmmChild(0);
-        if (nodeIsOfType(condition, false, "boolean")) {
+        Type valueType = checkVariableIsDeclared(condition, "value").a.getType();
+        if (valueType.isArray()){
+            String reportMessage = "Conditions must be of boolean type";
+            addReport(node, reportMessage);
+            throw new SemanticAnalysisException();
+        }
+        else if (valueType.equals("boolean")){
             node.put("type", "boolean");
             return null;
         }
@@ -221,82 +253,9 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
         addReport(node, reportMessage);
         throw new SemanticAnalysisException();
     }
-/*
-    private boolean checkVarHasMethod(JmmNode node) {
-        String subjectType = node.getJmmChild(0).get("type");
-        Method calledMethod = symbolTable.getMethodScope(node.getJmmChild(1).get("image"));
-        if ((subjectType.equals(symbolTable.getClassName()) && calledMethod != null) || cantDetermineArgsType(node)) {
-            return true;
-        }
-        return false;
-    }
 
-    private boolean cantDetermineArgsType(JmmNode node) {
-        String subjectType = node.getJmmChild(0).get("type");
-        String calledMethod = node.getJmmChild(1).get("image");
-        return symbolTable.hasSymbolInImportPath(subjectType) || // Symbol was imported
-                (
-                        subjectType.equals(symbolTable.getClassName()) && // Symbol is the current class
-                                symbolTable.getMethodScope(calledMethod) == null && // The called method isn't available in the scope
-                                symbolTable.getSuper() != null // However, the class extends another class
-                );
-    }
-
-    private boolean methodArgsCompatible(JmmNode node) {
-        String subjectType = node.getJmmChild(0).get("type");
-        List<SymbolExtended> params = symbolTable.getMethodScope(node.getJmmChild(1).get("image")).getParameters();
-        List<JmmNode> args = node.getJmmChild(2).getChildren();
-        if (args.size() != params.size()) {
-            return false;
-        }
-        for (int i = 0; i < args.size(); i++) {
-            Type currentType = params.get(i).getType();
-            if (!matchExpectedType(args.get(i), currentType.getName(), currentType.isArray())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private String fnCallOp(JmmNode node, String s) {
-        if (!checkVarHasMethod(node)) {
-            reports.add(new Report(
-                    ReportType.ERROR,
-                    Stage.SEMANTIC,
-                    Integer.parseInt(node.get("line")),
-                    Integer.parseInt(node.get("column")),
-                    String.format("Method '%s' not found in '%s' definition", node.getJmmChild(1).get("image"), node.getJmmChild(0).get("type"))
-            ));
-            throw new SemanticAnalysisException();
-        }
-        if (cantDetermineArgsType(node)) {
-            node.put("type", Constants.ANY_TYPE);
-            return null;
-        }
-        List<Symbol> expectedParams = new ArrayList<>(symbolTable.getMethodScope(node.getJmmChild(1).get("image")).getParameters());
-        List<JmmNode> args = node.getJmmChild(2).getChildren();
-        if (!methodArgsCompatible(node)) {
-            reports.add(new Report(
-                    ReportType.ERROR,
-                    Stage.SEMANTIC,
-                    Integer.parseInt(node.get("line")),
-                    Integer.parseInt(node.get("column")),
-                    String.format("Gave %s but method expected %s", Util.buildArgTypes(args), Util.buildParamTypes(expectedParams))
-            ));
-            throw new SemanticAnalysisException();
-        }
-        Method methodBeingCalled = symbolTable.getMethodScope(node.getJmmChild(1).get("image"));
-        node.put("type", methodBeingCalled.getReturnType().getName());
-        if (methodBeingCalled.getReturnType().isArray()) {
-            node.put("array", "true");
-        }
-        return null;
-    }
-*/
     private String assignment(JmmNode node, Integer child) {
-        String nodeScope = node.get("scope");
-        String var = node.get("var");
-        Type varType = symbolTable.getSymbol(nodeScope, var).a.getType();
+        Type varType = checkVariableIsDeclared(node, "var").a.getType();
         JmmNode exp = node.getJmmChild(child);
         if(exp.getKind().equals("This")){
             String className = symbolTable.getClassName();

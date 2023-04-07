@@ -85,7 +85,6 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
                 return new Pair<>(new Symbol(new Type(varName, false), varName), "IMPORT");
             }
         }
-
         return null;
     }
 
