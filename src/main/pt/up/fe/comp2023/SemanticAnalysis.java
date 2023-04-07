@@ -17,8 +17,8 @@ public class SemanticAnalysis implements JmmAnalysis {
         SymbolTableGenerator symbolTableGenerator = new SymbolTableGenerator();
         SymbolTable symbolTable = symbolTableGenerator.build(jmmParserResult.getRootNode());
         try {
-            new TypeVerification(symbolTable, reports).visit(jmmParserResult.getRootNode());
-        } catch (SemanticAnalysisException e) {}
+            new SemanticVerification(symbolTable, reports).visit(jmmParserResult.getRootNode());
+        } catch (RuntimeException e) {}
         return new JmmSemanticsResult(jmmParserResult, symbolTable, reports);
     }
 }

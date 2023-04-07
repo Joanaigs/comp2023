@@ -89,12 +89,21 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
     }
 
     public Boolean isImported(String symbol) {
-        for (var path : imports) {
-            if (path.endsWith("." + symbol) || path.endsWith("." + symbol + ";")) {
+        for (var importPath: imports) {
+            String[] parts = importPath.split("-");
+            if (parts[parts.length-1].equals(symbol)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public Boolean hasMethod (String method) {
+        return methods.containsKey(method);
+    }
+
+    public Method getMethod (String method) {
+        return methods.get(method);
     }
 
 }

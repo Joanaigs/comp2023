@@ -1,21 +1,21 @@
-import io.ola.adeus;
-class Fac{
-    int a;
-    public int computeFac (int num,  boolean a){
-        int num_aux ;
-        char a;
-        a=new int[1123];
-        b=-3;
-        if ( num < 1){
-            num_aux = 1;
-            }
-        else
-            num_aux = num * ( this . computeFac (num -1));
-        return num_aux ;
+import B;
+
+class ObjectAssignmentFail {
+
+    public static void main(String[] args) {
+
     }
-    public static void main ( String [] args ){
-        int a;
-        io. println ( new Fac (). computeFac (10)); // assuming the existence
-        // of the classfile io. class
+
+    public ObjectAssignmentFail foo() {
+        ObjectAssignmentFail a;
+        B b;
+
+        a = new ObjectAssignmentFail();
+        b = new B();
+
+        // ObjectAssignmentFail does not extend B
+        a = b;
+
+        return a;
     }
 }

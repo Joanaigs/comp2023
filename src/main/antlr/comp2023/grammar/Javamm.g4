@@ -42,7 +42,7 @@ fieldDeclaration
     ;
 
 type locals[boolean isArray=false, boolean isPrimitive=true]
-    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')array='[' ']' {$isArray=true;}
+    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char') array='[' ']' {$isArray=true;}
     | typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')
     | typeDeclaration='String' {$isPrimitive=false;}
     | typeDeclaration=ID {$isPrimitive=false;}
@@ -52,7 +52,7 @@ type locals[boolean isArray=false, boolean isPrimitive=true]
 statement
     :  '{' ( statement )* '}'                               #CodeBlockStmt
     | 'if' '(' expression ')' statement 'else' statement    #IfStmt
-    | 'while' '(' expression ')' statement                  #WhileSTmt
+    | 'while' '(' expression ')' statement                  #WhileStmt
     | expression ';'                                        #ExprStmt
     | var=ID '=' expression ';'                             #Assignment
     | var=ID '[' expression ']' '=' expression ';'          #ArrayAssignStmt
