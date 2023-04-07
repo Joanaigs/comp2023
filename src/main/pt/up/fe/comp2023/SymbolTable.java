@@ -1,25 +1,29 @@
 package pt.up.fe.comp2023;
 
+import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
+import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable{
-    final String superName; //nome da classe que está a "extender"
-    final String className;//nome da classe
-    final List<String> imports; //imports do ficheiro
-    final Map<String, Symbol> fields;
-    final Map<String, Method> methods;
+    private final String superName; //nome da classe que está a "extender"
+    private final String className;//nome da classe
+    private final List<String> imports; //imports do ficheiro
+    private final Map<String, Symbol> fields;
+    private final Map<String, Method> methods;
+    private final List<Report> reports;
 
-    public SymbolTable(String superName, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods) {
+    public SymbolTable(String superName, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods, List<Report> reports) {
         this.superName = superName;
         this.className = className;
         this.imports = imports;
         this.fields = fields;
         this.methods = methods;
+        this.reports = reports;
     }
 
 
@@ -58,4 +62,40 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
     public List<Symbol> getLocalVariables(String s) {
         return new LinkedList<>(methods.get(s).getLocalVariables());
     }
+
+    public Pair<Symbol, String> getSymbol(String methodName, String varName) {
+        for(Symbol symbol:fields.values()){
+            if(symbol.getName().equals(varName)){
+                return new Pair<>(symbol, "FIELD");
+            }
+        }
+        for(Symbol symbol:new LinkedList<>(methods.get(methodName).getParameters())){
+            if(symbol.getName().equals(varName)){
+                return new Pair<>(symbol, "PARAM");
+            }
+        }
+        for(Symbol symbol:new LinkedList<>(methods.get(methodName).getLocalVariables())){
+            if(symbol.getName().equals(varName)){
+                return new Pair<>(symbol, "LOCAL");
+            }
+        }
+        for (var importPath: imports) {
+            String[] parts = importPath.split("-");
+            if (parts[parts.length-1].equals(varName)) {
+                return new Pair<>(new Symbol(new Type(varName, false), varName), "IMPORT");
+            }
+        }
+
+        return null;
+    }
+
+    public Boolean isImported(String symbol) {
+        for (var path : imports) {
+            if (path.endsWith("." + symbol) || path.endsWith("." + symbol + ";")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

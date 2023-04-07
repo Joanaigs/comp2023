@@ -66,7 +66,7 @@ expression
     | '(' expression ')'                                                  #ParenthesisExpr
     | expression '[' expression ']'                                       #ArrayExp
     | expression '.' value=ID '(' ( expression ( ',' expression )* )? ')' #CallFnc
-    | expression '.' 'length'                                             #GetLenght
+    | expression '.' 'length'                                             #GetLength
     | expression op=('++'|'--')                                           #PostfixOp
     | op=('++'|'--'|'+'|'-') expression                                   #UnaryOp
     | expression op=( '*' | '/' | '%') expression                         #BinaryOp
