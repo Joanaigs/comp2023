@@ -140,6 +140,12 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
     private String binaryOp(JmmNode node, String s) {
         JmmNode leftOperand = node.getJmmChild(0);
         JmmNode rightOperand = node.getJmmChild(1);
+        if (leftOperand.getAttributes().contains("array") || rightOperand.getAttributes().contains("array")) {
+            String reportMessage = "Operand can't be array";
+            addReport(node, reportMessage);
+            throw new RuntimeException();
+        }
+        /*
         if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
             if (!nodeIsOfType(leftOperand, false, "boolean")) {
                 String leftChildType = leftOperand.get("type");
@@ -159,16 +165,11 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             }
             else
                 node.put("type", "boolean");    //both operands are boolean
-        }
+        }*/
         else {
             String type = leftOperand.get("type");
             if(!type.equals(rightOperand.get("type"))){
                 String reportMessage = "Operands must be of the same type";
-                addReport(node, reportMessage);
-                throw new RuntimeException();
-            }
-            else if(leftOperand.getAttributes().contains("array") || rightOperand.getAttributes().contains("array")){
-                String reportMessage = "Array cannot be used in arithmetic operations";
                 addReport(node, reportMessage);
                 throw new RuntimeException();
             }
@@ -185,6 +186,11 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
     private String unaryOp(JmmNode node, String s) {
         JmmNode child = node.getJmmChild(0);
         String type = child.get("type");
+        if (child.getAttributes().contains("array")) {
+            String reportMessage = "Operand can't be array";
+            addReport(node, reportMessage);
+            throw new RuntimeException();
+        }
         if (type.equals("boolean")){
             String reportMessage = "Operand can't be of type boolean";
             addReport(node, reportMessage);
