@@ -1,21 +1,11 @@
-import io.ola.adeus;
-class Fac{
-    int a;
-    public int computeFac (int num,  boolean a){
-        int num_aux ;
-        char a;
-        a=new int[1123];
-        b=-3;
-        if ( num < 1){
-            num_aux = 1;
-            }
-        else
-            num_aux = num * ( this . computeFac (num -1));
-        return num_aux ;
+import io;
+
+class OllirToJasminInvoke {
+
+    public static void main(String[] args) {
+        OllirToJasminInvoke test;
+
+        test = new OllirToJasminInvoke();
     }
-    public static void main ( String [] args ){
-        int a;
-        io. println ( new Fac (). computeFac (10)); // assuming the existence
-        // of the classfile io. class
-    }
+
 }

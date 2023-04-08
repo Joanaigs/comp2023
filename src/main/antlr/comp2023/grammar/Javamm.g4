@@ -31,7 +31,7 @@ methodDeclaration
     : (instanceMethodDeclaration| mainMethodDeclaration) ;
 
 instanceMethodDeclaration
-    : ('public'|'private'|'protected')?  type methodName=ID '(' ( fieldDeclaration ( ','fieldDeclaration )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
+    : access=('public'|'private'|'protected')?  type methodName=ID '(' ( fieldDeclaration ( ','fieldDeclaration )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
 ;
 mainMethodDeclaration
     : ('public')? 'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
@@ -52,7 +52,7 @@ type locals[boolean isArray=false, boolean isPrimitive=true]
 statement
     :  '{' ( statement )* '}'                               #CodeBlockStmt
     | 'if' '(' expression ')' statement 'else' statement    #IfStmt
-    | 'while' '(' expression ')' statement                  #WhileSTmt
+    | 'while' '(' expression ')' statement                  #WhileStmt
     | expression ';'                                        #ExprStmt
     | var=ID '=' expression ';'                             #Assignment
     | var=ID '[' expression ']' '=' expression ';'          #ArrayAssignStmt

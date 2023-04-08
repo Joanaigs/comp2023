@@ -1,5 +1,6 @@
 package pt.up.fe.comp2023;
 
+import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
@@ -57,5 +58,42 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
     @Override
     public List<Symbol> getLocalVariables(String s) {
         return new LinkedList<>(methods.get(s).getLocalVariables());
+    }
+
+
+    public Pair<Symbol, String> getSymbol(String methodName, String varName) {
+        for(Symbol symbol:fields.values()){
+            if(symbol.getName().equals(varName)){
+                return new Pair<>(symbol, "FIELD");
+            }
+        }
+        for(Symbol symbol:new LinkedList<>(methods.get(methodName).getParameters())){
+            if(symbol.getName().equals(varName)){
+                return new Pair<>(symbol, "PARAM");
+            }
+        }
+        for(Symbol symbol:new LinkedList<>(methods.get(methodName).getLocalVariables())){
+            if(symbol.getName().equals(varName)){
+                return new Pair<>(symbol, "LOCAL");
+            }
+        }
+        for (var importPath: imports) {
+            String[] parts = importPath.split("-");
+            if (parts[parts.length-1].equals(varName)) {
+                return new Pair<>(new Symbol(new Type(varName, false), varName), "IMPORT");
+            }
+        }
+
+        return null;
+    }
+    public int getSymbolIndex(String methodName, String varName) {
+        LinkedList<SymbolExtended> Parameters = new LinkedList<>(methods.get(methodName).getParameters());
+        for (int i = 0; i < Parameters.size(); i++) {
+            SymbolExtended symbol = Parameters.get(i);
+            if (symbol.getName().equals(varName)) {
+                return i+1;
+            }
+        }
+        return 0;
     }
 }
