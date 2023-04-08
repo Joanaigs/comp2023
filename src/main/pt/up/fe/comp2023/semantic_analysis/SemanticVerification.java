@@ -173,8 +173,12 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
                 addReport(node, reportMessage);
                 throw new RuntimeException();
             }
-            else
-                node.put("type", type);
+            else {
+                if (node.get("op").equals("<") || node.get("op").equals(">") || node.get("op").equals("<=") || node.get("op").equals(">=") || node.get("op").equals("==") || node.get("op").equals("!=")) {
+                    node.put("type", "boolean");
+                } else
+                    node.put("type", type);
+            }
         }
         return null;
     }
