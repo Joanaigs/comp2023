@@ -67,7 +67,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             return  String.format("%s.%s", newTempVar, Uteis.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("PARAM")){
-            return  String.format("%s.%s",varName, Uteis.typeOllir(info.a.getType()));
+            return  String.format("$%d.%s.%s",symbolTable.getSymbolIndex(s, varName), varName, Uteis.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("LOCAL")){
             return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
@@ -122,27 +122,31 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     private String visitCallFnc(JmmNode jmmNode, String s) {
         String type=Uteis.typeOllir(jmmNode);
         String obj= visit(jmmNode.getJmmChild(0), s);
+        String _return = "";
         if(!jmmNode.getJmmParent().getKind().equals("ExprStmt")){
             obj= visit(jmmNode.getJmmChild(0), s);
             String newTempVar="t"+this.numTemVars++;
             code+=(String.format("%s.%s :=.%s ", newTempVar, type, type));
-            code+=String.format("invokevirtual(%s, \"%s\"",obj, jmmNode.get("value"));
-            for(int i=1; i<jmmNode.getNumChildren(); i++){
-                code+=", "+ visit(jmmNode.getJmmChild(i), s);
-            }
-            code += String.format(").%s;\n", type);
-            return String.format("%s.%s", newTempVar, type);
+            _return= String.format("%s.%s", newTempVar, type);
         }
-        else{
+
+        String method = jmmNode.get("value");
+        if (jmmNode.getJmmChild(0).getKind().equals("Identifier") && obj.split("[.]")[0].equals(jmmNode.get("type"))) {
             if(!obj.equals("this"))
                 obj=obj.split("[.]")[0];
             code+=String.format("invokestatic(%s, \"%s\"",obj, jmmNode.get("value"));
-            for(int i=1; i<jmmNode.getNumChildren(); i++){
-                code+=", "+ visit(jmmNode.getJmmChild(i), s);
-            }
-            code += String.format(").%s;\n", type);
+        } else {
+            code+=String.format("invokevirtual(%s, \"%s\"",obj, jmmNode.get("value"));
         }
-        return "";
+        for(int i=1; i<jmmNode.getNumChildren(); i++){
+            code+=", "+ visit(jmmNode.getJmmChild(i), s);
+        }
+        code += String.format(").%s;\n", type);
+
+
+
+
+        return _return;
     }
 
     private String visitArrayExp(JmmNode jmmNode, String s) {
@@ -160,7 +164,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             return String.format("%s[%s].i32", newTempVar, arrayIdx);
         }
         else if (info.b.equals("PARAM")) {
-            return String.format("%s[%s].i32", name, arrayIdx);
+            return String.format("$%d.%s[%s].i32", symbolTable.getSymbolIndex(s, name), name, arrayIdx);
         }
         else if (info.b.equals("IMPORT")) {
             throw new RuntimeException("Class cannot be accessed as an array");
