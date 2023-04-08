@@ -56,8 +56,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, parseInt(node.get("lineStart")), parseInt(node.get("colStart")), message));
     }
 
-    // not in Util because it needs the symbol table
-    private boolean nodeIsOfType(JmmNode node, boolean isArray, String type) {
+     private boolean nodeIsOfType(JmmNode node, boolean isArray, String type) {
         String nodeType = node.get("type");
         if (node.getAttributes().contains("imported"))
             return true;
@@ -221,7 +220,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             addReport(node, reportMessage);
             throw new RuntimeException();
         }
-        else if (!index.get("type").equals("int")){
+        else if (!nodeIsOfType(index, false, "int")){
             String reportMessage = "Array access index must be of type Integer, but found " + index.get("type") + " instead";
             addReport(node, reportMessage);
             throw new RuntimeException();
@@ -264,8 +263,14 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         if(exp.getKind().equals("This")){
             String className = symbolTable.getClassName();
             String superName = symbolTable.getSuper();
-            if(varType.getName().equals(className) || varType.getName().equals(superName)){     // if the current class is the type of the variable that "this" is assigned to or if the current class extends the type of the variable
+            if(varType.getName().equals(className)){    // if the current class is the type of the variable that "this" is assigned to
                 node.put("type", className);
+                if(varType.isArray())
+                    node.put("array", "true");
+                return null;
+            }
+            else if(varType.getName().equals(superName)) {      // if the current class extends the type of the variable
+                node.put("type", superName);
                 if(varType.isArray())
                     node.put("array", "true");
                 return null;
@@ -318,7 +323,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
     private String fnCallOp(JmmNode node, String s) {
         String className = node.getJmmChild(0).get("type");
         String methodName = node.get("value");
-        if (className.equals(symbolTable.getClassName())) {      //method is part of the current class
+        if (className.equals(symbolTable.getClassName())) {  //method is part of the current class
             if (!symbolTable.hasMethod(methodName)) {
                 if (symbolTable.getSuper() == null) {     //can extend another class
                     String reportMessage = "Method does not exist";
