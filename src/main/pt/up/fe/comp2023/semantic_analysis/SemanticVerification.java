@@ -145,7 +145,6 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             addReport(node, reportMessage);
             throw new RuntimeException();
         }
-        /*
         if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
             if (!nodeIsOfType(leftOperand, false, "boolean")) {
                 String leftChildType = leftOperand.get("type");
@@ -165,7 +164,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             }
             else
                 node.put("type", "boolean");    //both operands are boolean
-        }*/
+        }
         else {
             String type = leftOperand.get("type");
             if(!type.equals(rightOperand.get("type"))){
@@ -254,7 +253,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             addReport(node, reportMessage);
             throw new RuntimeException();
         }
-        else if (condition.get("type").equals("boolean")){
+        else if (nodeIsOfType(condition, false, "boolean")){
             node.put("type", "boolean");
             return null;
         }
