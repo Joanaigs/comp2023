@@ -176,7 +176,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     }
 
     private String visitParenthesisExpr(JmmNode jmmNode, String s) {
-        return visit(jmmNode.getJmmChild(0));
+        return visit(jmmNode.getJmmChild(0), s);
     }
 
 
