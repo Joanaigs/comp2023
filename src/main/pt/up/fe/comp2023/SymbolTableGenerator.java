@@ -27,6 +27,9 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
         this.visit(root_node, null);
         return new SymbolTable(superName, className, imports, fields, methods, reports);
     }
+
+    public List<Report> getReports() {return reports;}
+
     protected void buildVisitor() {
         addVisit ("Program", this::dealWithProgram );
         addVisit ("ImportDeclaration", this::importDeclaration );

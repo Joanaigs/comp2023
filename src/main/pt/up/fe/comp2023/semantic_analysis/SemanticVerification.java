@@ -30,16 +30,16 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         addVisit("Boolean", this::bool);
         addVisit("Identifier", this::id);
         addVisit("This", this::keywordThis);
+        addVisit("InitializeClass", this::initClass);
         addVisit("ParenthesisExpr", this::simpleExpr);
         addVisit("ExprStmt", this::simpleExpr);
         addVisit("NegateExpr", this::negation);
-        addVisit("CreateArray", this::createArray);
-        addVisit("ArrayExp", this::arrayAccess);
-        addVisit("InitializeClass", this::initClass);
-        addVisit("GetLength", this::getLength);
         addVisit("BinaryOp", this::binaryOp);
         addVisit("UnaryOp", this::unaryOp);
         addVisit("PostfixOp", this::unaryOp);
+        addVisit("CreateArray", this::createArray);
+        addVisit("ArrayExp", this::arrayAccess);
+        addVisit("GetLength", this::getLength);
         addVisit("IfStmt", this::loop);
         addVisit("WhileStmt", this::loop);
         addVisit("Assignment", this::assignmentStm);
@@ -82,17 +82,6 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         return symbolStringPair;
     }
 
-    private String initClass(JmmNode node, String s) {
-        node.put("type", node.get("value"));
-        return null;
-    }
-
-    private String simpleExpr(JmmNode node, String s) {
-        JmmNode exp = node.getJmmChild(0);
-        node.put("type", exp.get("type"));
-        return null;
-    }
-
     private String integer(JmmNode node, String s) {
         node.put("type", "int");
         return null;
@@ -125,6 +114,17 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         }
     }
 
+    private String initClass(JmmNode node, String s) {
+        node.put("type", node.get("value"));
+        return null;
+    }
+
+    private String simpleExpr(JmmNode node, String s) {
+        JmmNode exp = node.getJmmChild(0);
+        node.put("type", exp.get("type"));
+        return null;
+    }
+
     private String negation(JmmNode node, String s) {
         JmmNode exp = node.getJmmChild(0);
         if (!nodeIsOfType(exp, false, "boolean")) {
@@ -138,83 +138,37 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         return null;
     }
 
-    private String createArray(JmmNode node, String s) {
-        JmmNode sizeOfArray = node.getJmmChild(0);
-        if (nodeIsOfType(sizeOfArray, false, "int")) {
-            node.put("type", "int");
-            return null;
-        }
-        String sizeOfArrayType = node.get("type");
-        if(sizeOfArray.getAttributes().contains("array"))
-            sizeOfArrayType += "[]";
-        String reportMessage = "Size of array must be an Integer, type " + sizeOfArrayType + " found instead";
-        addReport(node, reportMessage);
-        throw new RuntimeException();
-    }
-
-    private String arrayAccess(JmmNode node, String s) {
-        JmmNode firstChild = node.getJmmChild(0);
-        JmmNode secondChild = node.getJmmChild(1);
-        Type firstChildType = checkVariableIsDeclared(firstChild, "value").a.getType();
-        String typeName = firstChildType.getName();
-        if(!firstChildType.isArray()){
-            String reportMessage = "Array access can only be done over an array, but found " + typeName;
-            addReport(node, reportMessage);
-            throw new RuntimeException();
-        }
-        else if (!secondChild.get("type").equals("int")){
-            String reportMessage = "Array access index must be of type Integer, but found " + secondChild.get("type") + " instead";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
-        }
-        node.put("type", typeName);
-        return null;
-    }
-
-
-    private String getLength(JmmNode node, String method) {
-        JmmNode object = node.getJmmChild(0);
-        if (object.getAttributes().contains("array")) {
-            node.put("type", "int");
-            return null;
-        }
-        String objectType = node.getJmmChild(0).get("type");
-        String reportMessage = "Expected type array but found " + objectType + " instead";
-        addReport(node, reportMessage);
-       throw new RuntimeException();
-    }
-
-
     private String binaryOp(JmmNode node, String s) {
-        JmmNode leftChild = node.getJmmChild(0);
-        JmmNode rightChild = node.getJmmChild(1);
-        if (node.get("op").equals("&&") || node.get("op").equals("||")) {
-            if (!nodeIsOfType(leftChild, false, "boolean")) {
-                String leftChildType = leftChild.get("type");
-                if(leftChild.getAttributes().contains("array"))
+        JmmNode leftOperand = node.getJmmChild(0);
+        JmmNode rightOperand = node.getJmmChild(1);
+        if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
+            if (!nodeIsOfType(leftOperand, false, "boolean")) {
+                String leftChildType = leftOperand.get("type");
+                if(leftOperand.getAttributes().contains("array"))
                     leftChildType += "[]";
                 String reportMessage = "Operand must be of type boolean, but found " + leftChildType + " instead";
                 addReport(node, reportMessage);
                 throw new RuntimeException();
-            } else if (!nodeIsOfType(rightChild, false, "boolean")) {
-                String rightChildType = rightChild.get("type");
-                if(rightChild.getAttributes().contains("array"))
+            }
+            else if (!nodeIsOfType(rightOperand, false, "boolean")) {
+                String rightChildType = rightOperand.get("type");
+                if(rightOperand.getAttributes().contains("array"))
                     rightChildType += "[]";
                 String reportMessage = "Operand must be of type boolean, but found " + rightChildType + " instead";
                 addReport(node, reportMessage);
                 throw new RuntimeException();
             }
             else
-                node.put("type", "boolean");    // both operands are boolean
+                node.put("type", "boolean");    //both operands are boolean
         }
         else {
-            String type = leftChild.get("type");
-            if(!type.equals(rightChild.get("type"))){
+            String type = leftOperand.get("type");
+            if(!type.equals(rightOperand.get("type"))){
                 String reportMessage = "Operands must be of the same type";
                 addReport(node, reportMessage);
                 throw new RuntimeException();
             }
-            else if(leftChild.getAttributes().contains("array") || rightChild.getAttributes().contains("array")){
+            else if(leftOperand.getAttributes().contains("array") || rightOperand.getAttributes().contains("array")){
                 String reportMessage = "Array cannot be used in arithmetic operations";
                 addReport(node, reportMessage);
                 throw new RuntimeException();
@@ -235,6 +189,52 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         }
         node.put("type", type);
         return null;
+    }
+
+
+    private String createArray(JmmNode node, String s) {
+        JmmNode sizeOfArray = node.getJmmChild(0);
+        if (nodeIsOfType(sizeOfArray, false, "int")) {
+            node.put("type", "int");
+            return null;
+        }
+        String sizeOfArrayType = node.get("type");
+        if(sizeOfArray.getAttributes().contains("array"))
+            sizeOfArrayType += "[]";
+        String reportMessage = "Size of array must be an Integer, type " + sizeOfArrayType + " found instead";
+        addReport(node, reportMessage);
+        throw new RuntimeException();
+    }
+
+    private String arrayAccess(JmmNode node, String s) {
+        JmmNode firstChild = node.getJmmChild(0);
+        JmmNode index = node.getJmmChild(1);
+        Type firstChildType = checkVariableIsDeclared(firstChild, "value").a.getType();
+        String typeName = firstChildType.getName();
+        if(!firstChildType.isArray()){
+            String reportMessage = "Array access can only be done over an array, but found " + typeName;
+            addReport(node, reportMessage);
+            throw new RuntimeException();
+        }
+        else if (!index.get("type").equals("int")){
+            String reportMessage = "Array access index must be of type Integer, but found " + index.get("type") + " instead";
+            addReport(node, reportMessage);
+            throw new RuntimeException();
+        }
+        node.put("type", typeName);
+        return null;
+    }
+
+    private String getLength(JmmNode node, String method) {
+        JmmNode object = node.getJmmChild(0);
+        if (object.getAttributes().contains("array")) {
+            node.put("type", "int");
+            return null;
+        }
+        String objectType = node.getJmmChild(0).get("type");
+        String reportMessage = "Expected type array but found " + objectType + " instead";
+        addReport(node, reportMessage);
+       throw new RuntimeException();
     }
 
     private String loop(JmmNode node, String s) {
@@ -259,8 +259,12 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         if(exp.getKind().equals("This")){
             String className = symbolTable.getClassName();
             String superName = symbolTable.getSuper();
-            if(varType.equals(className) || varType.equals(superName))
+            if(varType.equals(className) || varType.equals(superName)){     // if the current class is the type of the variable that "this" is assigned to or if the current class extends the type of the variable
+                node.put("type", className);
+                if(varType.isArray())
+                    node.put("array", "true");
                 return null;
+            }
             else{
                 String reportMessage = "Can't assign \"this\" keyword to " + varType.getName();
                 addReport(node, reportMessage);
@@ -271,7 +275,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             boolean isArray = varType.isArray();
             String varTypeName = varType.getName();
             String expType = exp.get("type");
-            if (nodeIsOfType(exp, isArray, varTypeName)) {
+            if (nodeIsOfType(exp, isArray, varTypeName)) {  //they have the same type
                 node.put("type", varTypeName);
                 if (isArray) {
                     node.put("array", "true");
@@ -362,7 +366,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         String type = node.getJmmChild(0).get("typeDeclaration");
         Boolean isArray = node.getJmmChild(0).getObject("isArray").equals(true);
         if(nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), isArray, type)){
-            String typeReturn = node.getJmmChild(node.getNumChildren()-1).get("type");
+            String typeReturn = node.getJmmChild(node.getNumChildren()-1).get("type");  //last child of the node (return expression)
             Boolean isArrayReturn = node.getJmmChild(node.getNumChildren()-1).getAttributes().contains("array");
             node.put("type", typeReturn);
             if(isArrayReturn) {
