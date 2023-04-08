@@ -99,7 +99,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String right = visit(jmmNode.getJmmChild(1), s);
         String newTempVar="t"+this.numTemVars++;
         String type=Uteis.typeOllir(jmmNode);
-        String typeOp=jmmNode.getJmmChild(0).get("type");
+        String typeOp=Uteis.typeOllir(jmmNode.getJmmChild(0));
         code+=String.format("%s.%s :=.%s %s %s.%s %s;\n",
                 newTempVar,
                 type,
