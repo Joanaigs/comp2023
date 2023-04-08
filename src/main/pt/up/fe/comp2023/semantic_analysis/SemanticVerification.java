@@ -146,12 +146,31 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             throw new RuntimeException();
         }
         if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
-            String type = leftOperand.get("type");
+            //se for permitido operação && entre inteiros fica como em baixo
+            /*String type = leftOperand.get("type");
             if(!type.equals(rightOperand.get("type"))){
                 String reportMessage = "Operands must be of the same type";
                 addReport(node, reportMessage);
                 throw new RuntimeException();
             }
+                node.put("type", "boolean");    //both operands are boolean*/
+            if (!nodeIsOfType(leftOperand, false, "boolean")) {
+                String leftChildType = leftOperand.get("type");
+                if(leftOperand.getAttributes().contains("array"))
+                    leftChildType += "[]";
+                String reportMessage = "Operand must be of type boolean, but found " + leftChildType + " instead";
+                addReport(node, reportMessage);
+                throw new RuntimeException();
+            }
+            else if (!nodeIsOfType(rightOperand, false, "boolean")) {
+                String rightChildType = rightOperand.get("type");
+                if(rightOperand.getAttributes().contains("array"))
+                    rightChildType += "[]";
+                String reportMessage = "Operand must be of type boolean, but found " + rightChildType + " instead";
+                addReport(node, reportMessage);
+                throw new RuntimeException();
+            }
+            else
                 node.put("type", "boolean");    //both operands are boolean
         }
         else {
