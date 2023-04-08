@@ -67,7 +67,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             return  String.format("%s.%s", newTempVar, Uteis.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("PARAM")){
-            return  String.format("$%d.%s.%s",symbolTable.getSymbolIndex(s, varName), varName, Uteis.typeOllir(info.a.getType()));
+            return  String.format("%s.%s",varName, Uteis.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("LOCAL")){
             return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
@@ -160,7 +160,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             return String.format("%s[%s].i32", newTempVar, arrayIdx);
         }
         else if (info.b.equals("PARAM")) {
-            return String.format("$%d.%s[%s].i32", symbolTable.getSymbolIndex(s, name), name, arrayIdx);
+            return String.format("%s[%s].i32", name, arrayIdx);
         }
         else if (info.b.equals("IMPORT")) {
             throw new RuntimeException("Class cannot be accessed as an array");
