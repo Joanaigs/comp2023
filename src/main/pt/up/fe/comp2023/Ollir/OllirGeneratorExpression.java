@@ -119,19 +119,24 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     private String visitBinaryOp(JmmNode jmmNode, String s) {
         String left = visit(jmmNode.getJmmChild(0), s);
         String right = visit(jmmNode.getJmmChild(1), s);
+        String type=Uteis.typeOllir(jmmNode);
         if(!(jmmNode.getJmmParent().getKind().equals("Assignment") && !symbolTable.getSymbol(s, jmmNode.getJmmParent().get("var")).b.equals("FIELD"))){
             String newTempVar="t"+this.numTemVars++;
-            code+=String.format("%s.i32 :=.i32 %s %s.i32 %s;\n", //mudar i32 por node.type
+            code+=String.format("%s.%s:=.%s %s %s.%s %s;\n",
                     newTempVar,
+                    type,
+                    type,
                     left,
                     jmmNode.get("op"),
+                    type,
                     right
             );
             return newTempVar+".i32";
         }
-        return String.format("%s %s.i32 %s", //mudar i32 por node.type
+        return String.format("%s %s.%s %s",
                 left,
                 jmmNode.get("op"),
+                type,
                 right
         );
 
@@ -168,17 +173,18 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     }*/
 
     private String visitCallFnc(JmmNode jmmNode, String s) {
+        String type=Uteis.typeOllir(jmmNode);
         String obj= visit(jmmNode.getJmmChild(0), s);
         if(!jmmNode.getJmmParent().getKind().equals("ExprStmt")){
             obj= visit(jmmNode.getJmmChild(0), s);
             String newTempVar="t"+this.numTemVars++;
-            code+=(String.format("%s.%s :=.%s ", newTempVar, "i32", "i32"));//substituir o i32 por type of the node
+            code+=(String.format("%s.%s :=.%s ", newTempVar, type, type));
             code+=String.format("invokevirtual(%s, \"%s\"",obj, jmmNode.get("value"));
             for(int i=1; i<jmmNode.getNumChildren(); i++){
                 code+=", "+ visit(jmmNode.getJmmChild(i), s);
             }
-            code += String.format(").%s;\n", "i32"); //change
-            return String.format("%s.%s", newTempVar, "i32");
+            code += String.format(").%s;\n", type);
+            return String.format("%s.%s", newTempVar, type);
         }
         else{
             if(!obj.equals("this"))
@@ -187,7 +193,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             for(int i=1; i<jmmNode.getNumChildren(); i++){
                 code+=", "+ visit(jmmNode.getJmmChild(i), s);
             }
-            code += String.format(").%s;\n", "i32"); //change
+            code += String.format(").%s;\n", type);
         }
         return "";
     }
