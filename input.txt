@@ -3,9 +3,18 @@ import io;
 class OllirToJasminInvoke {
 
     public static void main(String[] args) {
-        OllirToJasminInvoke test;
 
-        test = new OllirToJasminInvoke();
+    }
+
+    public int foo() {
+        int a;
+        int b;
+        boolean c;
+
+
+        c=a < b;
+
+        return 1;
     }
 
 }
