@@ -17,7 +17,7 @@ import static pt.up.fe.specs.util.SpecsStrings.parseInt;
 
 public class SemanticVerification extends PostorderJmmVisitor<String, String> {
     private final SymbolTable symbolTable;
-    private List<Report> reports;
+    private final List<Report> reports;
 
     public SemanticVerification(SymbolTable symbolTable, List<Report> reports) {
         this.reports = reports;
@@ -259,7 +259,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         if(exp.getKind().equals("This")){
             String className = symbolTable.getClassName();
             String superName = symbolTable.getSuper();
-            if(varType.equals(className) || varType.equals(superName)){     // if the current class is the type of the variable that "this" is assigned to or if the current class extends the type of the variable
+            if(varType.getName().equals(className) || varType.getName().equals(superName)){     // if the current class is the type of the variable that "this" is assigned to or if the current class extends the type of the variable
                 node.put("type", className);
                 if(varType.isArray())
                     node.put("array", "true");
@@ -364,10 +364,10 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
 
     private String checkReturn(JmmNode node, String s) {
         String type = node.getJmmChild(0).get("typeDeclaration");
-        Boolean isArray = node.getJmmChild(0).getObject("isArray").equals(true);
+        boolean isArray = node.getJmmChild(0).getObject("isArray").equals(true);
         if(nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), isArray, type)){
             String typeReturn = node.getJmmChild(node.getNumChildren()-1).get("type");  //last child of the node (return expression)
-            Boolean isArrayReturn = node.getJmmChild(node.getNumChildren()-1).getAttributes().contains("array");
+            boolean isArrayReturn = node.getJmmChild(node.getNumChildren()-1).getAttributes().contains("array");
             node.put("type", typeReturn);
             if(isArrayReturn) {
                 node.put("array", "true");
