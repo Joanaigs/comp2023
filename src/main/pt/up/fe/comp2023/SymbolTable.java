@@ -85,6 +85,7 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
                 return new Pair<>(new Symbol(new Type(varName, false), varName), "IMPORT");
             }
         }
+
         return null;
     }
 
@@ -104,6 +105,17 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
 
     public Method getMethod (String method) {
         return methods.get(method);
+    }
+
+    public int getSymbolIndex(String methodName, String varName) {
+        LinkedList<SymbolExtended> Parameters = new LinkedList<>(methods.get(methodName).getParameters());
+        for (int i = 0; i < Parameters.size(); i++) {
+            SymbolExtended symbol = Parameters.get(i);
+            if (symbol.getName().equals(varName)) {
+                return i+1;
+            }
+        }
+        return 0;
     }
 
 }

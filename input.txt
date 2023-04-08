@@ -1,21 +1,11 @@
-import B;
+import io;
 
-class ObjectAssignmentFail {
+class OllirToJasminInvoke {
 
     public static void main(String[] args) {
+        OllirToJasminInvoke test;
 
+        test = new OllirToJasminInvoke();
     }
 
-    public ObjectAssignmentFail foo() {
-        ObjectAssignmentFail a;
-        B b;
-
-        a = new ObjectAssignmentFail();
-        b = new B();
-
-        // ObjectAssignmentFail does not extend B
-        a = b;
-
-        return a;
-    }
 }

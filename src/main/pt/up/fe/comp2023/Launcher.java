@@ -7,8 +7,9 @@ import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
-import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp2023.Ollir.Optimization;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -48,6 +49,11 @@ public class Launcher {
         SemanticAnalysis semanticAnalysis= new SemanticAnalysis();
         JmmSemanticsResult jmmSemanticsResult= semanticAnalysis.semanticAnalysis(parserResult);
         System.out.println(jmmSemanticsResult.getSymbolTable().print());
+
+        //ollir
+        Optimization optimizer = new Optimization();
+        OllirResult ollir = optimizer.toOllir(jmmSemanticsResult);
+        System.out.println(ollir.getOllirCode());
         // ... add remaining stages
     }
 
