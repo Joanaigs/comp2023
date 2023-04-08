@@ -19,9 +19,9 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     private List<String> imports = new LinkedList<>();
     private String superName=null;
     private String className= "";//nome da classe
-    private Map<String, Symbol> fields = new HashMap<String, Symbol>();
-    private Map<String, Method> methods = new HashMap<String, Method>();
-    private List<Report> reports = new LinkedList<>();;
+    private Map<String, Symbol> fields = new HashMap<>();
+    private Map<String, Method> methods = new HashMap<>();
+    private List<Report> reports = new LinkedList<>();
 
     public SymbolTable build(pt.up.fe.comp.jmm.ast.JmmNode root_node) {
         this.visit(root_node, null);
@@ -72,12 +72,12 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     }
 
     private String importDeclaration ( JmmNode jmmNode , String s) {
-        String imp= "";
+        StringBuilder imp= new StringBuilder();
         var lib =  (List<?>) jmmNode.getObject("library");
         for (int i =0; i<lib.size()-1; i++){
-            imp+= lib.get(i)+ ".";
+            imp.append(lib.get(i)).append(".");
         }
-        imports.add(imp+lib.get(lib.size()-1));
+        imports.add(imp.toString() +lib.get(lib.size()-1));
         return null;
     }
 
@@ -107,7 +107,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
             return null;
         }
         String nameType =jmmNode.getJmmChild(0).get("typeDeclaration");
-        Boolean isArray=false;
+        boolean isArray=false;
         if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
             isArray=true;
         Method method = new Method(jmmNode.get("methodName"), new Type(nameType, isArray));
@@ -120,7 +120,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
 
     private String fieldDeclaration ( JmmNode jmmNode , String s) {
         String nameType = jmmNode.getJmmChild(0).get("typeDeclaration");
-        Boolean isArray=false;
+        boolean isArray=false;
         if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
             isArray=true;
         Type type= new Type(nameType, isArray);
@@ -151,7 +151,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
 
     private String varDeclaration ( JmmNode jmmNode , String s) {
         String nameType =jmmNode.getJmmChild(0).get("typeDeclaration");
-        Boolean isArray=false;
+        boolean isArray=false;
         if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
             isArray=true;
         Type type= new Type(nameType, isArray);
@@ -180,6 +180,6 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     }
 
     private void addReport(JmmNode node, String message) {
-        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("line")), Integer.parseInt(node.get("column")), message));
+        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), message));
     }
 }
