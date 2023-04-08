@@ -196,6 +196,7 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         JmmNode sizeOfArray = node.getJmmChild(0);
         if (nodeIsOfType(sizeOfArray, false, "int")) {
             node.put("type", "int");
+            node.put("array", "true");
             return null;
         }
         String sizeOfArrayType = node.get("type");
