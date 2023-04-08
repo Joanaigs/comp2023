@@ -42,7 +42,7 @@ fieldDeclaration
     ;
 
 type locals[boolean isArray=false, boolean isPrimitive=true]
-    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')array='[' ']' {$isArray=true;}
+    : typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char') array='[' ']' {$isArray=true;}
     | typeDeclaration=('byte'|'short'|'int'|'long'|'float'|'double'|'boolean'|'char')
     | typeDeclaration='String' {$isPrimitive=false;}
     | typeDeclaration=ID {$isPrimitive=false;}
@@ -66,7 +66,7 @@ expression
     | '(' expression ')'                                                  #ParenthesisExpr
     | expression '[' expression ']'                                       #ArrayExp
     | expression '.' value=ID '(' ( expression ( ',' expression )* )? ')' #CallFnc
-    | expression '.' 'length'                                             #GetLenght
+    | expression '.' 'length'                                             #GetLength
     | expression op=('++'|'--')                                           #PostfixOp
     | op=('++'|'--'|'+'|'-') expression                                   #UnaryOp
     | expression op=( '*' | '/' | '%') expression                         #BinaryOp

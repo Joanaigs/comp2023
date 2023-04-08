@@ -46,4 +46,6 @@ public class Method {
     public void addVariable(SymbolExtended variable) {
         this.variables.add(variable);
     }
+
+    public boolean hasVariable(SymbolExtended variable) {return this.variables.contains(variable);}
 }

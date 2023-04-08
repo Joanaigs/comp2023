@@ -3,24 +3,27 @@ package pt.up.fe.comp2023;
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
+import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable{
-    final String superName; //nome da classe que está a "extender"
-    final String className;//nome da classe
-    final List<String> imports; //imports do ficheiro
-    final Map<String, Symbol> fields;
-    final Map<String, Method> methods;
+    private final String superName; //nome da classe que está a "extender"
+    private final String className;//nome da classe
+    private final List<String> imports; //imports do ficheiro
+    private final Map<String, Symbol> fields;
+    private final Map<String, Method> methods;
+    private final List<Report> reports;
 
-    public SymbolTable(String superName, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods) {
+    public SymbolTable(String superName, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods, List<Report> reports) {
         this.superName = superName;
         this.className = className;
         this.imports = imports;
         this.fields = fields;
         this.methods = methods;
+        this.reports = reports;
     }
 
 
@@ -60,7 +63,6 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
         return new LinkedList<>(methods.get(s).getLocalVariables());
     }
 
-
     public Pair<Symbol, String> getSymbol(String methodName, String varName) {
         for(Symbol symbol:fields.values()){
             if(symbol.getName().equals(varName)){
@@ -86,6 +88,25 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
 
         return null;
     }
+
+    public Boolean isImported(String symbol) {
+        for (var importPath: imports) {
+            String[] parts = importPath.split("-");
+            if (parts[parts.length-1].equals(symbol)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Boolean hasMethod (String method) {
+        return methods.containsKey(method);
+    }
+
+    public Method getMethod (String method) {
+        return methods.get(method);
+    }
+
     public int getSymbolIndex(String methodName, String varName) {
         LinkedList<SymbolExtended> Parameters = new LinkedList<>(methods.get(methodName).getParameters());
         for (int i = 0; i < Parameters.size(); i++) {
@@ -96,4 +117,5 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
         }
         return 0;
     }
+
 }
