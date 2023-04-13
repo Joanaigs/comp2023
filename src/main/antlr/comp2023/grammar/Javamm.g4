@@ -34,7 +34,7 @@ instanceMethodDeclaration
     : access=('public'|'private'|'protected')?  type methodName=ID '(' ( fieldDeclaration ( ','fieldDeclaration )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
 ;
 mainMethodDeclaration
-    : ('public')? 'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
+    : (access='public')? 'static' 'void' methodName='main' '(' 'String' '[' ']' var=ID ')' '{' ( varDeclaration )* ( statement )* '}'
     ;
 
 fieldDeclaration

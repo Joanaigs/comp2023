@@ -2,13 +2,9 @@ package pt.up.fe.comp2023.Ollir;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
-import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2023.SymbolTable;
-
-
-import java.util.StringJoiner;
 
 
 public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
@@ -44,7 +40,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     private String visitReturn(JmmNode jmmNode, String s) {
         String ret = visit(jmmNode.getJmmChild(0), s);
         code+=String.format("ret.%s %s;\n",
-                Uteis.typeOllir(symbolTable.getReturnType(s)),
+                Utils.typeOllir(symbolTable.getReturnType(s)),
                 ret
         );
         return "";
@@ -62,18 +58,18 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         Pair<Symbol, String> info= symbolTable.getSymbol(s, varName);
         if(info.b.equals("FIELD")){
             String newTempVar="t"+this.numTemVars++;
-            String type = Uteis.typeOllir(info.a.getType());
+            String type = Utils.typeOllir(info.a.getType());
             code+=String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n", newTempVar, type, type, varName, type, type);
-            return  String.format("%s.%s", newTempVar, Uteis.typeOllir(info.a.getType()));
+            return  String.format("%s.%s", newTempVar, Utils.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("PARAM")){
-            return  String.format("$%d.%s.%s",symbolTable.getSymbolIndex(s, varName), varName, Uteis.typeOllir(info.a.getType()));
+            return  String.format("$%d.%s.%s",symbolTable.getSymbolIndex(s, varName), varName, Utils.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("LOCAL")){
-            return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
+            return  String.format("%s.%s", varName, Utils.typeOllir(info.a.getType()));
         }
         else if(info.b.equals("IMPORT")){
-            return  String.format("%s.%s", varName, Uteis.typeOllir(info.a.getType()));
+            return  String.format("%s.%s", varName, Utils.typeOllir(info.a.getType()));
         }
         return  null;
     }
@@ -98,14 +94,15 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String left = visit(jmmNode.getJmmChild(0), s);
         String right = visit(jmmNode.getJmmChild(1), s);
         String newTempVar="t"+this.numTemVars++;
-        String type=Uteis.typeOllir(jmmNode);
+        String type= Utils.typeOllir(jmmNode);
+        String typeOp= Utils.typeOllir(jmmNode.getJmmChild(0));
         code+=String.format("%s.%s :=.%s %s %s.%s %s;\n",
                 newTempVar,
                 type,
                 type,
                 left,
                 jmmNode.get("op"),
-                type,
+                typeOp,
                 right
         );
         return newTempVar+".i32";
@@ -120,7 +117,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     }
 
     private String visitCallFnc(JmmNode jmmNode, String s) {
-        String type=Uteis.typeOllir(jmmNode);
+        String type= Utils.typeOllir(jmmNode);
         String obj= visit(jmmNode.getJmmChild(0), s);
         String _return = "";
         if(!jmmNode.getJmmParent().getKind().equals("ExprStmt")){
@@ -153,7 +150,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String name =jmmNode.getJmmChild(0).get("value");
         String index = visit(jmmNode.getJmmChild(1), s);
         String arrayIdx = index;
-        if (!Uteis.LiteralorVariable(index)) {
+        if (!Utils.LiteralorVariable(index)) {
             arrayIdx  = "t"+this.numTemVars++ + ".i32";
             code+=String.format("%s :=.i32 %s;\n", arrayIdx, index);
         }
@@ -175,7 +172,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     }
 
     private String visitParenthesisExpr(JmmNode jmmNode, String s) {
-        return visit(jmmNode.getJmmChild(0));
+        return visit(jmmNode.getJmmChild(0), s);
     }
 
 

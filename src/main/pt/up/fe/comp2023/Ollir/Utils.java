@@ -3,7 +3,7 @@ package pt.up.fe.comp2023.Ollir;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
-public class Uteis {
+public class Utils {
     public static String typeOllir(Type type) {
         String ollirType = "";
         if (type.isArray()) {

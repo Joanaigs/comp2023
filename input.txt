@@ -1,15 +1,20 @@
-class ArrayInWhileCondition {
+import io;
+
+class OllirToJasminInvoke {
 
     public static void main(String[] args) {
 
     }
 
     public int foo() {
-        int[] a;
-        a = new int[2];
+        int a;
+        int b;
+        boolean c;
 
-        while (2) {
-        }
-        return 0;
+
+        c=a < b;
+
+        return true && (a<b);
     }
+
 }
