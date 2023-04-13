@@ -105,7 +105,7 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
     public static String getFields(List<Symbol> fields) {
         String result="";
         for (var field: fields) {
-            result+= ".field private "+ field.getName()+'.'+ Utils.typeOllir(field.getType() )+";\n";
+            result+= ".field "+ field.getName()+'.'+ Utils.typeOllir(field.getType() )+";\n";
         }
         result+="\n";
         return result;
