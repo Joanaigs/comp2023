@@ -137,8 +137,11 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
 
     private String visitInstanceMethodDeclaration ( JmmNode jmmNode , String s) {
         String methodName = jmmNode.get("methodName");
-        String access= jmmNode.get("access");
-        ollirCode+=".method "+access+" "+methodName+"(";
+        if(jmmNode.hasAttribute("access")){
+            String access= jmmNode.get("access");
+            ollirCode+=".method "+access+" "+methodName+"(";        }
+        else
+            ollirCode+=".method "+methodName+"(";
         List<Symbol> parameters= symbolTable.getParameters(methodName);
         StringJoiner sj = new StringJoiner(", ");
 
@@ -164,8 +167,12 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
 
 
     private String visitMainMethodDeclaration ( JmmNode jmmNode , String s) {
-        ollirCode+=".method public static main("+jmmNode.get("var")+".array.String).V{\n";
-
+        if(jmmNode.hasAttribute("access")){
+            String access= jmmNode.get("access");
+            ollirCode+=".method "+access+" static main("+jmmNode.get("var")+".array.String).V{\n";
+        }
+        else
+            ollirCode+=".method static main("+jmmNode.get("var")+".array.String).V{\n";
         for (JmmNode child: jmmNode.getChildren()) {
             visit(child, "main");
         }
