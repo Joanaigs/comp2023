@@ -1,11 +1,15 @@
-import io;
-
-class OllirToJasminInvoke {
+class ArrayInWhileCondition {
 
     public static void main(String[] args) {
-        OllirToJasminInvoke test;
 
-        test = new OllirToJasminInvoke();
     }
 
+    public int foo() {
+        int[] a;
+        a = new int[2];
+
+        while (2) {
+        }
+        return 0;
+    }
 }

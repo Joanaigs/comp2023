@@ -15,11 +15,11 @@ import java.util.List;
 
 import static pt.up.fe.specs.util.SpecsStrings.parseInt;
 
-public class SemanticVerification extends PostorderJmmVisitor<String, String> {
+public class TypeVerification extends PostorderJmmVisitor<String, String> {
     private final SymbolTable symbolTable;
     private final List<Report> reports;
 
-    public SemanticVerification(SymbolTable symbolTable, List<Report> reports) {
+    public TypeVerification(SymbolTable symbolTable, List<Report> reports) {
         this.reports = reports;
         this.symbolTable = symbolTable;
     }
@@ -52,17 +52,18 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         return null;
     }
 
-    private void addReport(JmmNode node, String message) {
-        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, parseInt(node.get("lineStart")), parseInt(node.get("colStart")), message));
+
+    private Report createReport(JmmNode node, String message) {
+        return new Report(ReportType.ERROR, Stage.SEMANTIC, parseInt(node.get("lineStart")), parseInt(node.get("colStart")), message);
     }
 
      private boolean nodeIsOfType(JmmNode node, boolean isArray, String type) {
         String nodeType = node.get("type");
         if (node.getAttributes().contains("imported"))
             return true;
-        if (symbolTable.getSuper() != null && symbolTable.getSuper().equals(type) && symbolTable.getClassName().equals(nodeType))
+        if (this.symbolTable.getSuper() != null && this.symbolTable.getSuper().equals(type) && this.symbolTable.getClassName().equals(nodeType))
             return true;
-        if (symbolTable.isImported(type) && symbolTable.isImported(nodeType))
+        if (this.symbolTable.isImported(type) && this.symbolTable.isImported(nodeType))
             return true;
         if (node.getAttributes().contains("array") == isArray)
             return type.equals(nodeType);
@@ -72,11 +73,12 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
     private Pair<Symbol, String> checkVariableIsDeclared(JmmNode node, String variable){
         String scope = node.get("scope");
         String var = node.get(variable);
-        Pair<Symbol, String> symbolStringPair = symbolTable.getSymbol(scope, var);
+        Pair<Symbol, String> symbolStringPair = this.symbolTable.getSymbol(scope, var);
         if (symbolStringPair == null) {
-            String messageReport = var + " not defined";
-            addReport(node, messageReport);
-            throw new RuntimeException();
+            String reportMessage = var + " not defined";
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
         return symbolStringPair;
     }
@@ -104,11 +106,12 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         String scope = node.get("scope");
         if(scope.equals("main")){
             String reportMessage = "this keyword is not allowed in main";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
         else {
-            node.put("type", symbolTable.getClassName());
+            node.put("type", this.symbolTable.getClassName());
             return null;
         }
     }
@@ -126,60 +129,59 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
 
     private String negation(JmmNode node, String s) {
         JmmNode exp = node.getJmmChild(0);
-        if (!nodeIsOfType(exp, false, "boolean")) {
-            String expType = exp.get("type");
-            if(exp.getAttributes().contains("array"))
-                expType += "[]";
-            String reportMessage = "Type must be boolean to negate, " + expType + " found instead";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+        String expType = exp.get("type");
+        if(exp.getAttributes().contains("array"))
+            expType += "[]";
+        else{
+            if (expType.equals("boolean")) {
+                return null;
+            }
         }
-        return null;
+        String reportMessage = "Type must be boolean to negate, " + expType + " found instead";
+        Report report = createReport(node, reportMessage);
+        this.reports.add(report);
+        throw new CompilerException(report);
     }
 
     private String binaryOp(JmmNode node, String s) {
         JmmNode leftOperand = node.getJmmChild(0);
         JmmNode rightOperand = node.getJmmChild(1);
         if (leftOperand.getAttributes().contains("array") || rightOperand.getAttributes().contains("array")) {
-            String reportMessage = "Operand can't be array";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+            String reportMessage = "Operands can't be array";
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
-        if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
-            if (!nodeIsOfType(leftOperand, false, "boolean")) {
-                String leftChildType = leftOperand.get("type");
-                if(leftOperand.getAttributes().contains("array"))
-                    leftChildType += "[]";
-                String reportMessage = "Operand must be of type boolean, but found " + leftChildType + " instead";
-                addReport(node, reportMessage);
-                throw new RuntimeException();
-            }
-            else if (!nodeIsOfType(rightOperand, false, "boolean")) {
-                String rightChildType = rightOperand.get("type");
-                if(rightOperand.getAttributes().contains("array"))
-                    rightChildType += "[]";
-                String reportMessage = "Operand must be of type boolean, but found " + rightChildType + " instead";
-                addReport(node, reportMessage);
-                throw new RuntimeException();
-            }
-            else
-                node.put("type", "boolean");    //both operands are boolean
-        }
-        else {
-            String type = leftOperand.get("type");
-            if(!type.equals(rightOperand.get("type"))){
-                String reportMessage = "Operands must be of the same type";
-                addReport(node, reportMessage);
-                throw new RuntimeException();
+        else{
+            String leftOperandType = leftOperand.get("type");
+            String rightOperandType = rightOperand.get("type");
+            if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
+                if (leftOperandType.equals("boolean") && rightOperandType.equals("boolean") && !leftOperand.getAttributes().contains("array") && !rightOperand.getAttributes().contains("array")) {
+                    node.put("type", "boolean");    //both operands are boolean and are not arrays
+                    return null;
+                } else {
+                    String reportMessage = "Both operands must be of type boolean";
+                    Report report = createReport(node, reportMessage);
+                    this.reports.add(report);
+                    throw new CompilerException(report);
+                }
             }
             else {
-                if (node.get("op").equals("<") || node.get("op").equals(">") || node.get("op").equals("<=") || node.get("op").equals(">=") || node.get("op").equals("==") || node.get("op").equals("!=")) {
-                    node.put("type", "boolean");
-                } else
-                    node.put("type", type);
+                if(!leftOperandType.equals(rightOperandType)){
+                    String reportMessage = "Operands must be of the same type";
+                    Report report = createReport(node, reportMessage);
+                    this.reports.add(report);
+                    throw new CompilerException(report);
+                }
+                else {
+                    if (node.get("op").equals("<") || node.get("op").equals(">") || node.get("op").equals("<=") || node.get("op").equals(">=") || node.get("op").equals("==") || node.get("op").equals("!=")) {
+                        node.put("type", "boolean");
+                    } else
+                        node.put("type", leftOperandType);
+                }
             }
+            return null;
         }
-        return null;
     }
 
     private String unaryOp(JmmNode node, String s) {
@@ -187,13 +189,15 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         String type = child.get("type");
         if (child.getAttributes().contains("array")) {
             String reportMessage = "Operand can't be array";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
         if (type.equals("boolean")){
             String reportMessage = "Operand can't be of type boolean";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
         node.put("type", type);
         return null;
@@ -211,8 +215,9 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         if(sizeOfArray.getAttributes().contains("array"))
             sizeOfArrayType += "[]";
         String reportMessage = "Size of array must be an Integer, type " + sizeOfArrayType + " found instead";
-        addReport(node, reportMessage);
-        throw new RuntimeException();
+        Report report = createReport(node, reportMessage);
+        this.reports.add(report);
+        throw new CompilerException(report);
     }
 
     private String arrayAccess(JmmNode node, String s) {
@@ -222,13 +227,15 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         String typeName = firstChildType.getName();
         if(!firstChildType.isArray()){
             String reportMessage = "Array access can only be done over an array, but found " + typeName;
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
-        else if (!nodeIsOfType(index, false, "int")){
-            String reportMessage = "Array access index must be of type Integer, but found " + index.get("type") + " instead";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+        else if (!index.get("type").equals("int") || index.getAttributes().contains("array")){
+            String reportMessage = "Array access index must be of type int";
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
         node.put("type", typeName);
         return null;
@@ -242,39 +249,42 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
         }
         String objectType = node.getJmmChild(0).get("type");
         String reportMessage = "Expected type array but found " + objectType + " instead";
-        addReport(node, reportMessage);
-       throw new RuntimeException();
+        Report report = createReport(node, reportMessage);
+        this.reports.add(report);
+        throw new CompilerException(report);
     }
 
     private String loop(JmmNode node, String s) {
         JmmNode condition = node.getJmmChild(0);
         if (condition.getAttributes().contains("array")){
-            String reportMessage = "Conditions must be of boolean type";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+            String reportMessage = "Conditions can't be array";
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
-        else if (nodeIsOfType(condition, false, "boolean")){
+        else if (condition.get("type").equals("boolean")){
             node.put("type", "boolean");
             return null;
         }
         String reportMessage = "Conditions must be of boolean type";
-        addReport(node, reportMessage);
-        throw new RuntimeException();
+        Report report = createReport(node, reportMessage);
+        this.reports.add(report);
+        throw new CompilerException(report);
     }
 
     private String assignment(JmmNode node, Integer child) {
         Type varType = checkVariableIsDeclared(node, "var").a.getType();
         JmmNode exp = node.getJmmChild(child);
         if(exp.getKind().equals("This")){
-            String className = symbolTable.getClassName();
-            String superName = symbolTable.getSuper();
+            String className = this.symbolTable.getClassName();
+            String superName = this.symbolTable.getSuper();
             if(varType.getName().equals(className)){    // if the current class is the type of the variable that "this" is assigned to
                 node.put("type", className);
                 if(varType.isArray())
                     node.put("array", "true");
                 return null;
             }
-            else if(varType.getName().equals(superName)) {      // if the current class extends the type of the variable
+            else if(varType.getName().equals(superName)) {    // if the current class extends the type of the variable
                 node.put("type", superName);
                 if(varType.isArray())
                     node.put("array", "true");
@@ -282,8 +292,9 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             }
             else{
                 String reportMessage = "Can't assign \"this\" keyword to " + varType.getName();
-                addReport(node, reportMessage);
-                throw new RuntimeException();
+                Report report = createReport(node, reportMessage);
+                this.reports.add(report);
+                throw new CompilerException(report);
             }
         }
         else {
@@ -302,8 +313,9 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             if (isArray)
                 varTypeName += "[]";
             String reportMessage = "Can't assign " + expType + " to " + varTypeName;
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
     }
 
@@ -314,10 +326,11 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
 
     private String arrayAssignStm(JmmNode node, String s) {
         JmmNode idx = node.getJmmChild(0);
-        if(!idx.get("type").equals("int")){
+        if(!idx.get("type").equals("int") || idx.getAttributes().contains("array")){
             String reportMessage = "Array index must be of type integer";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
         else {
             assignment(node, 1);
@@ -328,18 +341,19 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
     private String fnCallOp(JmmNode node, String s) {
         String className = node.getJmmChild(0).get("type");
         String methodName = node.get("value");
-        if (className.equals(symbolTable.getClassName())) {  //method is part of the current class
-            if (!symbolTable.hasMethod(methodName)) {
-                if (symbolTable.getSuper() == null) {     //can extend another class
+        if (className.equals(this.symbolTable.getClassName())) {  //method is part of the current class
+            if (!this.symbolTable.hasMethod(methodName)) {
+                if (this.symbolTable.getSuper() == null) {     //can extend another class
                     String reportMessage = "Method does not exist";
-                    addReport(node, reportMessage);
-                    throw new RuntimeException();
+                    Report report = createReport(node, reportMessage);
+                    this.reports.add(report);
+                    throw new CompilerException(report);
                 } else {
                     node.put("type", className);
                     return null;
                 }
             }
-            List<Symbol> methodParameters = symbolTable.getParameters(methodName);     //check if method parameters and function arguments match
+            List<Symbol> methodParameters = this.symbolTable.getParameters(methodName);     //check if method parameters and function arguments match
             int numChildren = node.getNumChildren();
             List<JmmNode> argumentNodes = new ArrayList<>();
             if (numChildren > 1) {   // if it's not > 2, then the function has no arguments
@@ -349,49 +363,54 @@ public class SemanticVerification extends PostorderJmmVisitor<String, String> {
             }
             if (methodParameters.size() != argumentNodes.size()) {
                 String reportMessage = "Method parameters and function arguments don't match";
-                addReport(node, reportMessage);
-                throw new RuntimeException();
+                Report report = createReport(node, reportMessage);
+                this.reports.add(report);
+                throw new CompilerException(report);
             }
             for (int j = 0; j < methodParameters.size(); j++) {
                 Type paramType = methodParameters.get(j).getType();
                 if (!nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName())) {
                     String reportMessage = "Method parameters and function arguments don't match";
-                    addReport(node, reportMessage);
-                    throw new RuntimeException();
+                    Report report = createReport(node, reportMessage);
+                    this.reports.add(report);
+                    throw new CompilerException(report);
                 }
             }
-            Type methodReturn = symbolTable.getMethod(methodName).getReturnType();
+            Type methodReturn = this.symbolTable.getMethod(methodName).getReturnType();
             node.put("type", methodReturn.getName());
             if (methodReturn.isArray()) {
                 node.put("array", "true");
+                return null;
             }
-            return null;
-
-        } else if (!symbolTable.isImported(className)) {
-            String reportMessage = "Class is not defined";
-            addReport(node, reportMessage);
-            throw new RuntimeException();
         }
-        node.put("type", className);
-        node.put("imported", "true");
-        return null;
+        else if (this.symbolTable.isImported(className)) {
+            node.put("type", className);
+            node.put("imported", "true");
+            return null;
+        }
+        String reportMessage = "Method not defined";
+        Report report = createReport(node, reportMessage);
+        this.reports.add(report);
+        throw new CompilerException(report);
     }
 
     private String checkReturn(JmmNode node, String s) {
         String type = node.getJmmChild(0).get("typeDeclaration");
+        JmmNode returnNode = node.getJmmChild(node.getNumChildren()-1);
         boolean isArray = node.getJmmChild(0).getObject("isArray").equals(true);
-        if(nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), isArray, type)){
-            String typeReturn = node.getJmmChild(node.getNumChildren()-1).get("type");  //last child of the node (return expression)
-            boolean isArrayReturn = node.getJmmChild(node.getNumChildren()-1).getAttributes().contains("array");
+        if(nodeIsOfType(returnNode, isArray, type)){
+            String typeReturn = returnNode.get("type");  //last child of the node (return expression)
+            boolean isReturnArray = returnNode.getAttributes().contains("array");
             node.put("type", typeReturn);
-            if(isArrayReturn) {
+            if(isReturnArray) {
                 node.put("array", "true");
             }
             return null;
         }
         String reportMessage = "Incompatible return type";
-        addReport(node, reportMessage);
-        throw new RuntimeException();
+        Report report = createReport(node, reportMessage);
+        this.reports.add(report);
+        throw new CompilerException(report);
     }
 
 }
