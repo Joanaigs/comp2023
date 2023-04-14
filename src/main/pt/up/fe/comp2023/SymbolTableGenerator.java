@@ -9,23 +9,19 @@ import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SymbolTableGenerator extends AJmmVisitor<String, String> {
     private List<String> imports = new LinkedList<>();
     private String superName=null;
     private String className= "";//nome da classe
-    private Map<String, Symbol> fields = new HashMap<>();
-    private Map<String, Method> methods = new HashMap<>();
-    private List<Report> reports = new LinkedList<>();
+    private final Map<String, Symbol> fields = new HashMap<>();
+    private final Map<String, Method> methods = new HashMap<>();
+    private final List<Report> reports = new ArrayList<>();
 
     public SymbolTable build(pt.up.fe.comp.jmm.ast.JmmNode root_node) {
         this.visit(root_node, null);
-        return new SymbolTable(superName, className, imports, fields, methods, reports);
+        return new SymbolTable(superName, className, imports, fields, methods);
     }
 
     public List<Report> getReports() {return reports;}
