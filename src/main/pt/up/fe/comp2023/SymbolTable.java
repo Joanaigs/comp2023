@@ -15,15 +15,13 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
     private final List<String> imports; //imports do ficheiro
     private final Map<String, Symbol> fields;
     private final Map<String, Method> methods;
-    private final List<Report> reports;
 
-    public SymbolTable(String superName, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods, List<Report> reports) {
+    public SymbolTable(String superName, String className, List<String> imports, Map<String, Symbol> fields, Map<String, Method> methods) {
         this.superName = superName;
         this.className = className;
         this.imports = imports;
         this.fields = fields;
         this.methods = methods;
-        this.reports = reports;
     }
 
 

@@ -50,6 +50,9 @@ public class Launcher {
         JmmSemanticsResult jmmSemanticsResult= semanticAnalysis.semanticAnalysis(parserResult);
         System.out.println(jmmSemanticsResult.getSymbolTable().print());
 
+        // Check if there are semantic errors
+        TestUtils.noErrors(jmmSemanticsResult.getReports());
+
         //ollir
         Optimization optimizer = new Optimization();
         OllirResult ollir = optimizer.toOllir(jmmSemanticsResult);
