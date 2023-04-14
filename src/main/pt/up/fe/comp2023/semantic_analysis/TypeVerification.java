@@ -73,14 +73,7 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
     private Pair<Symbol, String> checkVariableIsDeclared(JmmNode node, String variable){
         String scope = node.get("scope");
         String var = node.get(variable);
-        Pair<Symbol, String> symbolStringPair = this.symbolTable.getSymbol(scope, var);
-        if (symbolStringPair == null) {
-            String reportMessage = var + " not defined";
-            Report report = createReport(node, reportMessage);
-            this.reports.add(report);
-            throw new CompilerException(report);
-        }
-        return symbolStringPair;
+        return this.symbolTable.getSymbol(scope, var);
     }
 
     private String integer(JmmNode node, String s) {
@@ -94,12 +87,21 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
     }
 
     private String id(JmmNode node, String s) {
-        Type type = checkVariableIsDeclared(node, "value").a.getType();
-        node.put("type", type.getName());
-        if (type.isArray()){
-            node.put("array", "true");
+        Pair<Symbol, String> var = checkVariableIsDeclared(node, "value");
+        if(var == null) {
+            String reportMessage = node.get("value") + " not defined";
+            Report report = createReport(node, reportMessage);
+            this.reports.add(report);
+            throw new CompilerException(report);
         }
-        return null;
+        else {
+            Type type = var.a.getType();
+            node.put("type", type.getName());
+            if (type.isArray()) {
+                node.put("array", "true");
+            }
+            return null;
+        }
     }
 
     private String keywordThis(JmmNode node, String s) {
@@ -223,22 +225,30 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
     private String arrayAccess(JmmNode node, String s) {
         JmmNode firstChild = node.getJmmChild(0);
         JmmNode index = node.getJmmChild(1);
-        Type firstChildType = checkVariableIsDeclared(firstChild, "value").a.getType();
-        String typeName = firstChildType.getName();
-        if(!firstChildType.isArray()){
-            String reportMessage = "Array access can only be done over an array, but found " + typeName;
+        Pair<Symbol, String> var = checkVariableIsDeclared(firstChild, "value");
+        if(var == null) {
+            String reportMessage = node.get("value") + " not defined";
             Report report = createReport(node, reportMessage);
             this.reports.add(report);
             throw new CompilerException(report);
         }
-        else if (!index.get("type").equals("int") || index.getAttributes().contains("array")){
-            String reportMessage = "Array access index must be of type int";
-            Report report = createReport(node, reportMessage);
-            this.reports.add(report);
-            throw new CompilerException(report);
+        else {
+            Type firstChildType = var.a.getType();
+            String typeName = firstChildType.getName();
+            if (!firstChildType.isArray()) {
+                String reportMessage = "Array access can only be done over an array, but found " + typeName;
+                Report report = createReport(node, reportMessage);
+                this.reports.add(report);
+                throw new CompilerException(report);
+            } else if (!index.get("type").equals("int") || index.getAttributes().contains("array")) {
+                String reportMessage = "Array access index must be of type int";
+                Report report = createReport(node, reportMessage);
+                this.reports.add(report);
+                throw new CompilerException(report);
+            }
+            node.put("type", typeName);
+            return null;
         }
-        node.put("type", typeName);
-        return null;
     }
 
     private String getLength(JmmNode node, String method) {
@@ -272,56 +282,64 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
         throw new CompilerException(report);
     }
 
-    private String assignment(JmmNode node, Integer child) {
-        Type varType = checkVariableIsDeclared(node, "var").a.getType();
+    private boolean checkAssignmentThis(JmmNode node, Pair<Symbol, String> var) {
+        Type varType = var.a.getType();
+        String className = this.symbolTable.getClassName();
+        String superName = this.symbolTable.getSuper();
+        if (varType.getName().equals(className)) {    // if the current class is the type of the variable that "this" is assigned to
+            node.put("type", className);
+            if (varType.isArray())
+                node.put("array", "true");
+            return false;
+        } else if (varType.getName().equals(superName)) {    // if the current class extends the type of the variable
+            node.put("type", superName);
+            if (varType.isArray())
+                node.put("array", "true");
+            return false;
+        } else return true;
+    }
+
+    private boolean checkAssignment(JmmNode node, Integer child, Pair<Symbol, String> var) {
+        Type varType = var.a.getType();
         JmmNode exp = node.getJmmChild(child);
-        if(exp.getKind().equals("This")){
-            String className = this.symbolTable.getClassName();
-            String superName = this.symbolTable.getSuper();
-            if(varType.getName().equals(className)){    // if the current class is the type of the variable that "this" is assigned to
-                node.put("type", className);
-                if(varType.isArray())
-                    node.put("array", "true");
-                return null;
+        boolean isArray = varType.isArray();
+        String varTypeName = varType.getName();
+        if (nodeIsOfType(exp, isArray, varTypeName)) {  //they have the same type
+            node.put("type", varTypeName);
+            if (isArray) {
+                node.put("array", "true");
             }
-            else if(varType.getName().equals(superName)) {    // if the current class extends the type of the variable
-                node.put("type", superName);
-                if(varType.isArray())
-                    node.put("array", "true");
-                return null;
-            }
-            else{
-                String reportMessage = "Can't assign \"this\" keyword to " + varType.getName();
-                Report report = createReport(node, reportMessage);
-                this.reports.add(report);
-                throw new CompilerException(report);
-            }
+            return false;
         }
-        else {
-            boolean isArray = varType.isArray();
-            String varTypeName = varType.getName();
-            String expType = exp.get("type");
-            if (nodeIsOfType(exp, isArray, varTypeName)) {  //they have the same type
-                node.put("type", varTypeName);
-                if (isArray) {
-                    node.put("array", "true");
-                }
-                return null;
-            }
-            if (exp.getAttributes().contains("array"))
-                expType += "[]";
-            if (isArray)
-                varTypeName += "[]";
-            String reportMessage = "Can't assign " + expType + " to " + varTypeName;
+        return true;
+    }
+
+
+    private String assignmentStm(JmmNode node, String s) {
+        Pair<Symbol, String> var = checkVariableIsDeclared(node, "var");
+        if(var == null) {
+            String reportMessage = node.get("var") + " not defined";
             Report report = createReport(node, reportMessage);
             this.reports.add(report);
             throw new CompilerException(report);
         }
-    }
-
-    private String assignmentStm(JmmNode node, String s) {
-        assignment(node, 0);
-        return null;
+        else {
+            JmmNode exp = node.getJmmChild(0);
+            if (exp.getKind().equals("This")) {
+                if (checkAssignmentThis(node, var)) {
+                    String reportMessage = "Can't assign \"this\" keyword to " + var.a.getType().getName();
+                    Report report = createReport(node, reportMessage);
+                    this.reports.add(report);
+                    throw new CompilerException(report);
+                }
+            } else if (checkAssignment(node, 0, var)) {
+                String reportMessage = "Type of the assignee must be compatible with the assigned";
+                Report report = createReport(node, reportMessage);
+                this.reports.add(report);
+                throw new CompilerException(report);
+            }
+            return null;
+        }
     }
 
     private String arrayAssignStm(JmmNode node, String s) {
@@ -333,16 +351,38 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
             throw new CompilerException(report);
         }
         else {
-            assignment(node, 1);
-            return null;
+            Pair<Symbol, String> var = checkVariableIsDeclared(node, "var");
+            if(var == null) {
+                String reportMessage = node.get("var") + " not defined";
+                Report report = createReport(node, reportMessage);
+                this.reports.add(report);
+                throw new CompilerException(report);
+            }
+            else{
+                JmmNode exp = node.getJmmChild(1);
+                if (exp.getKind().equals("This")) {
+                    if (checkAssignmentThis(node, var)) {
+                        String reportMessage = "Can't assign \"this\" keyword to " + var.a.getType().getName();
+                        Report report = createReport(node, reportMessage);
+                        this.reports.add(report);
+                        throw new CompilerException(report);
+                    }
+                } else if (checkAssignment(node, 1, var)) {
+                    String reportMessage = "Type of the assignee must be compatible with the assigned";
+                    Report report = createReport(node, reportMessage);
+                    this.reports.add(report);
+                    throw new CompilerException(report);
+                }
+                return null;
+            }
         }
     }
 
     private String fnCallOp(JmmNode node, String s) {
         String className = node.getJmmChild(0).get("type");
-        String methodName = node.get("value");
         if (className.equals(this.symbolTable.getClassName())) {  //method is part of the current class
-            if (!this.symbolTable.hasMethod(methodName)) {
+            Pair<Symbol, String> var = checkVariableIsDeclared(node, "value");
+            if (var == null) {
                 if (this.symbolTable.getSuper() == null) {     //can extend another class
                     String reportMessage = "Method does not exist";
                     Report report = createReport(node, reportMessage);
@@ -352,35 +392,44 @@ public class TypeVerification extends PostorderJmmVisitor<String, String> {
                     node.put("type", className);
                     return null;
                 }
-            }
-            List<Symbol> methodParameters = this.symbolTable.getParameters(methodName);     //check if method parameters and function arguments match
-            int numChildren = node.getNumChildren();
-            List<JmmNode> argumentNodes = new ArrayList<>();
-            if (numChildren > 1) {   // if it's not > 2, then the function has no arguments
-                for (int i = 1; i < numChildren; i++) {
-                    argumentNodes.add(node.getJmmChild(i));
-                }
-            }
-            if (methodParameters.size() != argumentNodes.size()) {
-                String reportMessage = "Method parameters and function arguments don't match";
-                Report report = createReport(node, reportMessage);
-                this.reports.add(report);
-                throw new CompilerException(report);
-            }
-            for (int j = 0; j < methodParameters.size(); j++) {
-                Type paramType = methodParameters.get(j).getType();
-                if (!nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName())) {
-                    String reportMessage = "Method parameters and function arguments don't match";
+            } else {
+                String methodName = var.a.getType().getName();
+                if (this.symbolTable.hasMethod(methodName)) {
+                    List<Symbol> methodParameters = this.symbolTable.getParameters(methodName);     //check if method parameters and function arguments match
+                    int numChildren = node.getNumChildren();
+                    List<JmmNode> argumentNodes = new ArrayList<>();
+                    if (numChildren > 1) {   // if it's not > 2, then the function has no arguments
+                        for (int i = 1; i < numChildren; i++) {
+                            argumentNodes.add(node.getJmmChild(i));
+                        }
+                    }
+                    if (methodParameters.size() != argumentNodes.size()) {
+                        String reportMessage = "Method parameters and function arguments don't match";
+                        Report report = createReport(node, reportMessage);
+                        this.reports.add(report);
+                        throw new CompilerException(report);
+                    }
+                    for (int j = 0; j < methodParameters.size(); j++) {
+                        Type paramType = methodParameters.get(j).getType();
+                        if (!nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName())) {
+                            String reportMessage = "Method parameters and function arguments don't match";
+                            Report report = createReport(node, reportMessage);
+                            this.reports.add(report);
+                            throw new CompilerException(report);
+                        }
+                    }
+                    Type methodReturn = this.symbolTable.getMethod(methodName).getReturnType();
+                    node.put("type", methodReturn.getName());
+                    if (methodReturn.isArray()) {
+                        node.put("array", "true");
+                        return null;
+                    }
+                } else {
+                    String reportMessage = "Method does not exist";
                     Report report = createReport(node, reportMessage);
                     this.reports.add(report);
                     throw new CompilerException(report);
                 }
-            }
-            Type methodReturn = this.symbolTable.getMethod(methodName).getReturnType();
-            node.put("type", methodReturn.getName());
-            if (methodReturn.isArray()) {
-                node.put("array", "true");
-                return null;
             }
         }
         else if (this.symbolTable.isImported(className)) {
