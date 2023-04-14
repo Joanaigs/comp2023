@@ -1,10 +1,15 @@
-class VarNotDeclared {
+class CallToUndeclaredMethod {
 
     public static void main(String[] args) {
 
     }
 
     public int foo() {
-        return x;
+        CallToUndeclaredMethod a;
+        a = new CallToUndeclaredMethod();
+
+        a.bar();
+
+        return 0;
     }
 }
