@@ -148,34 +148,24 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         return null;
     }
 
-    private boolean typeAssignment(JmmNode node, int child, Type varType) {
-        JmmNode exp = node.getJmmChild(child);
-        if(exp.getKind().equals("This")){
-            String className = symbolTable.getClassName();
-            String superName = symbolTable.getSuper();
-            if(varType.getName().equals(className)){    // if the current class is the type of the variable that "this" is assigned to
-                node.put("type", className);
-                if(varType.isArray())
-                    node.put("array", "true");
-                return true;
-            }
-            else if(varType.getName().equals(superName)) {   // if the current class extends the type of the variable
-                node.put("type", superName);
-                if(varType.isArray())
-                    node.put("array", "true");
-                return true;
-            }
-            else return false;
+    private boolean typeAssignmentThis(JmmNode node, Type varType) {
+        String className = symbolTable.getClassName();
+        String superName = symbolTable.getSuper();
+        if(varType.getName().equals(className)){    // if the current class is the type of the variable that "this" is assigned to
+            node.put("type", className);
+            return false;
         }
-        else {
-            boolean isArray = varType.isArray();
-            String varTypeName = varType.getName();
-            node.put("type", varTypeName);
-            if (isArray) {
-                node.put("array", "true");
-            }
+        else if(varType.getName().equals(superName)) {   // if the current class extends the type of the variable
+            node.put("type", superName);
+            return false;
+        }
+        else
             return true;
-        }
+    }
+
+    private void typeAssignment(JmmNode node, Type varType) {
+        String varTypeName = varType.getName();
+        node.put("type", varTypeName);
     }
 
     private String typeAssignmentStm(JmmNode node, String s) {
@@ -185,9 +175,13 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         }
         else {
             Type varType = var.a.getType();
-            if(!typeAssignment(node, 0, varType)){
-                throw new CompilerException(utils.addReport(node, "Can't assign \"this\" keyword to " + varType.getName()));
+            JmmNode exp = node.getJmmChild(0);
+            if(exp.getKind().equals("This")) {
+                if (typeAssignmentThis(node, varType)) {
+                    throw new CompilerException(utils.addReport(node, "Can't assign \"this\" keyword to " + varType.getName()));
+                }
             }
+            else typeAssignment(node, varType);
         }
         return null;
     }
@@ -199,9 +193,13 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         }
         else {
             Type varType = var.a.getType();
-            if(typeAssignment(node, 1, varType)){
-                throw new CompilerException(utils.addReport(node, "Can't assign \"this\" keyword to " + varType.getName()));
+            JmmNode exp = node.getJmmChild(1);
+            if(exp.getKind().equals("This")) {
+                if (typeAssignmentThis(node, varType)) {
+                    throw new CompilerException(utils.addReport(node, "Can't assign \"this\" keyword to " + varType.getName()));
+                }
             }
+            else typeAssignment(node, varType);
         }
         return null;
     }

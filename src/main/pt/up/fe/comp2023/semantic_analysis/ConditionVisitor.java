@@ -31,11 +31,7 @@ public class ConditionVisitor extends PostorderJmmVisitor<String, String> implem
 
     private String condition(JmmNode node, String s) {
         JmmNode condition = node.getJmmChild(0);
-        if (condition.getAttributes().contains("array")){
-            String reportMessage = "Conditions must be of boolean type";
-            throw new CompilerException(utils.addReport(node, reportMessage));
-        }
-        else if (utils.nodeIsOfType(condition, false, "boolean")){
+        if (utils.nodeIsOfType(condition, false, "boolean")){
             node.put("type", "boolean");
             return null;
         }

@@ -32,11 +32,10 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         return null;
     }
 
-    private boolean checkAssignment(JmmNode node, int child, Type varType){
+    private boolean checkAssignment(JmmNode node, int child, Type varType, boolean shouldBeArray){
         JmmNode exp = node.getJmmChild(child);
-        boolean isArray = varType.isArray();
         String varTypeName = varType.getName();
-        return !utils.nodeIsOfType(exp, isArray, varTypeName);
+        return !utils.nodeIsOfType(exp, shouldBeArray, varTypeName);
     }
 
     private String assignmentStm(JmmNode node, String s) {
@@ -46,7 +45,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         }
         else {
             Type varType = var.a.getType();
-            if(checkAssignment(node, 0, varType)){
+            if(checkAssignment(node, 0, varType, varType.isArray())){
                throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
             }
         }
@@ -55,7 +54,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
 
     private String arrayAssignStm(JmmNode node, String s) {
         JmmNode idx = node.getJmmChild(0);
-        if(!idx.get("type").equals("int")){
+        if(!utils.nodeIsOfType(idx, false, "int")){
             String reportMessage = "Array index must be of type integer";
             throw new CompilerException(utils.addReport(node, reportMessage));
         }
@@ -66,7 +65,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
             }
             else {
                 Type varType = var.a.getType();
-                if(checkAssignment(node, 1, varType)){
+                if(checkAssignment(node, 1, varType, false)){
                     throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
                 }
             }
