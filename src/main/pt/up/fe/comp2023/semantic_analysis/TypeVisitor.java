@@ -124,9 +124,13 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
 
 
     private String typeCreateArray(JmmNode node, String s) {
-        node.put("type", "int");
-        node.put("array", "true");
-        return null;
+        JmmNode sizeOfArray = node.getJmmChild(0);
+        if (utils.nodeIsOfType(sizeOfArray, false, "int")) {
+            node.put("type", "int");
+            node.put("array", "true");
+            return null;
+        }
+        throw new CompilerException(utils.addReport(node, "Size of array must be of type int"));
     }
 
     private String typeArrayAccess(JmmNode node, String s) {
@@ -205,34 +209,29 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
     private String typeFnCallOp(JmmNode node, String s) {
         String className = node.getJmmChild(0).get("type");
         if (className.equals(this.symbolTable.getClassName())) {  //method is part of the current class
-            Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "value");
-            if (var == null) {
-                if (this.symbolTable.getSuper() != null) {     //can extend another class
-                    node.put("type", className);
-                }
-                else {
-                    String reportMessage = "Method does not exist";
-                    throw new CompilerException(utils.addReport(node,reportMessage));
-                }
-                return null;
-            }
-            else {
-                String methodName = var.a.getType().getName();
+            if (this.symbolTable.getSuper() == null) {     //can extend another class
+                String methodName = node.get("value");
                 if (this.symbolTable.hasMethod(methodName)) {
-                   Type methodReturn = symbolTable.getMethod(methodName).getReturnType();
+                    Type methodReturn = symbolTable.getMethod(methodName).getReturnType();
                     node.put("type", methodReturn.getName());
                     if (methodReturn.isArray()) {
                         node.put("array", "true");
                     }
                     return null;
                 }
-                else{
-                    String reportMessage = "Method does not exist";
-                    throw new CompilerException(utils.addReport(node,reportMessage));
+                else {
+                    String reportMessage = "Method not defined";
+                    throw new CompilerException(utils.addReport(node, reportMessage));
                 }
             }
-
-        } else if (!symbolTable.isImported(className)) {
+            else if (!symbolTable.isImported(this.symbolTable.getSuper())) {
+                String reportMessage = "Class is not defined";
+                throw new CompilerException(utils.addReport(node, reportMessage));
+            }
+            node.put("type", className);    //it's a method from an extended class
+            return null;
+        }
+        else if (!symbolTable.isImported(className)) {
             String reportMessage = "Class is not defined";
             throw new CompilerException(utils.addReport(node, reportMessage));
         }

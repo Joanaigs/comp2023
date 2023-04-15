@@ -29,7 +29,6 @@ public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements
 
     @Override
     protected void buildVisitor() {
-        addVisit("CreateArray", this::createArray);
         addVisit("ArrayExp", this::arrayAccess);
         addVisit("GetLength", this::getLength);
         setDefaultVisit(this::ignore);
@@ -38,40 +37,20 @@ public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements
         return null;
     }
 
-    private String createArray(JmmNode node, String s) {
-        JmmNode sizeOfArray = node.getJmmChild(0);
-        if (utils.nodeIsOfType(sizeOfArray, false, "int")) {
-            node.put("type", "int");
-            node.put("array", "true");
-            return null;
-        }
-        String sizeOfArrayType = node.get("type");
-        if(sizeOfArray.getAttributes().contains("array"))
-            sizeOfArrayType += "[]";
-        String reportMessage = "Size of array must be an Integer, type " + sizeOfArrayType + " found instead";
-        throw new CompilerException(utils.addReport(node, reportMessage));
-    }
-
     private String arrayAccess(JmmNode node, String s) {
         JmmNode firstChild = node.getJmmChild(0);
         JmmNode index = node.getJmmChild(1);
-        Pair<Symbol, String> var = utils.checkVariableIsDeclared(firstChild, "value");
-        if(var == null) {
-            throw new CompilerException(utils.addReport(node, node.get("value") + " not defined"));
+        if (!utils.nodeIsOfType(firstChild, true, "int")) {
+            String reportMessage = "Array access can only be done over an array of Integers";
+            throw new CompilerException(utils.addReport(node, reportMessage));
         }
-        else {
-            Type firstChildType = var.a.getType();
-            String typeName = firstChildType.getName();
-            if (!firstChildType.isArray()) {
-                String reportMessage = "Array access can only be done over an array, but found " + typeName;
-                throw new CompilerException(utils.addReport(node, reportMessage));
-            } else if (!utils.nodeIsOfType(index, false, "int")) {
-                String reportMessage = "Array access index must be of type Integer, but found " + index.get("type") + " instead";
-                throw new CompilerException(utils.addReport(node, reportMessage));
+        else if (!index.getKind().equals("Integer")) {
+            if (!utils.nodeIsOfType(index, false, "int")) {
+                throw new CompilerException(utils.addReport(node, "Array access index must be of type Integer"));
             }
-            node.put("type", typeName);
-            return null;
+            else return null;
         }
+        else return null;
     }
 
     private String getLength(JmmNode node, String method) {

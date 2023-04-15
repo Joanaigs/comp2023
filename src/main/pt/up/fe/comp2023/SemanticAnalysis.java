@@ -20,10 +20,10 @@ public class SemanticAnalysis implements JmmAnalysis {
         reports.addAll(symbolTableGenerator.getReports());
         List<AnalyserVisitor> visitors = new ArrayList<>();
         visitors.add(new TypeVisitor(symbolTable));
-        visitors.add(new OperatorsVisitor(symbolTable));
         visitors.add(new ArrayVisitor(symbolTable));
-        visitors.add(new ConditionVisitor(symbolTable));
         visitors.add(new AssignmentVisitor(symbolTable));
+        visitors.add(new OperatorsVisitor(symbolTable));
+        visitors.add(new ConditionVisitor(symbolTable));
         visitors.add(new FunctionVisitor(symbolTable));
 
         for( AnalyserVisitor visitor : visitors){
