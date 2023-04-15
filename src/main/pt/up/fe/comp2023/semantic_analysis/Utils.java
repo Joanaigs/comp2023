@@ -44,8 +44,9 @@ public class Utils {
     public Pair<Symbol, String> checkVariableIsDeclared(JmmNode node, String variable){
         String scope = node.get("scope");
         String var = node.get(variable);
+        String extendedClass = this.symbolTable.getSuper();
         if (this.symbolTable.getSuper() != null && this.symbolTable.getSuper().equals(var))
-            return new Pair<>(new Symbol(new Type("", true), ""), "");
+            return new Pair<>(new Symbol(new Type(extendedClass, true), extendedClass), "");
         return this.symbolTable.getSymbol(scope, var);
     }
 
