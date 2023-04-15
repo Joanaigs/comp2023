@@ -48,7 +48,7 @@ public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements
         String sizeOfArrayType = node.get("type");
         if(sizeOfArray.getAttributes().contains("array"))
             sizeOfArrayType += "[]";
-        String reportMessage = "Size of array must be an Integer, type " + sizeOfArrayType + " found instead";
+        String reportMessage = "Size of array must be of type int, but found type " + sizeOfArrayType + " instead";
         throw new CompilerException(utils.addReport(node, reportMessage));
     }
 

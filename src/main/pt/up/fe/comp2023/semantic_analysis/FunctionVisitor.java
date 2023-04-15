@@ -42,12 +42,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
             throw new CompilerException(utils.addReport(node, reportMessage));
         }
         String className = node.getJmmChild(0).get("type");
-        Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "value");
-        if (var == null) {
-            return null; //assume the call is right
-        }
-        Type functionType = var.a.getType();
-        String methodName = functionType.getName();
+        String methodName = node.get("value");
         if (className.equals(symbolTable.getClassName()) && symbolTable.getSuper() == null) {  //method is part of the current class
             if (this.symbolTable.hasMethod(methodName)) {
                 List<Symbol> methodParameters = symbolTable.getParameters(methodName);     //check if method parameters and function arguments match
