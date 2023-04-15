@@ -206,8 +206,9 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
 
     private String typeFnCallOp(JmmNode node, String s) {
         String className = node.getJmmChild(0).get("type");
+        String extendedClass = this.symbolTable.getSuper();
         if (className.equals(this.symbolTable.getClassName())) {  //method is part of the current class
-            if (this.symbolTable.getSuper() == null) {     //can extend another class
+            if (extendedClass == null) {     //can extend another class
                 String methodName = node.get("value");
                 if (this.symbolTable.hasMethod(methodName)) {
                     Type methodReturn = symbolTable.getMethod(methodName).getReturnType();
@@ -222,17 +223,23 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
                     throw new CompilerException(utils.addReport(node, reportMessage));
                 }
             }
-            else if (!symbolTable.isImported(this.symbolTable.getSuper())) {
+            else if (!symbolTable.isImported(extendedClass)) {
                 String reportMessage = "Class is not defined";
                 throw new CompilerException(utils.addReport(node, reportMessage));
             }
             node.put("type", className);    //it's a method from an extended class
             return null;
         }
+        else if (extendedClass != null && symbolTable.isImported(extendedClass)) {
+            node.put("type", className);
+            return null;
+        }
+
         else if (!symbolTable.isImported(className)) {
             String reportMessage = "Class is not defined";
             throw new CompilerException(utils.addReport(node, reportMessage));
         }
+
         node.put("type", className);
         node.put("imported", "true");
         return null;
