@@ -124,9 +124,13 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
 
 
     private String typeCreateArray(JmmNode node, String s) {
-        node.put("type", "int");
-        node.put("array", "true");
-        return null;
+        JmmNode sizeOfArray = node.getJmmChild(0);
+        if (utils.nodeIsOfType(sizeOfArray, false, "int")) {
+            node.put("type", "int");
+            node.put("array", "true");
+            return null;
+        }
+        throw new CompilerException(utils.addReport(node, "Size of array must be of type int"));
     }
 
     private String typeArrayAccess(JmmNode node, String s) {
@@ -220,10 +224,12 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
                     throw new CompilerException(utils.addReport(node, reportMessage));
                 }
             }
-            else{
-                node.put("type", className);
-                return null;
+            else if (!symbolTable.isImported(this.symbolTable.getSuper())) {
+                String reportMessage = "Class is not defined";
+                throw new CompilerException(utils.addReport(node, reportMessage));
             }
+            node.put("type", className);    //it's a method from an extended class
+            return null;
         }
         else if (!symbolTable.isImported(className)) {
             String reportMessage = "Class is not defined";

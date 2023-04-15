@@ -46,21 +46,19 @@ public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implem
     private String binaryOp(JmmNode node, String s) {
         JmmNode leftOperand = node.getJmmChild(0);
         JmmNode rightOperand = node.getJmmChild(1);
-        String leftOperandType = leftOperand.get("type");
-        String rightOperandType = rightOperand.get("type");
         if (leftOperand.getAttributes().contains("array") || rightOperand.getAttributes().contains("array")) {
             String reportMessage = "Operand can't be array";
             throw new CompilerException(utils.addReport(node, reportMessage));
         }
         if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
-            if (leftOperandType.equals("boolean") && leftOperandType.equals(rightOperandType)) return null;
+            if (utils.nodeIsOfType(leftOperand, false, "boolean") && utils.nodeIsOfType(rightOperand, false, "boolean")) return null;
             else {
                 String reportMessage = "Operand must be of type boolean";
                 throw new CompilerException(utils.addReport(node, reportMessage));
             }
         }
         else {
-            if (leftOperandType.equals("int") && leftOperandType.equals(rightOperandType)) return null;
+            if (utils.nodeIsOfType(leftOperand, false, "int") && utils.nodeIsOfType(rightOperand, false, "int")) return null;
             else {
                 String reportMessage = "Operands must be of type int";
                 throw new CompilerException(utils.addReport(node, reportMessage));
