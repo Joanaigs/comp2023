@@ -1,17 +1,10 @@
 package pt.up.fe.comp2023.semantic_analysis;
 
-import org.antlr.v4.runtime.misc.Pair;
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
-import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PostorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp.jmm.report.ReportType;
-import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2023.SymbolTable;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import static pt.up.fe.specs.util.SpecsStrings.parseInt;

@@ -22,7 +22,7 @@ public class ConditionVisitor extends PostorderJmmVisitor<String, String> implem
     @Override
     protected void buildVisitor() {
         addVisit("IfStmt", this::condition);
-        addVisit("WhileStmt", this::condition);;
+        addVisit("WhileStmt", this::condition);
         setDefaultVisit(this::ignore);
     }
     private String ignore ( JmmNode jmmNode, String s) {

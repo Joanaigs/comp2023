@@ -7,7 +7,6 @@ import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2023.semantic_analysis.*;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class SemanticAnalysis implements JmmAnalysis {

@@ -3,7 +3,6 @@ package pt.up.fe.comp2023;
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
-import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.LinkedList;
 import java.util.List;

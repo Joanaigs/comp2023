@@ -1,13 +1,13 @@
 package pt.up.fe.comp2023;
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
+
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
 import java.util.*;
 
 public class Method {
-    private String name;
-    private Type returnType;
-    private List<SymbolExtended> variables; //true if local variable false if parameter
+    private final String name;
+    private final Type returnType;
+    private final List<SymbolExtended> variables; //true if local variable false if parameter
 
     public Method(String name, Type returnType) {
         this.name = name;

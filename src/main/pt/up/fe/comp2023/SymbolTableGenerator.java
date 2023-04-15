@@ -1,6 +1,5 @@
 package pt.up.fe.comp2023;
 
-import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
@@ -12,9 +11,9 @@ import pt.up.fe.comp.jmm.report.Stage;
 import java.util.*;
 
 public class SymbolTableGenerator extends AJmmVisitor<String, String> {
-    private List<String> imports = new LinkedList<>();
+    private final List<String> imports = new LinkedList<>();
     private String superName=null;
-    private String className= "";//nome da classe
+    private String className= "";   //nome da class
     private final Map<String, Symbol> fields = new HashMap<>();
     private final Map<String, Method> methods = new HashMap<>();
     private final List<Report> reports = new ArrayList<>();
@@ -149,9 +148,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
 
     private String varDeclaration ( JmmNode jmmNode , String s) {
         String nameType =jmmNode.getJmmChild(0).get("typeDeclaration");
-        boolean isArray=false;
-        if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
-            isArray=true;
+        boolean isArray= jmmNode.getJmmChild(0).getObject("isArray").equals(true);
         Type type= new Type(nameType, isArray);
         if(s==null){
             Symbol symbol = new Symbol(type, jmmNode.get("name"));
