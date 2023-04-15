@@ -103,9 +103,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
             return null;
         }
         String nameType =jmmNode.getJmmChild(0).get("typeDeclaration");
-        boolean isArray=false;
-        if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
-            isArray=true;
+        boolean isArray = jmmNode.getJmmChild(0).getObject("isArray").equals(true);
         Method method = new Method(jmmNode.get("methodName"), new Type(nameType, isArray));
         methods.put(jmmNode.get("methodName"), method);
         for (JmmNode child: jmmNode.getChildren()) {
@@ -116,9 +114,7 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
 
     private String fieldDeclaration ( JmmNode jmmNode , String s) {
         String nameType = jmmNode.getJmmChild(0).get("typeDeclaration");
-        boolean isArray=false;
-        if(jmmNode.getJmmChild(0).getObject("isArray").equals(true))
-            isArray=true;
+        boolean isArray = jmmNode.getJmmChild(0).getObject("isArray").equals(true);
         Type type= new Type(nameType, isArray);
         Method method = methods.get(s);
         SymbolExtended symbol = new SymbolExtended(type, jmmNode.get("name"), false);
@@ -135,8 +131,14 @@ public class SymbolTableGenerator extends AJmmVisitor<String, String> {
             addReport(jmmNode, reportMessage);
             return null;
         }
+        String variable = jmmNode.get("var");
+        if (fields.containsKey(variable)) {
+            String reportMessage = "Can't declare a field with the name " + variable ;
+            addReport(jmmNode, reportMessage);
+            return null;
+        }
         Method method = new Method("main", new Type("void", false));
-        SymbolExtended symbol = new SymbolExtended(new Type("String", true), jmmNode.get("var"), false );
+        SymbolExtended symbol = new SymbolExtended(new Type("String", true), variable, false );
         method.addVariable(symbol);
         methods.put("main", method);
         for (JmmNode child: jmmNode.getChildren()) {
