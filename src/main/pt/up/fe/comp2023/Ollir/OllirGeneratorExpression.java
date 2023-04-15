@@ -8,7 +8,7 @@ import pt.up.fe.comp2023.SymbolTable;
 
 
 public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
-    String code = "";
+    String code;
     SymbolTable symbolTable;
     int numTemVars=0;
     public String getCode() {
@@ -56,20 +56,19 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     private String visitIdentifier(JmmNode jmmNode, String s) {
         String varName = jmmNode.get("value");
         Pair<Symbol, String> info= symbolTable.getSymbol(s, varName);
-        if(info.b.equals("FIELD")){
-            String newTempVar="t"+this.numTemVars++;
-            String type = Utils.typeOllir(info.a.getType());
-            code+=String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n", newTempVar, type, type, varName, type, type);
-            return  String.format("%s.%s", newTempVar, Utils.typeOllir(info.a.getType()));
-        }
-        else if(info.b.equals("PARAM")){
-            return  String.format("$%d.%s.%s",symbolTable.getSymbolIndex(s, varName), varName, Utils.typeOllir(info.a.getType()));
-        }
-        else if(info.b.equals("LOCAL")){
-            return  String.format("%s.%s", varName, Utils.typeOllir(info.a.getType()));
-        }
-        else if(info.b.equals("IMPORT")){
-            return  String.format("%s.%s", varName, Utils.typeOllir(info.a.getType()));
+        switch (info.b) {
+            case "FIELD" -> {
+                String newTempVar = "t" + this.numTemVars++;
+                String type = Utils.typeOllir(info.a.getType());
+                code += String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n", newTempVar, type, type, varName, type, type);
+                return String.format("%s.%s", newTempVar, Utils.typeOllir(info.a.getType()));
+            }
+            case "PARAM" -> {
+                return String.format("$%d.%s.%s", symbolTable.getSymbolIndex(s, varName), varName, Utils.typeOllir(info.a.getType()));
+            }
+            case "LOCAL", "IMPORT" -> {
+                return String.format("%s.%s", varName, Utils.typeOllir(info.a.getType()));
+            }
         }
         return  null;
     }
@@ -127,7 +126,6 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             _return= String.format("%s.%s", newTempVar, type);
         }
 
-        String method = jmmNode.get("value");
         if (jmmNode.getJmmChild(0).getKind().equals("Identifier") && obj.split("[.]")[0].equals(jmmNode.get("type"))) {
             if(!obj.equals("this"))
                 obj=obj.split("[.]")[0];
@@ -150,24 +148,20 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String name =jmmNode.getJmmChild(0).get("value");
         String index = visit(jmmNode.getJmmChild(1), s);
         String arrayIdx = index;
-        if (!Utils.LiteralorVariable(index)) {
-            arrayIdx  = "t"+this.numTemVars++ + ".i32";
-            code+=String.format("%s :=.i32 %s;\n", arrayIdx, index);
-        }
         Pair<Symbol, String> info= symbolTable.getSymbol(s, name);
-        if (info.b.equals("FIELD")) {
-            String newTempVar="t"+this.numTemVars++ ;
-            code+=String.format("%s.array.i32 :=.array.i32 getfield(this, %s.array.i32).array.i32;\n", newTempVar, name);
-            return String.format("%s[%s].i32", newTempVar, arrayIdx);
-        }
-        else if (info.b.equals("PARAM")) {
-            return String.format("$%d.%s[%s].i32", symbolTable.getSymbolIndex(s, name), name, arrayIdx);
-        }
-        else if (info.b.equals("IMPORT")) {
-            throw new RuntimeException("Class cannot be accessed as an array");
-        }
-        else {
-            return String.format("%s[%s].i32", name, arrayIdx);
+        switch (info.b) {
+            case "FIELD" -> {
+                String newTempVar = "t" + this.numTemVars++;
+                code += String.format("%s.array.i32 :=.array.i32 getfield(this, %s.array.i32).array.i32;\n", newTempVar, name);
+                return String.format("%s[%s].i32", newTempVar, arrayIdx);
+            }
+            case "PARAM" -> {
+                return String.format("$%d.%s[%s].i32", symbolTable.getSymbolIndex(s, name), name, arrayIdx);
+            }
+            case "IMPORT" -> throw new RuntimeException("Class cannot be accessed as an array");
+            default -> {
+                return String.format("%s[%s].i32", name, arrayIdx);
+            }
         }
     }
 

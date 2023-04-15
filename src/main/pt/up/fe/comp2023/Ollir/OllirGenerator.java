@@ -12,7 +12,6 @@ import java.util.StringJoiner;
 public class OllirGenerator extends AJmmVisitor<String, String> {
     SymbolTable symbolTable;
     String ollirCode;
-    int label=0;
 
     OllirGenerator(SymbolTable symbolTable) {
         this.symbolTable=symbolTable;
@@ -42,14 +41,16 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         String code = ollirGeneratorExpression.getCode();
         ollirCode+=code;
 
-        if(info.b.equals("FIELD")){
-            ollirCode +="putfield(this, "+varName+"."+ Utils.typeOllir(info.a.getType())+", "+expr+").V"+";\n";
-            return s;
+        switch (info.b) {
+            case "FIELD" -> {
+                ollirCode += "putfield(this, " + varName + "." + Utils.typeOllir(info.a.getType()) + ", " + expr + ").V" + ";\n";
+                return s;
+            }
+            case "LOCAL" ->
+                    ollirCode += varName + "." + Utils.typeOllir(info.a.getType()) + " :=." + Utils.typeOllir(info.a.getType()) + " " + expr + ";\n";
+            case "PARAM" ->
+                    ollirCode += '$' + Integer.toString(symbolTable.getSymbolIndex(s, varName)) + "." + varName + "." + Utils.typeOllir(info.a.getType()) + " :=." + Utils.typeOllir(info.a.getType()) + " " + expr + ";\n";
         }
-        else if(info.b.equals("LOCAL") )
-            ollirCode+=varName+"."+ Utils.typeOllir(info.a.getType())+" :=."+ Utils.typeOllir(info.a.getType())+" "+ expr+";\n";
-        else if(info.b.equals("PARAM"))
-            ollirCode+='$'+Integer.toString(symbolTable.getSymbolIndex(s, varName))+"."+varName+"."+ Utils.typeOllir(info.a.getType())+" :=."+ Utils.typeOllir(info.a.getType())+" "+ expr+";\n";
         return s;
     }
 

@@ -10,18 +10,10 @@ public class Utils {
             ollirType += "array.";
         }
         switch (type.getName()) {
-            case "int":
-                ollirType += "i32";
-                break;
-            case "void":
-                ollirType += "V";
-                break;
-            case "boolean":
-                ollirType += "bool";
-                break;
-            default:
-                ollirType += type.getName();
-                break;
+            case "int" -> ollirType += "i32";
+            case "void" -> ollirType += "V";
+            case "boolean" -> ollirType += "bool";
+            default -> ollirType += type.getName();
         }
         return ollirType;
     }
@@ -32,18 +24,10 @@ public class Utils {
             ollirType += "array.";
         }
         switch (jmmNode.get("type")) {
-            case "int":
-                ollirType += "i32";
-                break;
-            case "void":
-                ollirType += "V";
-                break;
-            case "boolean":
-                ollirType += "bool";
-                break;
-            default:
-                ollirType += jmmNode.get("type");
-                break;
+            case "int" -> ollirType += "i32";
+            case "void" -> ollirType += "V";
+            case "boolean" -> ollirType += "bool";
+            default -> ollirType += jmmNode.get("type");
         }
         return ollirType;
     }
