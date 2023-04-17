@@ -8,10 +8,6 @@ import java.util.LinkedList;
 
 public class Optimization implements pt.up.fe.comp.jmm.ollir.JmmOptimization {
 
-    @Override
-    public JmmSemanticsResult optimize(JmmSemanticsResult semanticsResult) {
-        return pt.up.fe.comp.jmm.ollir.JmmOptimization.super.optimize(semanticsResult);
-    }
 
     @Override
     public OllirResult toOllir(JmmSemanticsResult jmmSemanticsResult) {
@@ -20,8 +16,4 @@ public class Optimization implements pt.up.fe.comp.jmm.ollir.JmmOptimization {
         return new OllirResult(jmmSemanticsResult, ollirGenerator.getOllirCode(), new LinkedList<>());
     }
 
-    @Override
-    public OllirResult optimize(OllirResult ollirResult) {
-        return pt.up.fe.comp.jmm.ollir.JmmOptimization.super.optimize(ollirResult);
-    }
 }
