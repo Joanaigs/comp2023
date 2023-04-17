@@ -21,15 +21,15 @@ public class ConditionVisitor extends PostorderJmmVisitor<String, String> implem
 
     @Override
     protected void buildVisitor() {
-        addVisit("IfStmt", this::condition);
-        addVisit("WhileStmt", this::condition);
-        setDefaultVisit(this::ignore);
+        addVisit("IfStmt", this::handleCondition);
+        addVisit("WhileStmt", this::handleCondition);
+        setDefaultVisit(this::setDefaultVisit);
     }
-    private String ignore ( JmmNode jmmNode, String s) {
+    private String setDefaultVisit ( JmmNode jmmNode, String s) {
         return null;
     }
 
-    private String condition(JmmNode node, String s) {
+    private String handleCondition(JmmNode node, String s) {
         JmmNode condition = node.getJmmChild(0);
         if (utils.nodeIsOfType(condition, false, "boolean")){
             node.put("type", "boolean");

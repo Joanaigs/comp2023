@@ -13,11 +13,8 @@ import java.util.List;
 
 public class AssignmentVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
     private final Utils utils;
-    private final SymbolTable symbolTable;
 
     public AssignmentVisitor(SymbolTable symbolTable) {
-
-        this.symbolTable = symbolTable;
         this.utils = new Utils(symbolTable);
     }
 
@@ -27,8 +24,8 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
 
     @Override
     protected void buildVisitor() {
-        addVisit("Assignment", this::assignmentStm);
-        addVisit("ArrayAssignStmt", this::arrayAssignStm);
+        addVisit("Assignment", this::handleAssignmentStm);
+        addVisit("ArrayAssignStmt", this::handleArrayAssignStm);
         setDefaultVisit(this::ignore);
     }
     private String ignore (JmmNode jmmNode, String s) {
@@ -41,7 +38,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         return !utils.nodeIsOfType(exp, shouldBeArray, varTypeName);
     }
 
-    private String assignmentStm(JmmNode node, String s) {
+    private String handleAssignmentStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
         Type varType = var.a.getType();
         if(var.b.equals("FIELD") && node.get("scope").equals("main")){
@@ -53,7 +50,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         return null;
     }
 
-    private String arrayAssignStm(JmmNode node, String s) {
+    private String handleArrayAssignStm(JmmNode node, String s) {
         JmmNode idx = node.getJmmChild(0);
         if(!utils.nodeIsOfType(idx, false, "int")){
             throw new CompilerException(utils.addReport(node, "Array index must be of type integer"));

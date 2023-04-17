@@ -21,15 +21,15 @@ public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements
 
     @Override
     protected void buildVisitor() {
-        addVisit("ArrayExp", this::arrayAccess);
-        addVisit("GetLength", this::getLength);
-        setDefaultVisit(this::ignore);
+        addVisit("ArrayExp", this::handleArrayAccess);
+        addVisit("GetLength", this::handleGetLength);
+        setDefaultVisit(this::setDefaultVisit);
     }
-    private String ignore (JmmNode jmmNode, String s) {
+    private String setDefaultVisit (JmmNode jmmNode, String s) {
         return null;
     }
 
-    private String arrayAccess(JmmNode node, String s) {
+    private String handleArrayAccess(JmmNode node, String s) {
         JmmNode firstChild = node.getJmmChild(0);
         JmmNode index = node.getJmmChild(1);
 
@@ -46,7 +46,7 @@ public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements
         else return null;
     }
 
-    private String getLength(JmmNode node, String method) {
+    private String handleGetLength(JmmNode node, String method) {
         JmmNode object = node.getJmmChild(0);
         if (object.getAttributes().contains("array")) {
             node.put("type", "int");

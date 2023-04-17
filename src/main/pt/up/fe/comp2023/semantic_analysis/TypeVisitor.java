@@ -29,43 +29,43 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
 
     @Override
     protected void buildVisitor() {
-        addVisit("Integer", this::typeInteger);
-        addVisit("Boolean", this::typeBool);
-        addVisit("Identifier", this::typeId);
-        addVisit("This", this::typeKeywordThis);
-        addVisit("InitializeClass", this::typeInitClass);
-        addVisit("ParenthesisExpr", this::typeSimpleExpr);
-        addVisit("ExprStmt", this::typeSimpleExpr);
-        addVisit("NegateExpr", this::typeNegation);
-        addVisit("BinaryOp", this::typeBinaryOp);
-        addVisit("UnaryOp", this::typeUnaryOp);
-        addVisit("PostfixOp", this::typeUnaryOp);
-        addVisit("CreateArray", this::typeCreateArray);
-        addVisit("ArrayExp", this::typeArrayAccess);
-        addVisit("GetLength", this::typeGetLength);
-        addVisit("IfStmt", this::typeCondition);
-        addVisit("WhileStmt", this::typeCondition);
-        addVisit("Assignment", this::typeAssignmentStm);
-        addVisit("ArrayAssignStmt", this::typeArrayAssignStm);
-        addVisit("CallFnc", this::typeFnCallOp);
-        addVisit("InstanceMethodDeclaration", this::typeReturn);
-        setDefaultVisit(this::ignore);
+        addVisit("Integer", this::handleTypeInteger);
+        addVisit("Boolean", this::handleTypeBool);
+        addVisit("Identifier", this::handleTypeId);
+        addVisit("This", this::handleTypeKeywordThis);
+        addVisit("InitializeClass", this::handleTypeInitClass);
+        addVisit("ParenthesisExpr", this::handleTypeSimpleExpr);
+        addVisit("ExprStmt", this::handleTypeSimpleExpr);
+        addVisit("NegateExpr", this::handleTypeNegation);
+        addVisit("BinaryOp", this::handleTypeBinaryOp);
+        addVisit("UnaryOp", this::handleTypeUnaryOp);
+        addVisit("PostfixOp", this::handleTypeUnaryOp);
+        addVisit("CreateArray", this::handleTypeCreateArray);
+        addVisit("ArrayExp", this::handleTypeArrayAccess);
+        addVisit("GetLength", this::handleTypeGetLength);
+        addVisit("IfStmt", this::handleTypeCondition);
+        addVisit("WhileStmt", this::handleTypeCondition);
+        addVisit("Assignment", this::handleTypeAssignmentStm);
+        addVisit("ArrayAssignStmt", this::handleTypeArrayAssignStm);
+        addVisit("CallFnc", this::handleTypeFnCallOp);
+        addVisit("InstanceMethodDeclaration", this::handleTypeReturn);
+        setDefaultVisit(this::setDefaultVisit);
     }
-    private String ignore (JmmNode jmmNode, String s) {
+    private String setDefaultVisit (JmmNode jmmNode, String s) {
         return null;
     }
 
-    private String typeInteger(JmmNode node, String s) {
+    private String handleTypeInteger(JmmNode node, String s) {
         node.put("type", "int");
         return null;
     }
 
-    private String typeBool(JmmNode node, String s) {
+    private String handleTypeBool(JmmNode node, String s) {
         node.put("type", "boolean");
         return null;
     }
 
-    private String typeId(JmmNode node, String s) {
+    private String handleTypeId(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "value");
         Type type = var.a.getType();
         node.put("type", type.getName());
@@ -75,7 +75,7 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         return null;
     }
 
-    private String typeKeywordThis(JmmNode node, String s) {
+    private String handleTypeKeywordThis(JmmNode node, String s) {
         String scope = node.get("scope");
         if(scope.equals("main")){
             throw new CompilerException(utils.addReport(node, "this keyword is not allowed in main"));
@@ -86,23 +86,23 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         }
     }
 
-    private String typeInitClass(JmmNode node, String s) {
+    private String handleTypeInitClass(JmmNode node, String s) {
         node.put("type", node.get("value"));
         return null;
     }
 
-    private String typeSimpleExpr(JmmNode node, String s) {
+    private String handleTypeSimpleExpr(JmmNode node, String s) {
         JmmNode exp = node.getJmmChild(0);
         node.put("type", exp.get("type"));
         return null;
     }
 
-    private String typeNegation(JmmNode node, String s) {
+    private String handleTypeNegation(JmmNode node, String s) {
         node.put("type", "boolean");
         return null;
     }
 
-    private String typeBinaryOp(JmmNode node, String s) {
+    private String handleTypeBinaryOp(JmmNode node, String s) {
         if (node.get("op").equals("&&") || node.get("op").equals("||")) {
             node.put("type", "boolean");
         }
@@ -114,13 +114,13 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         return null;
     }
 
-    private String typeUnaryOp(JmmNode node, String s) {
+    private String handleTypeUnaryOp(JmmNode node, String s) {
         node.put("type", "int");
         return null;
     }
 
 
-    private String typeCreateArray(JmmNode node, String s) {
+    private String handleTypeCreateArray(JmmNode node, String s) {
         JmmNode sizeOfArray = node.getJmmChild(0);
         if (utils.nodeIsOfType(sizeOfArray, false, "int")) {
             node.put("type", "int");
@@ -130,17 +130,17 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         throw new CompilerException(utils.addReport(node, "Size of array must be of type int"));
     }
 
-    private String typeArrayAccess(JmmNode node, String s) {
+    private String handleTypeArrayAccess(JmmNode node, String s) {
         node.put("type", node.getJmmChild(0).get("type"));
         return null;
     }
 
-    private String typeGetLength(JmmNode node, String method) {
+    private String handleTypeGetLength(JmmNode node, String method) {
         node.put("type", "int");
         return null;
     }
 
-    private String typeCondition(JmmNode node, String s) {
+    private String handleTypeCondition(JmmNode node, String s) {
         node.put("type", "boolean");
         return null;
     }
@@ -165,7 +165,7 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         node.put("type", varTypeName);
     }
 
-    private String typeAssignmentStm(JmmNode node, String s) {
+    private String handleTypeAssignmentStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
         Type varType = var.a.getType();
         JmmNode exp = node.getJmmChild(0);
@@ -178,7 +178,7 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         return null;
     }
 
-    private String typeArrayAssignStm(JmmNode node, String s) {
+    private String handleTypeArrayAssignStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
         Type varType = var.a.getType();
         JmmNode exp = node.getJmmChild(1);
@@ -191,7 +191,7 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         return null;
     }
 
-    private String typeFnCallOp(JmmNode node, String s) {
+    private String handleTypeFnCallOp(JmmNode node, String s) {
         String className = node.getJmmChild(0).get("type");
         String extendedClass = this.symbolTable.getSuper();
 
@@ -230,7 +230,7 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
         return null;
     }
 
-    private String typeReturn(JmmNode node, String s) {
+    private String handleTypeReturn(JmmNode node, String s) {
         String typeReturn = node.getJmmChild(0).get("typeDeclaration");
         boolean isArray = node.getJmmChild(0).getObject("isArray").equals(true);
         node.put("type", typeReturn);
