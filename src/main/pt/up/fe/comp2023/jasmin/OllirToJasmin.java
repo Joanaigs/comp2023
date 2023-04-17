@@ -28,25 +28,22 @@ public class OllirToJasmin {
 
     public String createHeader() {
 
+        // class
         String className = classUnit.getClassName();
         String classPrivacy = classUnit.getClassAccessModifier().name();
         String acessModifiers = createAccessModifiers(classPrivacy, classUnit.isStaticClass(), classUnit.isFinalClass());
         String atualClass = ".class " + acessModifiers + className + '\n';
 
-        String superClassName = classUnit.getSuperClass();
-        String superClass = ".super " + superClassName + '\n';
-
+        // extended class
+        String superClass = "";
+        if (classUnit.getSuperClass() != null) {
+            superClass += ".super " + classUnit.getSuperClass() + "\n";
+        }
+        else {
+            superClass += ".super java/lang/Object\n";
+        }
 
         return  atualClass + superClass + "\n";
-    }
-
-    public String createImports(){
-        String code = "";
-
-        for (String imp : classUnit.getImports())
-            code +=  ".import " + imp  + '\n';
-
-        return code;
     }
 
     public String createFields() {

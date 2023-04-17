@@ -21,6 +21,7 @@ public class JasminInstruction {
         return this.getCode(instruction, false);
     }
 
+
     public String getCode(Instruction instruction, boolean isAssign){
 
         String code = "";
