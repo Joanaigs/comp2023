@@ -35,7 +35,6 @@ public class ConditionVisitor extends PostorderJmmVisitor<String, String> implem
             node.put("type", "boolean");
             return null;
         }
-        String reportMessage = "Conditions must be of boolean type";
-        throw new CompilerException(utils.addReport(node, reportMessage));
+        throw new CompilerException(utils.addReport(node, "Conditions must be of boolean type"));
     }
 }

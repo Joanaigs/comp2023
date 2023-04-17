@@ -37,8 +37,7 @@ public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implem
             String expType = exp.get("type");
             if(exp.getAttributes().contains("array"))
                 expType += "[]";
-            String reportMessage = "Type must be boolean to negate, " + expType + " found instead";
-            throw new CompilerException(utils.addReport(node, reportMessage));
+            throw new CompilerException(utils.addReport(node, "Type must be boolean to negate, " + expType + " found instead"));
         }
         return null;
     }
@@ -46,37 +45,30 @@ public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implem
     private String binaryOp(JmmNode node, String s) {
         JmmNode leftOperand = node.getJmmChild(0);
         JmmNode rightOperand = node.getJmmChild(1);
-        if (leftOperand.getAttributes().contains("array") || rightOperand.getAttributes().contains("array")) {
-            String reportMessage = "Operand can't be array";
-            throw new CompilerException(utils.addReport(node, reportMessage));
-        }
+        if (leftOperand.getAttributes().contains("array") || rightOperand.getAttributes().contains("array"))
+            throw new CompilerException(utils.addReport(node, "Operand can't be array"));
+
         if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
-            if (utils.nodeIsOfType(leftOperand, false, "boolean") && utils.nodeIsOfType(rightOperand, false, "boolean")) return null;
-            else {
-                String reportMessage = "Operand must be of type boolean";
-                throw new CompilerException(utils.addReport(node, reportMessage));
-            }
+            if (utils.nodeIsOfType(leftOperand, false, "boolean") && utils.nodeIsOfType(rightOperand, false, "boolean"))
+                return null;
+            else
+                throw new CompilerException(utils.addReport(node, "Operand must be of type boolean"));
         }
         else {
-            if (utils.nodeIsOfType(leftOperand, false, "int") && utils.nodeIsOfType(rightOperand, false, "int")) return null;
-            else {
-                String reportMessage = "Operands must be of type int";
-                throw new CompilerException(utils.addReport(node, reportMessage));
-            }
+            if (utils.nodeIsOfType(leftOperand, false, "int") && utils.nodeIsOfType(rightOperand, false, "int"))
+                return null;
+            else
+                throw new CompilerException(utils.addReport(node, "Operands must be of type int"));
         }
     }
 
     private String unaryOp(JmmNode node, String s) {
         JmmNode child = node.getJmmChild(0);
         String type = child.get("type");
-        if (child.getAttributes().contains("array")) {
-            String reportMessage = "Operand can't be array";
-            throw new CompilerException(utils.addReport(node, reportMessage));
-        }
-        if (type.equals("boolean")){
-            String reportMessage = "Operand can't be of type boolean";
-            throw new CompilerException(utils.addReport(node, reportMessage));
-        }
+        if (child.getAttributes().contains("array"))
+            throw new CompilerException(utils.addReport(node, "Operand can't be array"));
+        if (type.equals("boolean"))
+            throw new CompilerException(utils.addReport(node, "Operand can't be of type boolean"));
         return null;
     }
 }

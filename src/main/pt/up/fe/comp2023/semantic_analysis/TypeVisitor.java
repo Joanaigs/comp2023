@@ -9,6 +9,7 @@ import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2023.SymbolTable;
 
 import java.util.List;
+import java.util.Objects;
 
 
 public class TypeVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
@@ -66,9 +67,6 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
 
     private String typeId(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "value");
-        if(var == null) {
-            throw new CompilerException(utils.addReport(node, node.get("value") + " not defined"));
-        }
         Type type = var.a.getType();
         node.put("type", type.getName());
         if (type.isArray()){
@@ -80,8 +78,7 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
     private String typeKeywordThis(JmmNode node, String s) {
         String scope = node.get("scope");
         if(scope.equals("main")){
-            String reportMessage = "this keyword is not allowed in main";
-            throw new CompilerException(utils.addReport(node, reportMessage));
+            throw new CompilerException(utils.addReport(node, "this keyword is not allowed in main"));
         }
         else {
             node.put("type", symbolTable.getClassName());
@@ -170,45 +167,36 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
 
     private String typeAssignmentStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-        if(var == null) {
-            throw new CompilerException(utils.addReport(node, node.get("var") + " not defined"));
-        }
-        else {
-            Type varType = var.a.getType();
-            JmmNode exp = node.getJmmChild(0);
-            if(exp.getKind().equals("This")) {
-                if (typeAssignmentThis(node, varType)) {
-                    throw new CompilerException(utils.addReport(node, "Can't assign \"this\" keyword to " + varType.getName()));
-                }
+        Type varType = var.a.getType();
+        JmmNode exp = node.getJmmChild(0);
+        if(exp.getKind().equals("This")) {
+            if (typeAssignmentThis(node, varType)) {
+                throw new CompilerException(utils.addReport(node, "Can't assign \"this\" keyword to " + varType.getName()));
             }
-            else typeAssignment(node, varType);
         }
+        else typeAssignment(node, varType);
         return null;
     }
 
     private String typeArrayAssignStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-        if(var == null) {
-            throw new CompilerException(utils.addReport(node, node.get("var") + " not defined"));
-        }
-        else {
-            Type varType = var.a.getType();
-            JmmNode exp = node.getJmmChild(1);
-            if(exp.getKind().equals("This")) {
-                if (typeAssignmentThis(node, varType)) {
-                    throw new CompilerException(utils.addReport(node, "Can't assign \"this\" keyword to " + varType.getName()));
-                }
+        Type varType = var.a.getType();
+        JmmNode exp = node.getJmmChild(1);
+        if(exp.getKind().equals("This")) {
+            if (typeAssignmentThis(node, varType)) {
+                throw new CompilerException(utils.addReport(node, "Can't assign \"this\" keyword to " + varType.getName()));
             }
-            else typeAssignment(node, varType);
         }
+        else typeAssignment(node, varType);
         return null;
     }
 
     private String typeFnCallOp(JmmNode node, String s) {
         String className = node.getJmmChild(0).get("type");
         String extendedClass = this.symbolTable.getSuper();
-        if (className.equals(this.symbolTable.getClassName())) {  //method is part of the current class
-            if (extendedClass == null) {     //can extend another class
+
+        if (className.equals(this.symbolTable.getClassName())) {  //class being called is the current class
+            if (Objects.isNull(extendedClass)) {
                 String methodName = node.get("value");
                 if (this.symbolTable.hasMethod(methodName)) {
                     Type methodReturn = symbolTable.getMethod(methodName).getReturnType();
@@ -218,31 +206,26 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
                     }
                     return null;
                 }
-                else {
-                    String reportMessage = "Method not defined";
-                    throw new CompilerException(utils.addReport(node, reportMessage));
-                }
+                else throw new CompilerException(utils.addReport(node, "Method not defined"));
             }
-            else if (!symbolTable.isImported(extendedClass)) {
-                String reportMessage = "Class is not defined";
-                throw new CompilerException(utils.addReport(node, reportMessage));
+            else if (!symbolTable.isImported(extendedClass)) {  //extended class must be imported
+                throw new CompilerException(utils.addReport(node, "Class is not defined"));
             }
-            node.put("type", className);    //it's a method from an extended class
+            node.put("type", className);    //it's a method from an imported extended class
             node.put("extended", extendedClass);
             return null;
         }
-        else if (extendedClass != null && symbolTable.isImported(extendedClass)) {
+        else if (!symbolTable.isImported(className)) {
+            throw new CompilerException(utils.addReport(node, "Class is not defined"));
+        }
+
+        else if (className.equals(extendedClass)) {     //class is being extended and imported
             node.put("type", className);
             node.put("extended", extendedClass);
             return null;
         }
 
-        else if (!symbolTable.isImported(className)) {
-            String reportMessage = "Class is not defined";
-            throw new CompilerException(utils.addReport(node, reportMessage));
-        }
-
-        node.put("type", className);
+        node.put("type", className);     //class is being imported
         node.put("imported", "true");
         return null;
     }

@@ -32,16 +32,17 @@ public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements
     private String arrayAccess(JmmNode node, String s) {
         JmmNode firstChild = node.getJmmChild(0);
         JmmNode index = node.getJmmChild(1);
-        if (!utils.nodeIsOfType(firstChild, true, "int")) {
-            String reportMessage = "Array access can only be done over an array of Integers";
-            throw new CompilerException(utils.addReport(node, reportMessage));
-        }
+
+        if (!utils.nodeIsOfType(firstChild, true, "int"))
+            throw new CompilerException(utils.addReport(node, "Array access can only be done over an array of Integers"));
+
         else if (!index.getKind().equals("Integer")) {
-            if (!utils.nodeIsOfType(index, false, "int")) {
+            if (!utils.nodeIsOfType(index, false, "int"))
                 throw new CompilerException(utils.addReport(node, "Array access index must be of type Integer"));
-            }
-            else return null;
+            else
+                return null;
         }
+
         else return null;
     }
 
@@ -52,8 +53,7 @@ public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements
             return null;
         }
         String objectType = node.getJmmChild(0).get("type");
-        String reportMessage = "Expected type array but found " + objectType + " instead";
-        throw new CompilerException(utils.addReport(node, reportMessage));
+        throw new CompilerException(utils.addReport(node,  "Expected type array but found " + objectType + " instead"));
     }
 
 }

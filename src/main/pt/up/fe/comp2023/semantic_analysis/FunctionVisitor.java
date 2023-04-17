@@ -35,6 +35,27 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
         return null;
     }
 
+    private boolean checkParameters(JmmNode node, String methodName) {
+        List<Symbol> methodParameters = symbolTable.getParameters(methodName);     //check if method parameters and function arguments match
+        int numChildren = node.getNumChildren();
+        List<JmmNode> argumentNodes = new ArrayList<>();
+        if (numChildren > 1) {   // if it's not > 1, then the function has no arguments
+            for (int i = 1; i < numChildren; i++) {
+                argumentNodes.add(node.getJmmChild(i));
+            }
+        }
+        if (methodParameters.size() != argumentNodes.size()) {
+            return false;
+        }
+        for (int j = 0; j < methodParameters.size(); j++) {
+            Type paramType = methodParameters.get(j).getType();
+            if (!utils.nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName())) {
+               return false;
+            }
+        }
+        return true;
+    }
+
     private String fnCallOp(JmmNode node, String s) {
         if(!node.getJmmChild(0).getAttributes().contains("type")){
             String reportMessage = "Class not defined";
@@ -44,39 +65,21 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
         String methodName = node.get("value");
         if (className.equals(symbolTable.getClassName()) && symbolTable.getSuper() == null) {  //method is part of the current class
             if (this.symbolTable.hasMethod(methodName)) {
-                List<Symbol> methodParameters = symbolTable.getParameters(methodName);     //check if method parameters and function arguments match
-                int numChildren = node.getNumChildren();
-                List<JmmNode> argumentNodes = new ArrayList<>();
-                if (numChildren > 1) {   // if it's not > 1, then the function has no arguments
-                    for (int i = 1; i < numChildren; i++) {
-                        argumentNodes.add(node.getJmmChild(i));
-                    }
-                }
-                if (methodParameters.size() != argumentNodes.size()) {
+                if (!checkParameters(node, methodName)){
                     String reportMessage = "Method parameters and function arguments don't match";
                     throw new CompilerException(utils.addReport(node, reportMessage));
-                }
-                for (int j = 0; j < methodParameters.size(); j++) {
-                    Type paramType = methodParameters.get(j).getType();
-                    if (!utils.nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName())) {
-                        String reportMessage = "Method parameters and function arguments don't match";
-                        throw new CompilerException(utils.addReport(node, reportMessage));
                     }
-                }
-                return null;
+                else return null;
             }
-            else{
-                String reportMessage = "Method is not defined";
-                throw new CompilerException(utils.addReport(node, reportMessage));
-            }
+            else
+                throw new CompilerException(utils.addReport(node, "Method is not defined"));
         }
         return null;
     }
 
     private String checkReturn(JmmNode node, String s) {
         if(!utils.nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), node.getJmmChild(0).getObject("isArray").equals(true), node.getJmmChild(0).get("typeDeclaration"))) {
-            String reportMessage = "Incompatible return type";
-            throw new CompilerException(utils.addReport(node, reportMessage));
+            throw new CompilerException(utils.addReport(node, "Incompatible return type"));
         }
         return null;
     }
