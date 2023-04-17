@@ -43,17 +43,12 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
 
     private String assignmentStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-        if(var == null) {
-            throw new CompilerException(utils.addReport(node, node.get("var") + " not defined"));
+        Type varType = var.a.getType();
+        if(var.b.equals("FIELD") && node.get("scope").equals("main")){
+            throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
         }
-        else {
-            Type varType = var.a.getType();
-            if(var.b.equals("FIELD") && node.get("scope").equals("main")){
-                throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
-            }
-            if(checkAssignment(node, 0, varType, varType.isArray())){
-               throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
-            }
+        if(checkAssignment(node, 0, varType, varType.isArray())){
+            throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
         }
         return null;
     }
@@ -61,19 +56,13 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
     private String arrayAssignStm(JmmNode node, String s) {
         JmmNode idx = node.getJmmChild(0);
         if(!utils.nodeIsOfType(idx, false, "int")){
-            String reportMessage = "Array index must be of type integer";
-            throw new CompilerException(utils.addReport(node, reportMessage));
+            throw new CompilerException(utils.addReport(node, "Array index must be of type integer"));
         }
         else {
             Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-            if(var == null) {
-                throw new CompilerException(utils.addReport(node, node.get("var") + " not defined"));
-            }
-            else {
-                Type varType = var.a.getType();
-                if(checkAssignment(node, 1, varType, false)){
-                    throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
-                }
+            Type varType = var.a.getType();
+            if(checkAssignment(node, 1, varType, false)){
+                throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
             }
             return null;
         }

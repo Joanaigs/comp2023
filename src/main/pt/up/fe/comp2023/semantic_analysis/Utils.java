@@ -12,6 +12,7 @@ import pt.up.fe.comp2023.SymbolTable;
 import java.util.LinkedList;
 import java.util.List;
 
+import static java.util.Objects.isNull;
 import static pt.up.fe.specs.util.SpecsStrings.parseInt;
 
 public class Utils {
@@ -49,7 +50,10 @@ public class Utils {
         String extendedClass = this.symbolTable.getSuper();
         if (this.symbolTable.getSuper() != null && this.symbolTable.getSuper().equals(var))
             return new Pair<>(new Symbol(new Type(extendedClass, true), extendedClass), "");
-        return this.symbolTable.getSymbol(scope, var);
+        Pair<Symbol, String> symbolStringPair = this.symbolTable.getSymbol(scope, var);
+        if(!isNull(symbolStringPair))
+            return symbolStringPair;
+        throw new CompilerException(addReport(node, var + " not defined"));
     }
 
     public Report addReport(JmmNode node, String reportMessage){
