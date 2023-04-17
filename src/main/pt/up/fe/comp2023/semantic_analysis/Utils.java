@@ -29,6 +29,8 @@ public class Utils {
     public boolean nodeIsOfType(JmmNode node, boolean isArray, String type) {
         if (node.getAttributes().contains("imported"))
             return true;
+        if (node.getAttributes().contains("extended"))
+            return true;
         if(!node.getAttributes().contains("type"))
             return false;
         String nodeType = node.get("type");

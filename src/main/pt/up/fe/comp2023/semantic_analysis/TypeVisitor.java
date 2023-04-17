@@ -228,10 +228,12 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
                 throw new CompilerException(utils.addReport(node, reportMessage));
             }
             node.put("type", className);    //it's a method from an extended class
+            node.put("extended", extendedClass);
             return null;
         }
         else if (extendedClass != null && symbolTable.isImported(extendedClass)) {
             node.put("type", className);
+            node.put("extended", extendedClass);
             return null;
         }
 
