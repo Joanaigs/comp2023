@@ -48,7 +48,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         }
         else {
             Type varType = var.a.getType();
-            if(var.b.equals("FIELD") && symbolTable.getClassName().equals("main")){
+            if(var.b.equals("FIELD") && node.get("scope").equals("main")){
                 throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
             }
             if(checkAssignment(node, 0, varType, varType.isArray())){
