@@ -118,8 +118,8 @@ public class OllirToJasmin {
 
     public String createMethodBody(Method method){
 
-        String code = "\t.limit stack 99\n";
-        code += "\t.limit locals 99\n";
+        String code = ".limit stack 99\n";
+        code += ".limit locals 99\n";
 
         for (int i = 0; i < method.getInstructions().size(); i++) {
 

@@ -64,7 +64,7 @@ public class MethodInstruction {
 
 
     public String getNoperCode(SingleOpInstruction instruction){
-        String code = "\t";
+        String code = "";
         var element = instruction.getSingleOperand();
         code += createLoadCode(element);
 
@@ -87,7 +87,7 @@ public class MethodInstruction {
         if(instruction.hasReturnValue()) {
             String loadCode = createLoadCode(instruction.getOperand());
             String returnType = jasminUtils.getReturnType(instruction.getOperand().getType().getTypeOfElement());
-            code += "\t" + loadCode + "\t" + returnType;
+            code +=  loadCode +  returnType;
             this.jasminUtils.sub2StackAtual();
         }
 
@@ -179,7 +179,7 @@ public class MethodInstruction {
                     code += createIConstCode( literalElement.getLiteral() );
                     break;
                 default:
-                    code += "\tldc " + literalElement.getLiteral();
+                    code += "ldc " + literalElement.getLiteral();
                     break;
             }
         }
@@ -191,7 +191,7 @@ public class MethodInstruction {
                 // field element
                 String className = this.classUnit.getClassName();
                 String operandName = operand.getName();
-                code += "aload_0\n" + "\tgetfield " + className + "/" + operandName;
+                code += "aload_0\n" + "getfield " + className + "/" + operandName;
             }
             else{
                 ElementType elementType = operand.getType().getTypeOfElement();
@@ -223,10 +223,10 @@ public class MethodInstruction {
             LiteralElement literalElement = (LiteralElement) e;
             switch (literalElement.getType().getTypeOfElement()) {
                 case INT32:
-                    code += "\t" + createIloadIstoreCode( Integer.parseInt(literalElement.getLiteral()), false );
+                    code += createIloadIstoreCode( Integer.parseInt(literalElement.getLiteral()), false );
                     break;
                 default:
-                    code += "\tstore " +  literalElement.getLiteral();
+                    code += "store " +  literalElement.getLiteral();
                     break;
             }
         } else {
@@ -235,21 +235,21 @@ public class MethodInstruction {
             ElementType elemType = operand.getType().getTypeOfElement();
 
             if (id < 0) {
-                code += "\tputfield " + this.jasminUtils.getType(elemType) + "/" + operand.getName() + " " + this.jasminUtils.getType(elemType);
+                code += "putfield " + this.jasminUtils.getType(elemType) + "/" + operand.getName() + " " + this.jasminUtils.getType(elemType);
             }else
                 switch (elemType) {
                     case INT32:
                     case BOOLEAN:
-                        code += "\t" + createIloadIstoreCode(id, false );
+                        code += createIloadIstoreCode(id, false );
                         break;
                     case ARRAYREF:
                     case OBJECTREF:
                     case CLASS:
                     case STRING:
-                        code += "\t astore" + (id <= 3 ? '_' : ' ') + id;
+                        code += "astore" + (id <= 3 ? '_' : ' ') + id;
                         break;
                     case THIS:
-                        code += "\t astore_0";
+                        code += "astore_0";
                         break;
                     case VOID:
                         break;
@@ -277,6 +277,10 @@ public class MethodInstruction {
         int val = Integer.parseInt(constValue);
         if (val >= 0 && val < 6)
             code += "iconst_";
+        else if (val >= 0 && val < 128)
+            code += "bipush ";
+        else if (val >= 0 && val < 32768)
+            code += "sipush ";
         else
             code += "ldc ";
 
