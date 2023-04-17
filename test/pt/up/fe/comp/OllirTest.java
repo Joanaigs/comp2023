@@ -3,7 +3,6 @@ package pt.up.fe.comp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.util.Collections;
 import java.util.HashMap;
 
 import org.junit.Test;
@@ -12,7 +11,6 @@ import org.specs.comp.ollir.ClassType;
 import org.specs.comp.ollir.ElementType;
 import org.specs.comp.ollir.Type;
 
-import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.specs.util.SpecsIo;
 
@@ -32,7 +30,7 @@ import pt.up.fe.specs.util.SpecsIo;
 public class OllirTest {
 
     static OllirResult getOllirResult(String filename) {
-        return new OllirResult(SpecsIo.getResource("pt/up/fe/comp/ollir/" + filename), new HashMap<>());
+        return new OllirResult(SpecsIo.getResource("pt/up/fe/comp/jasmin/ollir/" + filename), new HashMap<>());
     }
 
     @Test
