@@ -13,8 +13,11 @@ import java.util.List;
 
 public class AssignmentVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
     private final Utils utils;
+    private final SymbolTable symbolTable;
 
     public AssignmentVisitor(SymbolTable symbolTable) {
+
+        this.symbolTable = symbolTable;
         this.utils = new Utils(symbolTable);
     }
 
@@ -45,6 +48,9 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         }
         else {
             Type varType = var.a.getType();
+            if(var.b.equals("FIELD") && symbolTable.getClassName().equals("main")){
+                throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
+            }
             if(checkAssignment(node, 0, varType, varType.isArray())){
                throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
             }
