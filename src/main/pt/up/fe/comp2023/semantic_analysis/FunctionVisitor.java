@@ -26,12 +26,12 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
 
     @Override
     protected void buildVisitor() {
-        addVisit("CallFnc", this::fnCallOp);
-        addVisit("InstanceMethodDeclaration", this::checkReturn);
-        setDefaultVisit(this::ignore);
+        addVisit("CallFnc", this::handleFnCallOp);
+        addVisit("InstanceMethodDeclaration", this::handleReturn);
+        setDefaultVisit(this::setDefaultVisit);
     }
 
-    private String ignore (JmmNode jmmNode, String s) {
+    private String setDefaultVisit (JmmNode jmmNode, String s) {
         return null;
     }
 
@@ -56,7 +56,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
         return true;
     }
 
-    private String fnCallOp(JmmNode node, String s) {
+    private String handleFnCallOp(JmmNode node, String s) {
         if(!node.getJmmChild(0).getAttributes().contains("type")){
             String reportMessage = "Class not defined";
             throw new CompilerException(utils.addReport(node, reportMessage));
@@ -77,7 +77,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
         return null;
     }
 
-    private String checkReturn(JmmNode node, String s) {
+    private String handleReturn(JmmNode node, String s) {
         if(!utils.nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), node.getJmmChild(0).getObject("isArray").equals(true), node.getJmmChild(0).get("typeDeclaration"))) {
             throw new CompilerException(utils.addReport(node, "Incompatible return type"));
         }

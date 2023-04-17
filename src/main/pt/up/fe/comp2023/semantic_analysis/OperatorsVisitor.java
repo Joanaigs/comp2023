@@ -21,17 +21,17 @@ public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implem
 
     @Override
     protected void buildVisitor() {
-        addVisit("NegateExpr", this::negation);
-        addVisit("BinaryOp", this::binaryOp);
-        addVisit("UnaryOp", this::unaryOp);
-        addVisit("PostfixOp", this::unaryOp);
-        setDefaultVisit(this::ignore);
+        addVisit("NegateExpr", this::handleNegation);
+        addVisit("BinaryOp", this::handleBinaryOp);
+        addVisit("UnaryOp", this::handleUnaryOp);
+        addVisit("PostfixOp", this::handleUnaryOp);
+        setDefaultVisit(this::setDefaultVisit);
     }
-    private String ignore (JmmNode jmmNode, String s) {
+    private String setDefaultVisit (JmmNode jmmNode, String s) {
         return null;
     }
 
-    private String negation(JmmNode node, String s) {
+    private String handleNegation(JmmNode node, String s) {
         JmmNode exp = node.getJmmChild(0);
         if (!utils.nodeIsOfType(exp, false, "boolean")) {
             String expType = exp.get("type");
@@ -42,7 +42,7 @@ public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implem
         return null;
     }
 
-    private String binaryOp(JmmNode node, String s) {
+    private String handleBinaryOp(JmmNode node, String s) {
         JmmNode leftOperand = node.getJmmChild(0);
         JmmNode rightOperand = node.getJmmChild(1);
         if (leftOperand.getAttributes().contains("array") || rightOperand.getAttributes().contains("array"))
@@ -62,7 +62,7 @@ public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implem
         }
     }
 
-    private String unaryOp(JmmNode node, String s) {
+    private String handleUnaryOp(JmmNode node, String s) {
         JmmNode child = node.getJmmChild(0);
         String type = child.get("type");
         if (child.getAttributes().contains("array"))
