@@ -7,7 +7,6 @@ import pt.up.fe.comp2023.SymbolTable;
 
 import java.util.List;
 
-import static pt.up.fe.specs.util.SpecsStrings.parseInt;
 
 public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
     private final Utils utils;

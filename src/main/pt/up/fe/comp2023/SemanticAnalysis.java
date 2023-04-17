@@ -25,7 +25,7 @@ public class SemanticAnalysis implements JmmAnalysis {
         visitors.add(new ConditionVisitor(symbolTable));
         visitors.add(new FunctionVisitor(symbolTable));
 
-        for( AnalyserVisitor visitor : visitors){
+        for(AnalyserVisitor visitor : visitors){
             try {
                 visitor.visit(jmmParserResult.getRootNode(), "");
             } catch (CompilerException e) {
@@ -33,7 +33,7 @@ public class SemanticAnalysis implements JmmAnalysis {
             }
         }
 
-        for( AnalyserVisitor visitor : visitors){
+        for(AnalyserVisitor visitor : visitors){
             reports.addAll(visitor.getReports());
         }
 
