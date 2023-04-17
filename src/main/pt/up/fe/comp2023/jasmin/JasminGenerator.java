@@ -5,17 +5,20 @@ import pt.up.fe.comp.jmm.jasmin.JasminBackend;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 
+import java.io.File;
 import java.util.Collections;
 
 public class JasminGenerator implements JasminBackend {
 
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
-
         String jasminCode = new OllirToJasmin(ollirResult.getOllirClass()).getCode();
+        System.out.println(jasminCode);
         var jasminResult = new JasminResult(jasminCode);
+        jasminResult.compile();
 
-        return jasminResult;
+        return new JasminResult(ollirResult, jasminCode, Collections.emptyList());
+
     }
 
 }

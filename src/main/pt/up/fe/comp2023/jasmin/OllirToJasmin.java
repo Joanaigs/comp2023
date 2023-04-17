@@ -1,9 +1,6 @@
 package pt.up.fe.comp2023.jasmin;
 
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.Element;
-import org.specs.comp.ollir.Field;
-import org.specs.comp.ollir.Method;
+import org.specs.comp.ollir.*;
 
 import java.util.ArrayList;
 import java.util.StringJoiner;
@@ -30,14 +27,26 @@ public class OllirToJasmin {
     }
 
     public String createHeader() {
+
         String className = classUnit.getClassName();
         String classPrivacy = classUnit.getClassAccessModifier().name();
-        String atualClass = ".class " + classPrivacy + className + '\n';
+        String acessModifiers = createAccessModifiers(classPrivacy, classUnit.isStaticClass(), classUnit.isFinalClass());
+        String atualClass = ".class " + acessModifiers + className + '\n';
 
         String superClassName = classUnit.getSuperClass();
         String superClass = ".super " + superClassName + '\n';
 
-        return atualClass + superClass + "\n";
+
+        return  atualClass + superClass + "\n";
+    }
+
+    public String createImports(){
+        String code = "";
+
+        for (String imp : classUnit.getImports())
+            code +=  ".import " + imp  + '\n';
+
+        return code;
     }
 
     public String createFields() {
@@ -79,18 +88,27 @@ public class OllirToJasmin {
         String code = "";
 
         if(method.isConstructMethod())
-            createConstructMethod(method);
+            code += createConstructMethod();
         else{
             code += createMethodDeclaration(method);
-            code += createMethodBody(method) + "\n";
+            code += createMethodBody(method);
             code += ".end method\n";
+
         }
 
         return code;
     }
 
-    public String createConstructMethod(Method method){
+    public String createConstructMethod(){
         String code = "";
+        String superClass = classUnit.getSuperClass();
+
+        code+=  ".method public <init>()V\n" +
+                "   aload_0\n" +
+                "   invokenonvirtual " +  superClass + "/<init>()V\n" +
+                "   return\n" +
+                ".end method\n";
+
         return code;
     }
 
@@ -104,16 +122,26 @@ public class OllirToJasmin {
         code += methodAcessModifiers + methodName + '(';
 
         for(Element param : method.getParams())
-            code += param.getType().getTypeOfElement();
+            code += this.jasminUtils.getType(param.getType().getTypeOfElement());
 
-        String methodReturnType = jasminUtils.getType(method.getReturnType().getTypeOfElement());
-        code += ')' + methodReturnType;
+        String methodReturnType = this.jasminUtils.getType(method.getReturnType().getTypeOfElement());
+        code += ')' + methodReturnType + "\n";
 
         return code;
     }
 
     public String createMethodBody(Method method){
-        String code = "";
+
+        String code = "\t.limit stack 99\n";
+        code += "\t.limit locals 99\n";
+
+        for (int i = 0; i < method.getInstructions().size(); i++) {
+
+            JasminInstruction jasminInstruction = new JasminInstruction(this.classUnit, method);
+            var instruction = method.getInstr(i);
+
+            code += jasminInstruction.createInstructionCode(instruction);
+        }
 
         return code;
     }
