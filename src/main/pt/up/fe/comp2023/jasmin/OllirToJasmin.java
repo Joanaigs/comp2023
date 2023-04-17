@@ -27,8 +27,9 @@ public class OllirToJasmin {
     public String createClass(){
         String className = classUnit.getClassName();
         String classPrivacy = classUnit.getClassAccessModifier().name();
+        String isPublic = (classPrivacy == "DEFAULT")? "public " : "";
         String acessModifiers = createAccessModifiers(classPrivacy, classUnit.isStaticClass(), classUnit.isFinalClass());
-        String atualClass = ".class " + acessModifiers + className + '\n';
+        String atualClass = ".class " + isPublic + acessModifiers + className + '\n';
 
         return atualClass;
     }
@@ -83,7 +84,7 @@ public class OllirToJasmin {
         if(method.isConstructMethod())
             code += createConstructMethod();
         else{
-            code += createMethodDeclaration(method);
+            code += createMethodHeader(method);
             code += createMethodBody(method);
             code += ".end method\n";
         }
@@ -94,11 +95,10 @@ public class OllirToJasmin {
     public String createConstructMethod(){
         String extendedClass = (classUnit.getSuperClass() == null)? "java/lang/Object" : classUnit.getSuperClass();
 
-
         return "\n.method public <init>()V\naload_0\ninvokespecial " + extendedClass +  ".<init>()V\nreturn\n.end method\n";
     }
 
-    public String createMethodDeclaration(Method method){
+    public String createMethodHeader(Method method){
 
         String code = ".method ";
 
@@ -136,7 +136,7 @@ public class OllirToJasmin {
     {
         String code = "";
 
-        if (!privacy.equals("DEFAULT"))
+        if (privacy != "DEFAULT")
             code += privacy.toLowerCase() + " ";
         if (isFinal)
             code += "final ";

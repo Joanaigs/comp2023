@@ -13,8 +13,8 @@ public class MethodInstruction {
     MethodInstruction(ClassUnit classUnit, Method method)
     {
         this.classUnit = classUnit;
-        this.jasminUtils = new Utils(this.classUnit);
         this.varTable =  method.getVarTable();
+        this.jasminUtils = new Utils(this.classUnit);
     }
 
     public String createInstructionCode(Instruction instruction){
