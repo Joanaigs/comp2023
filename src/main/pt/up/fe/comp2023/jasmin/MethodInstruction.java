@@ -4,16 +4,16 @@ import org.specs.comp.ollir.*;
 
 import java.util.HashMap;
 
-public class JasminInstruction {
+public class MethodInstruction {
 
     private final ClassUnit classUnit;
-    private JasminUtils jasminUtils;
+    private Utils jasminUtils;
     private HashMap<String, Descriptor> varTable;
 
-    JasminInstruction(ClassUnit classUnit, Method method)
+    MethodInstruction(ClassUnit classUnit, Method method)
     {
         this.classUnit = classUnit;
-        this.jasminUtils = new JasminUtils(this.classUnit);
+        this.jasminUtils = new Utils(this.classUnit);
         this.varTable =  method.getVarTable();
     }
 
@@ -265,7 +265,7 @@ public class JasminInstruction {
 
         String code = (load) ?  "iload" : "istore";
 
-        code += (id >= 4) ? " " + id : "_" + id;
+        code += (id >= 4) ? " " + id : "_" + id;    // optimization
 
         return code;
     }

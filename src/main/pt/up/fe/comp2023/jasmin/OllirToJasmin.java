@@ -2,48 +2,44 @@ package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
 
-import java.util.ArrayList;
-import java.util.StringJoiner;
-
 public class OllirToJasmin {
 
     private final ClassUnit classUnit;
-    private final JasminUtils jasminUtils;
+    private final Utils jasminUtils;
 
 
     public OllirToJasmin(ClassUnit classUnit) {
         this.classUnit = classUnit;
-        this.jasminUtils = new JasminUtils(classUnit);
+        this.jasminUtils = new Utils(classUnit);
     }
 
     public String getCode() {
         String code = "";
 
-        code += createHeader();
+        code += createClass();
+        code += createExtendedClass();
         code += createFields();
         code += createMethods();
 
         return code;
     }
 
-    public String createHeader() {
-
-        // class
+    public String createClass(){
         String className = classUnit.getClassName();
         String classPrivacy = classUnit.getClassAccessModifier().name();
         String acessModifiers = createAccessModifiers(classPrivacy, classUnit.isStaticClass(), classUnit.isFinalClass());
         String atualClass = ".class " + acessModifiers + className + '\n';
 
-        // extended class
-        String superClass = "";
-        if (classUnit.getSuperClass() != null) {
-            superClass += ".super " + classUnit.getSuperClass() + "\n";
-        }
-        else {
-            superClass += ".super java/lang/Object\n";
-        }
+        return atualClass;
+    }
 
-        return  atualClass + superClass + "\n";
+    public String createExtendedClass(){
+
+        if (classUnit.getSuperClass() == null)
+            return ".super java/lang/Object\n";
+
+        return ".super " + classUnit.getSuperClass() + "\n";
+
     }
 
     public String createFields() {
@@ -90,23 +86,16 @@ public class OllirToJasmin {
             code += createMethodDeclaration(method);
             code += createMethodBody(method);
             code += ".end method\n";
-
         }
 
         return code;
     }
 
     public String createConstructMethod(){
-        String code = "";
-        String superClass = classUnit.getSuperClass();
+        String extendedClass = (classUnit.getSuperClass() == null)? "java/lang/Object" : classUnit.getSuperClass();
 
-        code+=  ".method public <init>()V\n" +
-                "   aload_0\n" +
-                "   invokenonvirtual " +  superClass + "/<init>()V\n" +
-                "   return\n" +
-                ".end method\n";
 
-        return code;
+        return "\n.method public <init>()V\naload_0\ninvokespecial " + extendedClass +  ".<init>()V\nreturn\n.end method\n";
     }
 
     public String createMethodDeclaration(Method method){
@@ -134,7 +123,7 @@ public class OllirToJasmin {
 
         for (int i = 0; i < method.getInstructions().size(); i++) {
 
-            JasminInstruction jasminInstruction = new JasminInstruction(this.classUnit, method);
+            MethodInstruction jasminInstruction = new MethodInstruction(this.classUnit, method);
             var instruction = method.getInstr(i);
 
             code += jasminInstruction.createInstructionCode(instruction);

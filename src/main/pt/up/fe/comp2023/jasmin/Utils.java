@@ -2,13 +2,12 @@ package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.ClassUnit;
 import org.specs.comp.ollir.ElementType;
-import org.specs.comp.ollir.Type;
 
-public class JasminUtils {
+public class Utils {
     ClassUnit classUnit;
     public int stackAtual;
 
-    JasminUtils(ClassUnit classUnit) {
+    Utils(ClassUnit classUnit) {
         this.classUnit = classUnit;
     }
 
@@ -46,14 +45,6 @@ public class JasminUtils {
 
     public int getLimitLocals(){
         return 99;
-    }
-
-    public int getStackAtual() {
-        return stackAtual;
-    }
-
-    public void add2StackAtual() {
-        this.stackAtual++;
     }
 
     public void sub2StackAtual() {
