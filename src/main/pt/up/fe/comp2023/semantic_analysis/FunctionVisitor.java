@@ -47,7 +47,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
                 List<Symbol> methodParameters = symbolTable.getParameters(methodName);     //check if method parameters and function arguments match
                 int numChildren = node.getNumChildren();
                 List<JmmNode> argumentNodes = new ArrayList<>();
-                if (numChildren > 1) {   // if it's not > 2, then the function has no arguments
+                if (numChildren > 1) {   // if it's not > 1, then the function has no arguments
                     for (int i = 1; i < numChildren; i++) {
                         argumentNodes.add(node.getJmmChild(i));
                     }
