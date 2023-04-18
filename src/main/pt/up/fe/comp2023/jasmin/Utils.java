@@ -1,18 +1,12 @@
 package pt.up.fe.comp2023.jasmin;
 
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.ElementType;
+import org.specs.comp.ollir.*;
 
 public class Utils {
-    ClassUnit classUnit;
     public int stackAtual;
 
-    Utils(ClassUnit classUnit) {
-        this.classUnit = classUnit;
-    }
-
-    public String getType(ElementType ollirType) {
-        switch (ollirType){
+    public String getType(ElementType elemType){
+        switch (elemType){
             case INT32:
                 return "I";
             case BOOLEAN:
@@ -21,15 +15,17 @@ public class Utils {
                 return "Ljava/lang/String;";
             case VOID:
                 return "V";
+            case CLASS:
+                return "CLASS";
             default:
                 return "";
         }
     }
 
+
     public String getReturnType(ElementType returnType) {
         switch (returnType) {
             case INT32:
-                return "i";
             case BOOLEAN:
                 return "i";
             case STRING:
@@ -37,7 +33,7 @@ public class Utils {
             case VOID:
                 return "";
             default:
-                return "";
+                return "a";
         }
     }
 
@@ -46,10 +42,5 @@ public class Utils {
     public int getLimitLocals(){
         return 99;
     }
-
-    public void sub2StackAtual() {
-        this.stackAtual--;
-    }
-
 
 }

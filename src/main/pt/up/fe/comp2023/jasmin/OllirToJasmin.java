@@ -10,7 +10,7 @@ public class OllirToJasmin {
 
     public OllirToJasmin(ClassUnit classUnit) {
         this.classUnit = classUnit;
-        this.jasminUtils = new Utils(classUnit);
+        this.jasminUtils = new Utils();
     }
 
     public String getCode() {
