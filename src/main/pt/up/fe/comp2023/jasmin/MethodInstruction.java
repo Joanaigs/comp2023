@@ -14,18 +14,13 @@ public class MethodInstruction {
     {
         this.classUnit = classUnit;
         this.varTable =  method.getVarTable();
-        this.jasminUtils = new Utils(this.classUnit);
+        this.jasminUtils = new Utils();
     }
 
     public String createInstructionCode(Instruction instruction){
-        return this.getCode(instruction, false);
-    }
-
-
-    public String getCode(Instruction instruction, boolean isAssign){
 
         String code = "";
-
+        System.out.println(instruction.getInstType());
         switch(instruction.getInstType()){
             case ASSIGN :
                 // assign
@@ -33,7 +28,7 @@ public class MethodInstruction {
                 break;
             case CALL:
                 // invoke methods
-                code += getInvokeCode( (CallInstruction) instruction, isAssign);
+                code += getInvokeCode( (CallInstruction) instruction);
                 break;
             case GOTO:
                 break;
@@ -44,8 +39,10 @@ public class MethodInstruction {
                 code += getReturnCode((ReturnInstruction) instruction);
                 break;
             case PUTFIELD:
+                code += getPutFieldCode((PutFieldInstruction) instruction);
                 break;
             case GETFIELD:
+                code += getGetFieldCode( (GetFieldInstruction) instruction);
                 break;
             case UNARYOPER:
                 break;
@@ -62,11 +59,10 @@ public class MethodInstruction {
         return code;
     }
 
-
     public String getNoperCode(SingleOpInstruction instruction){
         String code = "";
         var element = instruction.getSingleOperand();
-        code += createLoadCode(element);
+        code += getLoadCode(element);
 
         return code;
     }
@@ -75,8 +71,8 @@ public class MethodInstruction {
         String code = "";
         Operand o1 = (Operand) instruction.getDest();
 
-        code += getCode(instruction.getRhs(), true);
-        code += createStoreCode(o1);
+        code += createInstructionCode(instruction.getRhs());
+        code += getStoreCode(o1);
 
         return code;
     }
@@ -85,10 +81,9 @@ public class MethodInstruction {
         String code = "";
 
         if(instruction.hasReturnValue()) {
-            String loadCode = createLoadCode(instruction.getOperand());
+            String loadCode = getLoadCode(instruction.getOperand());
             String returnType = jasminUtils.getReturnType(instruction.getOperand().getType().getTypeOfElement());
             code +=  loadCode +  returnType;
-            this.jasminUtils.sub2StackAtual();
         }
 
         return code + "return\n";
@@ -103,7 +98,7 @@ public class MethodInstruction {
             case SUB:
             case MUL:
             case DIV:
-                code += createIntOperationCode(instruction, instructionType);
+                code += getArithmeticCode(instruction, instructionType);
                 break;
             default:
                 break;
@@ -111,54 +106,74 @@ public class MethodInstruction {
         return code;
     }
 
-    private String createIntOperationCode(BinaryOpInstruction instruction, OperationType instructionType) {
-        String leftOperand = createLoadCode(instruction.getLeftOperand());
-        String rightOperand = createLoadCode(instruction.getRightOperand());
-        String operation;
+    private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
+        String leftOperand = getLoadCode(instruction.getLeftOperand());
+        String rightOperand = getLoadCode(instruction.getRightOperand());
+        String op;
 
         switch (instructionType) {
-            case ADD -> operation = "iadd\n";
-            case SUB -> operation = "isub\n";
-            case MUL -> operation = "imul\n";
-            case DIV -> operation = "idiv\n";
-            default -> operation = "";
+            case ADD -> op = "iadd\n";
+            case SUB -> op = "isub\n";
+            case MUL -> op = "imul\n";
+            case DIV -> op= "idiv\n";
+            default -> op = "";
         }
 
-        return leftOperand + rightOperand + operation;
+        return leftOperand + rightOperand + op;
     }
 
-    public String getInvokeCode(CallInstruction instruction, boolean isAssign) {
+    private String getPutFieldCode(PutFieldInstruction instruction){
+        String code = "";
+
+        Operand firstOperand = (Operand) instruction.getFirstOperand();
+        Operand secondOperand = (Operand) instruction.getSecondOperand();
+        Element element = instruction.getThirdOperand();
+
+        code += getLoadCode(firstOperand) + getLoadCode(element) + "putfield ";
+        String varType = jasminUtils.getType(secondOperand.getType().getTypeOfElement());
+
+
+        return  code + classUnit.getClassName() + "/" + secondOperand.getName() + " " + varType + "\n";
+    }
+
+    private String getGetFieldCode(GetFieldInstruction instruction) {
+        String code = "";
+
+        Operand firstOperand = (Operand) instruction.getFirstOperand();
+        Operand secondOperand = (Operand) instruction.getSecondOperand();
+        String varType = jasminUtils.getType(secondOperand.getType().getTypeOfElement());
+
+        code += getLoadCode(firstOperand) + "getfield ";
+
+        return code + classUnit.getClassName() + "/" + secondOperand.getName() + " " + varType +  "\n";
+    }
+
+    public String getInvokeCode(CallInstruction instruction) {
 
         switch (instruction.getInvocationType()) {
             case invokestatic:
-                return getInvokeStaticCode(instruction, isAssign);
+                return getInvokeStaticCode(instruction);
             case invokevirtual:
-                return getInvokeVirtualCode(instruction, isAssign);
+                return getInvokeVirtualCode(instruction);
             case invokespecial:
-                return getInvokeSpecialCode(instruction, isAssign);
+                return getInvokeSpecialCode(instruction);
             case NEW:
                 return getNewCode(instruction);
-            case ldc:
-                return getLdcCode(instruction);
             default:
                 return "";
         }
     }
 
 
-    private String getInvokeStaticCode(CallInstruction instruction, boolean isAssign) {
+    private String getInvokeStaticCode(CallInstruction instruction) {
         return "";
     }
 
-    private String getInvokeVirtualCode(CallInstruction instruction, boolean isAssign) {
+    private String getInvokeVirtualCode(CallInstruction instruction) {
         return "";
     }
 
-    private String getInvokeSpecialCode(CallInstruction instruction, boolean isAssign) {
-        return "";
-    }
-
-    private String getLdcCode(CallInstruction instruction) {
+    private String getInvokeSpecialCode(CallInstruction instruction) {
         return "";
     }
 
@@ -167,7 +182,7 @@ public class MethodInstruction {
     }
 
 
-    public String createLoadCode(Element e){
+    public String getLoadCode(Element e){
         String code = "";
 
         if (e.isLiteral()) {
@@ -176,7 +191,7 @@ public class MethodInstruction {
             switch (elementType) {
                 case INT32:
                 case BOOLEAN:
-                    code += createIConstCode( literalElement.getLiteral() );
+                    code += getIConstCode( literalElement.getLiteral() );
                     break;
                 default:
                     code += "ldc " + literalElement.getLiteral();
@@ -198,7 +213,7 @@ public class MethodInstruction {
                 switch (elementType) {
                     case INT32:
                     case BOOLEAN:
-                        code += createIloadIstoreCode(id, true );
+                        code += getIloadIstoreCode(id, true );
                         break;
                     case CLASS:
                     case STRING:
@@ -212,18 +227,17 @@ public class MethodInstruction {
                 }
             }
         }
-        this.jasminUtils.sub2StackAtual();
         return code + "\n";
     }
 
-    public String createStoreCode(Element e){
+    public String getStoreCode(Element e){
         String code = "";
 
         if (e.isLiteral()) {
             LiteralElement literalElement = (LiteralElement) e;
             switch (literalElement.getType().getTypeOfElement()) {
                 case INT32:
-                    code += createIloadIstoreCode( Integer.parseInt(literalElement.getLiteral()), false );
+                    code += getIloadIstoreCode( Integer.parseInt(literalElement.getLiteral()), false );
                     break;
                 default:
                     code += "store " +  literalElement.getLiteral();
@@ -240,12 +254,12 @@ public class MethodInstruction {
                 switch (elemType) {
                     case INT32:
                     case BOOLEAN:
-                        code += createIloadIstoreCode(id, false );
+                        code += getIloadIstoreCode(id, false );
                         break;
-                    case ARRAYREF:
-                    case OBJECTREF:
                     case CLASS:
                     case STRING:
+                    case ARRAYREF:
+                    case OBJECTREF:
                         code += "astore" + (id <= 3 ? '_' : ' ') + id;
                         break;
                     case THIS:
@@ -256,12 +270,11 @@ public class MethodInstruction {
                 }
             }
 
-        this.jasminUtils.sub2StackAtual();
         return code + "\n";
     }
 
 
-    public String createIloadIstoreCode(int id, boolean load){
+    public String getIloadIstoreCode(int id, boolean load){
 
         String code = (load) ?  "iload" : "istore";
 
@@ -270,7 +283,7 @@ public class MethodInstruction {
         return code;
     }
 
-    public String createIConstCode(String constValue) {
+    public String getIConstCode(String constValue) {
 
         String code = "";
 

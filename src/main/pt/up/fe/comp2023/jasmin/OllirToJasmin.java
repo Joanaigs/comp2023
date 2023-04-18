@@ -10,7 +10,7 @@ public class OllirToJasmin {
 
     public OllirToJasmin(ClassUnit classUnit) {
         this.classUnit = classUnit;
-        this.jasminUtils = new Utils(classUnit);
+        this.jasminUtils = new Utils();
     }
 
     public String getCode() {
@@ -95,7 +95,7 @@ public class OllirToJasmin {
     public String createConstructMethod(){
         String extendedClass = (classUnit.getSuperClass() == null)? "java/lang/Object" : classUnit.getSuperClass();
 
-        return "\n.method public <init>()V\naload_0\ninvokespecial " + extendedClass +  ".<init>()V\nreturn\n.end method\n";
+        return "\n.method public <init>()V\naload_0\ninvokespecial " + extendedClass +  "/<init>()V\nreturn\n.end method\n";
     }
 
     public String createMethodHeader(Method method){
