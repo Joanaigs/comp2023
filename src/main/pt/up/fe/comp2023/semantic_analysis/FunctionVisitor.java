@@ -9,6 +9,7 @@ import pt.up.fe.comp2023.SymbolTable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 public class FunctionVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
@@ -63,7 +64,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
         }
         String className = node.getJmmChild(0).get("type");
         String methodName = node.get("value");
-        if (className.equals(symbolTable.getClassName()) && symbolTable.getSuper() == null) {  //method is part of the current class
+        if (className.equals(symbolTable.getClassName()) && Objects.isNull(symbolTable.getSuper())) {  //method is part of the current class
             if (this.symbolTable.hasMethod(methodName)) {
                 if (!checkParameters(node, methodName)){
                     String reportMessage = "Method parameters and function arguments don't match";

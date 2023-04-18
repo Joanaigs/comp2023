@@ -11,6 +11,7 @@ import pt.up.fe.comp2023.SymbolTable;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.Objects.isNull;
 import static pt.up.fe.specs.util.SpecsStrings.parseInt;
@@ -35,9 +36,9 @@ public class Utils {
         if(!node.getAttributes().contains("type"))
             return false;
         String nodeType = node.get("type");
-        if (this.symbolTable.getSuper() != null && this.symbolTable.getSuper().equals(type) && this.symbolTable.getClassName().equals(nodeType))
+        if (!Objects.isNull(this.symbolTable.getSuper()) && this.symbolTable.getSuper().equals(type) && this.symbolTable.getClassName().equals(nodeType))
             return true;
-        if (this.symbolTable.isImported(type) && this.symbolTable.isImported(nodeType))
+        if ((this.symbolTable.isImported(type) && this.symbolTable.isImported(nodeType)))
             return true;
         if (node.getAttributes().contains("array") == isArray)
             return type.equals(nodeType);
@@ -48,7 +49,7 @@ public class Utils {
         String scope = node.get("scope");
         String var = node.get(variable);
         String extendedClass = this.symbolTable.getSuper();
-        if (this.symbolTable.getSuper() != null && this.symbolTable.getSuper().equals(var))
+        if (!Objects.isNull(this.symbolTable.getSuper()) && this.symbolTable.getSuper().equals(var))
             return new Pair<>(new Symbol(new Type(extendedClass, true), extendedClass), "");
         Pair<Symbol, String> symbolStringPair = this.symbolTable.getSymbol(scope, var);
         if(!isNull(symbolStringPair))

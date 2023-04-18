@@ -9,12 +9,15 @@ import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2023.SymbolTable;
 
 import java.util.List;
+import java.util.Objects;
 
 
 public class AssignmentVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
     private final Utils utils;
+    private final SymbolTable symbolTable;
 
     public AssignmentVisitor(SymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
         this.utils = new Utils(symbolTable);
     }
 
@@ -32,21 +35,24 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         return null;
     }
 
-    private boolean checkAssignment(JmmNode node, int child, Type varType, boolean shouldBeArray){
+    private void checkAssignment(JmmNode node, int child, Pair<Symbol, String> var){
+        if(var.b.equals("FIELD") && node.get("scope").equals("main")){
+            throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
+        }
+        Type varType = var.a.getType();
+        boolean shouldBeArray = varType.isArray();
         JmmNode exp = node.getJmmChild(child);
         String varTypeName = varType.getName();
-        return !utils.nodeIsOfType(exp, shouldBeArray, varTypeName);
+        if (!this.symbolTable.isImported(exp.get("type")) && Objects.isNull(this.symbolTable.getSuper())) {    //if the assignee is imported and the current class does not extend it, then assume it's possible
+            if (!utils.nodeIsOfType(exp, shouldBeArray, varTypeName)) {
+                throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
+            }
+        }
     }
 
     private String handleAssignmentStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-        Type varType = var.a.getType();
-        if(var.b.equals("FIELD") && node.get("scope").equals("main")){
-            throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
-        }
-        if(checkAssignment(node, 0, varType, varType.isArray())){
-            throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
-        }
+        checkAssignment(node, 0, var);
         return null;
     }
 
@@ -57,10 +63,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         }
         else {
             Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-            Type varType = var.a.getType();
-            if(checkAssignment(node, 1, varType, false)){
-                throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
-            }
+            checkAssignment(node, 1, var);
             return null;
         }
     }

@@ -1,18 +1,21 @@
-import A;
+import B;
 
-class CallToMethodAssumedInExtends extends A {
+class ObjectAssignmentFail {
 
     public static void main(String[] args) {
 
     }
 
-    public int foo() {
-        CallToMethodAssumedInExtends a;
-        a = new CallToMethodAssumedInExtends();
+    public ObjectAssignmentFail foo() {
+        ObjectAssignmentFail a;
+        B b;
 
-        // Assume bar() is in A
-        a = A.bar(1, 2);
+        a = new ObjectAssignmentFail();
+        b = new B();
 
-        return 0;
+        // ObjectAssignmentFail does not extend B
+        a = b;
+
+        return a;
     }
 }
