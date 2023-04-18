@@ -112,11 +112,13 @@ public class MethodInstruction {
         String op;
 
         switch (instructionType) {
-            case ADD -> op = "iadd\n";
-            case SUB -> op = "isub\n";
-            case MUL -> op = "imul\n";
-            case DIV -> op= "idiv\n";
-            default -> op = "";
+            case LTH  -> op = "if_icmplt";
+            case ANDB -> op = "iand";
+            case ADD  -> op = "iadd\n";
+            case SUB  -> op = "isub\n";
+            case MUL  -> op = "imul\n";
+            case DIV  -> op= "idiv\n";
+            default  -> op = "";
         }
 
         return leftOperand + rightOperand + op;
@@ -128,10 +130,9 @@ public class MethodInstruction {
         Operand firstOperand = (Operand) instruction.getFirstOperand();
         Operand secondOperand = (Operand) instruction.getSecondOperand();
         Element element = instruction.getThirdOperand();
-
-        code += getLoadCode(firstOperand) + getLoadCode(element) + "putfield ";
         String varType = jasminUtils.getType(secondOperand.getType().getTypeOfElement());
 
+        code += getLoadCode(firstOperand) + getLoadCode(element) + "putfield ";
 
         return  code + classUnit.getClassName() + "/" + secondOperand.getName() + " " + varType + "\n";
     }
@@ -164,9 +165,9 @@ public class MethodInstruction {
         }
     }
 
-
     private String getInvokeStaticCode(CallInstruction instruction) {
-        return "";
+        String code = "";
+        return code;
     }
 
     private String getInvokeVirtualCode(CallInstruction instruction) {
@@ -180,7 +181,6 @@ public class MethodInstruction {
     private String getNewCode(CallInstruction instruction) {
         return "";
     }
-
 
     public String getLoadCode(Element e){
         String code = "";
