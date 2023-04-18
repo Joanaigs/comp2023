@@ -31,7 +31,7 @@ public class ConditionVisitor extends PostorderJmmVisitor<String, String> implem
 
     private String handleCondition(JmmNode node, String s) {
         JmmNode condition = node.getJmmChild(0);
-        if (utils.nodeIsOfType(condition, false, "boolean")){
+        if (utils.nodeIsOfType(condition, false, "boolean", false)){
             node.put("type", "boolean");
             return null;
         }

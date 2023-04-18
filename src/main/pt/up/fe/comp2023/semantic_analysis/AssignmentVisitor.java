@@ -40,10 +40,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         }
         JmmNode exp = node.getJmmChild(child);
         String varTypeName = varType.getName();
-        if (this.symbolTable.isImported(exp.get("type")) && (Objects.isNull(this.symbolTable.getSuper()) || !this.symbolTable.getSuper().equals(exp.get("type")))) {
-            return;     //if the assignee is imported and the current class does not extend it, then assume it's possible
-        }
-        if (!utils.nodeIsOfType(exp, shouldBeArray, varTypeName))
+        if (!utils.nodeIsOfType(exp, shouldBeArray, varTypeName, true))
             throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
     }
 
@@ -56,7 +53,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
 
     private String handleArrayAssignStm(JmmNode node, String s) {
         JmmNode idx = node.getJmmChild(0);
-        if(!utils.nodeIsOfType(idx, false, "int")){
+        if(!utils.nodeIsOfType(idx, false, "int", false)){
             throw new CompilerException(utils.addReport(node, "Array index must be of type integer"));
         }
         else {

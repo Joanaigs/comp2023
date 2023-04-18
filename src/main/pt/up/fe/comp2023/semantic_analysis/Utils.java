@@ -28,7 +28,7 @@ public class Utils {
         return this.reportList;
     }
 
-    public boolean nodeIsOfType(JmmNode node, boolean isArray, String type) {
+    public boolean nodeIsOfType(JmmNode node, boolean isArray, String type, boolean isAssignment) {
         if (node.getAttributes().contains("imported"))
             return true;
         if (node.getAttributes().contains("extended"))
@@ -40,6 +40,9 @@ public class Utils {
             return true;
         if ((this.symbolTable.isImported(type) && this.symbolTable.isImported(nodeType)))
             return true;
+        if (isAssignment && this.symbolTable.isImported(nodeType) && (Objects.isNull(this.symbolTable.getSuper()) || !this.symbolTable.getSuper().equals(nodeType))) {
+            return true;     //if the assignee is imported and the current class does not extend it, then assume it's possible
+        }
         if (node.getAttributes().contains("array") == isArray)
             return type.equals(nodeType);
         return false;

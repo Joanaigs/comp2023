@@ -50,7 +50,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
         }
         for (int j = 0; j < methodParameters.size(); j++) {
             Type paramType = methodParameters.get(j).getType();
-            if (!utils.nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName())) {
+            if (!utils.nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName(), false)) {
                return false;
             }
         }
@@ -79,7 +79,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
     }
 
     private String handleReturn(JmmNode node, String s) {
-        if(!utils.nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), node.getJmmChild(0).getObject("isArray").equals(true), node.getJmmChild(0).get("typeDeclaration"))) {
+        if(!utils.nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), node.getJmmChild(0).getObject("isArray").equals(true), node.getJmmChild(0).get("typeDeclaration"), false)) {
             throw new CompilerException(utils.addReport(node, "Incompatible return type"));
         }
         return null;

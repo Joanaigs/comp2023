@@ -33,7 +33,7 @@ public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implem
 
     private String handleNegation(JmmNode node, String s) {
         JmmNode exp = node.getJmmChild(0);
-        if (!utils.nodeIsOfType(exp, false, "boolean")) {
+        if (!utils.nodeIsOfType(exp, false, "boolean", false)) {
             String expType = exp.get("type");
             if(exp.getAttributes().contains("array"))
                 expType += "[]";
@@ -49,13 +49,13 @@ public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implem
             throw new CompilerException(utils.addReport(node, "Operand can't be array"));
 
         if (node.get("op").equals("&&") || node.get("op").equals("||")) {   //boolean operations
-            if (utils.nodeIsOfType(leftOperand, false, "boolean") && utils.nodeIsOfType(rightOperand, false, "boolean"))
+            if (utils.nodeIsOfType(leftOperand, false, "boolean", false) && utils.nodeIsOfType(rightOperand, false, "boolean", false))
                 return null;
             else
                 throw new CompilerException(utils.addReport(node, "Operand must be of type boolean"));
         }
         else {
-            if (utils.nodeIsOfType(leftOperand, false, "int") && utils.nodeIsOfType(rightOperand, false, "int"))
+            if (utils.nodeIsOfType(leftOperand, false, "int", false) && utils.nodeIsOfType(rightOperand, false, "int", false))
                 return null;
             else
                 throw new CompilerException(utils.addReport(node, "Operands must be of type int"));

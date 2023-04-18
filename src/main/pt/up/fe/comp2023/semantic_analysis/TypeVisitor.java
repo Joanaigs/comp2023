@@ -122,7 +122,7 @@ public class TypeVisitor extends PostorderJmmVisitor<String, String> implements 
 
     private String handleTypeCreateArray(JmmNode node, String s) {
         JmmNode sizeOfArray = node.getJmmChild(0);
-        if (utils.nodeIsOfType(sizeOfArray, false, "int")) {
+        if (utils.nodeIsOfType(sizeOfArray, false, "int", false)) {
             node.put("type", "int");
             node.put("array", "true");
             return null;
