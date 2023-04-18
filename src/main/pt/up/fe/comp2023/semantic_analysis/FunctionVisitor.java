@@ -9,6 +9,7 @@ import pt.up.fe.comp2023.SymbolTable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 public class FunctionVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
@@ -49,7 +50,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
         }
         for (int j = 0; j < methodParameters.size(); j++) {
             Type paramType = methodParameters.get(j).getType();
-            if (!utils.nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName())) {
+            if (!utils.nodeIsOfType(argumentNodes.get(j), paramType.isArray(), paramType.getName(), false)) {
                return false;
             }
         }
@@ -63,7 +64,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
         }
         String className = node.getJmmChild(0).get("type");
         String methodName = node.get("value");
-        if (className.equals(symbolTable.getClassName()) && symbolTable.getSuper() == null) {  //method is part of the current class
+        if (className.equals(symbolTable.getClassName()) && Objects.isNull(symbolTable.getSuper())) {  //method is part of the current class
             if (this.symbolTable.hasMethod(methodName)) {
                 if (!checkParameters(node, methodName)){
                     String reportMessage = "Method parameters and function arguments don't match";
@@ -78,7 +79,7 @@ public class FunctionVisitor extends PostorderJmmVisitor<String, String> impleme
     }
 
     private String handleReturn(JmmNode node, String s) {
-        if(!utils.nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), node.getJmmChild(0).getObject("isArray").equals(true), node.getJmmChild(0).get("typeDeclaration"))) {
+        if(!utils.nodeIsOfType(node.getJmmChild(node.getNumChildren()-1), node.getJmmChild(0).getObject("isArray").equals(true), node.getJmmChild(0).get("typeDeclaration"), false)) {
             throw new CompilerException(utils.addReport(node, "Incompatible return type"));
         }
         return null;

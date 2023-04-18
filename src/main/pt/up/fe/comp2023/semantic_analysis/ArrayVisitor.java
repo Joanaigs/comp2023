@@ -33,11 +33,11 @@ public class ArrayVisitor extends PostorderJmmVisitor<String, String> implements
         JmmNode firstChild = node.getJmmChild(0);
         JmmNode index = node.getJmmChild(1);
 
-        if (!utils.nodeIsOfType(firstChild, true, "int"))
+        if (!utils.nodeIsOfType(firstChild, true, "int", false))
             throw new CompilerException(utils.addReport(node, "Array access can only be done over an array of Integers"));
 
         else if (!index.getKind().equals("Integer")) {
-            if (!utils.nodeIsOfType(index, false, "int"))
+            if (!utils.nodeIsOfType(index, false, "int", false))
                 throw new CompilerException(utils.addReport(node, "Array access index must be of type Integer"));
             else
                 return null;

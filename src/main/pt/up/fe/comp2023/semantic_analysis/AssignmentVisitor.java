@@ -9,12 +9,14 @@ import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2023.SymbolTable;
 
 import java.util.List;
-
+import java.util.Objects;
 
 public class AssignmentVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
     private final Utils utils;
+    private final SymbolTable symbolTable;
 
     public AssignmentVisitor(SymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
         this.utils = new Utils(symbolTable);
     }
 
@@ -32,35 +34,31 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         return null;
     }
 
-    private boolean checkAssignment(JmmNode node, int child, Type varType, boolean shouldBeArray){
+    private void checkAssignment(JmmNode node, int child, Type varType, boolean shouldBeArray, String varName){
+        if(varName.equals("FIELD") && node.get("scope").equals("main")){
+            throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
+        }
         JmmNode exp = node.getJmmChild(child);
         String varTypeName = varType.getName();
-        return !utils.nodeIsOfType(exp, shouldBeArray, varTypeName);
+        if (!utils.nodeIsOfType(exp, shouldBeArray, varTypeName, true))
+            throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
     }
 
     private String handleAssignmentStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
         Type varType = var.a.getType();
-        if(var.b.equals("FIELD") && node.get("scope").equals("main")){
-            throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
-        }
-        if(checkAssignment(node, 0, varType, varType.isArray())){
-            throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
-        }
+        checkAssignment(node, 0, varType, varType.isArray(), var.b);
         return null;
     }
 
     private String handleArrayAssignStm(JmmNode node, String s) {
         JmmNode idx = node.getJmmChild(0);
-        if(!utils.nodeIsOfType(idx, false, "int")){
+        if(!utils.nodeIsOfType(idx, false, "int", false)){
             throw new CompilerException(utils.addReport(node, "Array index must be of type integer"));
         }
         else {
             Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-            Type varType = var.a.getType();
-            if(checkAssignment(node, 1, varType, false)){
-                throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
-            }
+            checkAssignment(node, 1, var.a.getType(), false, var.b);
             return null;
         }
     }
