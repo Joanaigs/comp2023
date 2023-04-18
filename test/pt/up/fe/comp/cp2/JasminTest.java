@@ -36,6 +36,11 @@ public class JasminTest {
         testOllirToJasmin("pt/up/fe/comp/cp2/apps/example_ollir/Simple.ollir");
     }
 
+    @Test
+    public void ollirToJasminHello() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/apps/example_ollir/HelloWorld.ollir");
+    }
+
     public static void testOllirToJasmin(String resource, String expectedOutput) {
         SpecsCheck.checkArgument(resource.endsWith(".ollir"), () -> "Expected resource to end with .ollir: " + resource);
 
