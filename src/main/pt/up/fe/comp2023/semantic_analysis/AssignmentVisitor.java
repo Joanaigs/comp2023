@@ -41,10 +41,8 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         }
         JmmNode exp = node.getJmmChild(child);
         String varTypeName = varType.getName();
-        if (!this.symbolTable.isImported(exp.get("type")) && Objects.isNull(this.symbolTable.getSuper())) {    //if the assignee is imported and the current class does not extend it, then assume it's possible
-            if (!utils.nodeIsOfType(exp, shouldBeArray, varTypeName)) {
-                throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
-            }
+        if (!utils.nodeIsOfType(exp, shouldBeArray, varTypeName)) {
+            throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
         }
     }
 
