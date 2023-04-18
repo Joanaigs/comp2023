@@ -11,7 +11,6 @@ import pt.up.fe.comp2023.SymbolTable;
 import java.util.List;
 import java.util.Objects;
 
-
 public class AssignmentVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
     private final Utils utils;
     private final SymbolTable symbolTable;
@@ -41,9 +40,11 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         }
         JmmNode exp = node.getJmmChild(child);
         String varTypeName = varType.getName();
-        if (!utils.nodeIsOfType(exp, shouldBeArray, varTypeName)) {
-            throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
+        if (this.symbolTable.isImported(exp.get("type")) && (Objects.isNull(this.symbolTable.getSuper()) || !this.symbolTable.getSuper().equals(exp.get("type")))) {
+            return;     //if the assignee is imported and the current class does not extend it, then assume it's possible
         }
+        if (!utils.nodeIsOfType(exp, shouldBeArray, varTypeName))
+            throw new CompilerException(utils.addReport(node, "Type of the assignee must be compatible with the assigned"));
     }
 
     private String handleAssignmentStm(JmmNode node, String s) {
