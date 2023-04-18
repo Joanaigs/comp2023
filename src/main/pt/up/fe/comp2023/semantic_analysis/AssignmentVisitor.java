@@ -35,12 +35,10 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         return null;
     }
 
-    private void checkAssignment(JmmNode node, int child, Pair<Symbol, String> var){
-        if(var.b.equals("FIELD") && node.get("scope").equals("main")){
+    private void checkAssignment(JmmNode node, int child, Type varType, boolean shouldBeArray, String varName){
+        if(varName.equals("FIELD") && node.get("scope").equals("main")){
             throw new CompilerException(utils.addReport(node, "Cannot assign field in static method"));
         }
-        Type varType = var.a.getType();
-        boolean shouldBeArray = varType.isArray();
         JmmNode exp = node.getJmmChild(child);
         String varTypeName = varType.getName();
         if (!this.symbolTable.isImported(exp.get("type")) && Objects.isNull(this.symbolTable.getSuper())) {    //if the assignee is imported and the current class does not extend it, then assume it's possible
@@ -52,7 +50,8 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
 
     private String handleAssignmentStm(JmmNode node, String s) {
         Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-        checkAssignment(node, 0, var);
+        Type varType = var.a.getType();
+        checkAssignment(node, 0, varType, varType.isArray(), var.b);
         return null;
     }
 
@@ -63,7 +62,7 @@ public class AssignmentVisitor extends PostorderJmmVisitor<String, String> imple
         }
         else {
             Pair<Symbol, String> var = utils.checkVariableIsDeclared(node, "var");
-            checkAssignment(node, 1, var);
+            checkAssignment(node, 1, var.a.getType(), false, var.b);
             return null;
         }
     }
