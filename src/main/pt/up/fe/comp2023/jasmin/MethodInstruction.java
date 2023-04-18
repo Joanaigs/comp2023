@@ -144,8 +144,6 @@ public class MethodInstruction {
         String op;
 
         switch (instructionType) {
-            case LTH  -> op = "if_icmplt";
-            case ANDB -> op = "iand";
             case ADD  -> op = "iadd\n";
             case SUB  -> op = "isub\n";
             case MUL  -> op = "imul\n";
@@ -162,7 +160,7 @@ public class MethodInstruction {
         Operand firstOperand = (Operand) instruction.getFirstOperand();
         Operand secondOperand = (Operand) instruction.getSecondOperand();
         Element element = instruction.getThirdOperand();
-        String varType = jasminUtils.getType(secondOperand.getType().getTypeOfElement());
+        String varType = jasminUtils.getType(secondOperand.getType(), this.classUnit);
 
         code += getLoadCode(firstOperand) + getLoadCode(element) + "putfield ";
 
@@ -174,7 +172,7 @@ public class MethodInstruction {
 
         Operand firstOperand = (Operand) instruction.getFirstOperand();
         Operand secondOperand = (Operand) instruction.getSecondOperand();
-        String varType = jasminUtils.getType(secondOperand.getType().getTypeOfElement());
+        String varType = jasminUtils.getType(secondOperand.getType(), this.classUnit);
 
         code += getLoadCode(firstOperand) + "getfield ";
 
@@ -278,12 +276,12 @@ public class MethodInstruction {
         } else {
             Operand operand = (Operand) e;
             int id = (operand.isParameter())? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
-            ElementType elemType = operand.getType().getTypeOfElement();
+            Type type = operand.getType();
 
             if (id < 0) {
-                code += "putfield " + this.jasminUtils.getType(elemType) + "/" + operand.getName() + " " + this.jasminUtils.getType(elemType);
+                code += "putfield " + this.jasminUtils.getType(type, this.classUnit) + "/" + operand.getName() + " " + this.jasminUtils.getType(type, this.classUnit);
             }else
-                switch (elemType) {
+                switch (type.getTypeOfElement()) {
                     case INT32:
                     case BOOLEAN:
                         code += getIloadIstoreCode(id, false );

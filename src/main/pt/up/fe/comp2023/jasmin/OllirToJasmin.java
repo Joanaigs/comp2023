@@ -60,7 +60,7 @@ public class OllirToJasmin {
         String fieldPrivacy = field.getFieldAccessModifier().name();
         String fieldAccessModifiers = createAccessModifiers(fieldPrivacy, field.isFinalField(), field.isStaticField());
         String fieldName = field.getFieldName() + " ";
-        String fieldType = jasminUtils.getType(field.getFieldType().getTypeOfElement()) + " ";
+        String fieldType = jasminUtils.getType(field.getFieldType(), classUnit) + " ";
         code += fieldAccessModifiers +  fieldName + fieldType;
         code += field.isInitialized() ? "=" + field.getInitialValue() : "";
 
@@ -108,9 +108,9 @@ public class OllirToJasmin {
         code += methodAcessModifiers + methodName + '(';
 
         for(Element param : method.getParams())
-            code += this.jasminUtils.getType(param.getType().getTypeOfElement());
+            code += jasminUtils.getType(param.getType(), classUnit);
 
-        String methodReturnType = this.jasminUtils.getType(method.getReturnType().getTypeOfElement());
+        String methodReturnType = jasminUtils.getType(method.getReturnType(), classUnit);
         code += ')' + methodReturnType + "\n";
 
         return code;

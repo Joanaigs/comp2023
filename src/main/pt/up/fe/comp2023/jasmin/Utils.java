@@ -3,10 +3,9 @@ package pt.up.fe.comp2023.jasmin;
 import org.specs.comp.ollir.*;
 
 public class Utils {
-    public int stackAtual;
 
-    public String getType(ElementType elemType){
-        switch (elemType){
+    public String getType(Type type, ClassUnit classUnit){
+        switch (type.getTypeOfElement()){
             case INT32:
                 return "I";
             case BOOLEAN:
@@ -15,11 +14,29 @@ public class Utils {
                 return "Ljava/lang/String;";
             case VOID:
                 return "V";
-            case CLASS:
-                return "CLASS";
+            case ARRAYREF:
+                return "[" + getType(((ArrayType) type).getElementType(), classUnit);
+            case OBJECTREF: {
+                String classTypeName = ((ClassType) type).getName();
+                return  "L" + getClassPath(classUnit.getClassName(), classUnit) + ";";
+            }
             default:
                 return "";
         }
+    }
+
+    private String getClassPath(String className, ClassUnit classUnit) {
+
+        if (className == "this")
+            return classUnit.getClassName();
+
+        for (String importName : classUnit.getImports()) {
+            if (importName.endsWith(className)) {
+                return importName.replaceAll("\\.", "/");
+            }
+        }
+
+        return className;
     }
 
 
