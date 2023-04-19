@@ -261,7 +261,7 @@ public class MethodInstruction {
             code += getLoadCode(element);
         }
 
-        return code + "\tnew " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\n";
+        return code + "\tnew " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
     }
 
     public String getLoadCode(Element e){
