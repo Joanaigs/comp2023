@@ -25,7 +25,7 @@ public class Utils {
         }
     }
 
-    private String getClassPath(String className, ClassUnit classUnit) {
+    public String getClassPath(String className, ClassUnit classUnit) {
 
         if (className == "this")
             return classUnit.getClassName();

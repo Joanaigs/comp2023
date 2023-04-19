@@ -197,7 +197,23 @@ public class MethodInstruction {
 
     private String getInvokeStaticCode(CallInstruction instruction) {
         String code = "";
-        return code;
+
+        for (Element element : instruction.getListOfOperands())
+            code += getLoadCode(element);
+
+
+        code += "invokestatic "
+                + jasminUtils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit)
+                + "/"
+                + ((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")
+                + "(";
+
+        for (Element element : instruction.getListOfOperands()) {
+            code += jasminUtils.getType(element.getType(), classUnit);
+        }
+
+
+        return code + ")" + jasminUtils.getType(instruction.getReturnType(), classUnit) + "\n";
     }
 
     private String getInvokeVirtualCode(CallInstruction instruction) {
@@ -219,13 +235,8 @@ public class MethodInstruction {
             LiteralElement literalElement = (LiteralElement) e;
             var elementType = literalElement.getType().getTypeOfElement();
             switch (elementType) {
-                case INT32:
-                case BOOLEAN:
-                    code += getIConstCode( literalElement.getLiteral() );
-                    break;
-                default:
-                    code += "ldc " + literalElement.getLiteral();
-                    break;
+                case INT32, BOOLEAN -> code += getIConstCode( literalElement.getLiteral() );
+                default -> code += "ldc " + literalElement.getLiteral();
             }
         }
         else {
@@ -241,19 +252,9 @@ public class MethodInstruction {
             else{
                 ElementType elementType = operand.getType().getTypeOfElement();
                 switch (elementType) {
-                    case INT32:
-                    case BOOLEAN:
-                        code += getIloadIstoreCode(id, true );
-                        break;
-                    case CLASS:
-                    case STRING:
-                        code += "aload" + (id <= 3 ? '_' : ' ') + id;
-                        break;
-                    case THIS:
-                        code += "aload_0";
-                        break;
-                    case VOID:
-                        break;
+                    case INT32, BOOLEAN -> getIloadIstoreCode(id, true );
+                    case CLASS, STRING -> code += "aload" + (id <= 3 ? '_' : ' ') + id;
+                    case THIS ->code += "aload_0";
                 }
             }
         }

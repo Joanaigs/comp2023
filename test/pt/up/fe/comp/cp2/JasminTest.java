@@ -38,7 +38,7 @@ public class JasminTest {
 
     @Test
     public void ollirToJasminHello() {
-        testOllirToJasmin("pt/up/fe/comp/cp2/apps/example_ollir/HelloWorld.ollir");
+        testOllirToJasmin("pt/up/fe/comp/cp2/apps/example_ollir/test.ollir");
     }
 
     public static void testOllirToJasmin(String resource, String expectedOutput) {
