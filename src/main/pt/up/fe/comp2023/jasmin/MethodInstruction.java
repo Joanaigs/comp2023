@@ -197,7 +197,7 @@ public class MethodInstruction {
 
     private String getInvokeStaticCode(CallInstruction instruction) {
         String code = "";
-
+        /*
         for (Element element : instruction.getListOfOperands())
             code += getLoadCode(element);
 
@@ -214,6 +214,8 @@ public class MethodInstruction {
 
 
         return code + ")" + jasminUtils.getType(instruction.getReturnType(), classUnit) + "\n";
+        */
+        return code;
     }
 
     private String getInvokeVirtualCode(CallInstruction instruction) {
