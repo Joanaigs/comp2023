@@ -7,14 +7,12 @@ import java.util.HashMap;
 public class MethodInstruction {
 
     private final ClassUnit classUnit;
-    private Utils jasminUtils;
     private HashMap<String, Descriptor> varTable;
 
     MethodInstruction(ClassUnit classUnit, Method method)
     {
         this.classUnit = classUnit;
         this.varTable =  method.getVarTable();
-        this.jasminUtils = new Utils();
     }
 
     public String createInstructionCode(Instruction instruction){
@@ -72,7 +70,7 @@ public class MethodInstruction {
 
         if(instruction.hasReturnValue()) {
             String loadCode = getLoadCode(instruction.getOperand());
-            String returnType = jasminUtils.getReturnType(instruction.getOperand().getType().getTypeOfElement());
+            String returnType = Utils.getReturnType(instruction.getOperand().getType().getTypeOfElement());
             code +=  loadCode +  returnType;
         }
 
@@ -160,7 +158,7 @@ public class MethodInstruction {
         Operand firstOperand = (Operand) instruction.getFirstOperand();
         Operand secondOperand = (Operand) instruction.getSecondOperand();
         Element element = instruction.getThirdOperand();
-        String varType = jasminUtils.getType(secondOperand.getType(), this.classUnit);
+        String varType = Utils.getType(secondOperand.getType(), this.classUnit);
 
         code += getLoadCode(firstOperand) + getLoadCode(element) + "putfield ";
 
@@ -172,7 +170,7 @@ public class MethodInstruction {
 
         Operand firstOperand = (Operand) instruction.getFirstOperand();
         Operand secondOperand = (Operand) instruction.getSecondOperand();
-        String varType = jasminUtils.getType(secondOperand.getType(), this.classUnit);
+        String varType = Utils.getType(secondOperand.getType(), this.classUnit);
 
         code += getLoadCode(firstOperand) + "getfield ";
 
@@ -203,17 +201,17 @@ public class MethodInstruction {
 
 
         code += "invokestatic "
-                + jasminUtils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit)
+                + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit)
                 + "/"
                 + ((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")
                 + "(";
 
         for (Element element : instruction.getListOfOperands()) {
-            code += jasminUtils.getType(element.getType(), classUnit);
+            code += Utils.getType(element.getType(), classUnit);
         }
 
 
-        return code + ")" + jasminUtils.getType(instruction.getReturnType(), classUnit) + "\n";
+        return code + ")" + Utils.getType(instruction.getReturnType(), classUnit) + "\n";
 
     }
 
@@ -223,19 +221,37 @@ public class MethodInstruction {
         for (Element element : instruction.getListOfOperands())
             code += getLoadCode(element);
         code += "invokevirtual "
-                + jasminUtils.getClassPath( ((ClassType) instruction.getFirstArg().getType()).getName(), classUnit)
+                + Utils.getClassPath( ((ClassType) instruction.getFirstArg().getType()).getName(), classUnit)
                 + "/"
                 + ((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")
                 + "(";
 
         for (Element element : instruction.getListOfOperands())
-            code += jasminUtils.getType(element.getType(), classUnit);
+            code += Utils.getType(element.getType(), classUnit);
 
-        return code + ")" + jasminUtils.getType(instruction.getReturnType(), classUnit) + "\n";
+        return code + ")" + Utils.getType(instruction.getReturnType(), classUnit) + "\n";
     }
 
     private String getInvokeSpecialCode(CallInstruction instruction) {
-        return "";
+
+        var firstArg = instruction.getFirstArg();
+        String superClassName = (classUnit.getSuperClass() == null)? "java/lang/Object\n" : (classUnit.getSuperClass() + "\n");
+        String code = "";
+
+        if (firstArg.getType().getTypeOfElement() == ElementType.THIS)
+            code += getLoadCode(firstArg) + "\tinvokespecial " + superClassName;
+        else
+            code += getLoadCode(firstArg) + "\tinvokespecial " + Utils.getClassPath(((ClassType) instruction.getFirstArg().getType()).getName(), classUnit);
+
+        code += "/<init>(";
+
+        for (Element element : instruction.getListOfOperands()) {
+            code += Utils.getType(element.getType(), classUnit);
+        }
+
+        code += ")" + Utils.getType(instruction.getReturnType(), classUnit) + "\n";
+
+        return code;
     }
 
     private String getNewCode(CallInstruction instruction) {
@@ -245,7 +261,7 @@ public class MethodInstruction {
             code += getLoadCode(element);
         }
 
-        return code + "\tnew " + jasminUtils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\n";
+        return code + "\tnew " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\n";
     }
 
     public String getLoadCode(Element e){
@@ -315,7 +331,7 @@ public class MethodInstruction {
             Type elemType = operand.getType();
 
             if (id < 0) {
-                code += "putfield " + this.jasminUtils.getType(elemType, classUnit) + "/" + operand.getName() + " " + this.jasminUtils.getType(elemType, classUnit);
+                code += "putfield " + Utils.getType(elemType, classUnit) + "/" + operand.getName() + " " + Utils.getType(elemType, classUnit);
             }else
                 switch (elemType.getTypeOfElement()) {
                     case INT32:

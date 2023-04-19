@@ -5,12 +5,10 @@ import org.specs.comp.ollir.*;
 public class OllirToJasmin {
 
     private final ClassUnit classUnit;
-    private final Utils jasminUtils;
 
 
     public OllirToJasmin(ClassUnit classUnit) {
         this.classUnit = classUnit;
-        this.jasminUtils = new Utils();
     }
 
     public String getCode() {
@@ -27,7 +25,7 @@ public class OllirToJasmin {
     public String createClass(){
         String className = classUnit.getClassName();
         String classPrivacy = classUnit.getClassAccessModifier().name();
-        String isPublic = (classPrivacy == "DEFAULT")? "public " : "";
+        String isPublic = (classPrivacy.equals("DEFAULT"))? "public " : "";
         String acessModifiers = createAccessModifiers(classPrivacy, classUnit.isStaticClass(), classUnit.isFinalClass());
         String atualClass = ".class " + isPublic + acessModifiers + className + '\n';
 
@@ -60,7 +58,7 @@ public class OllirToJasmin {
         String fieldPrivacy = field.getFieldAccessModifier().name();
         String fieldAccessModifiers = createAccessModifiers(fieldPrivacy, field.isFinalField(), field.isStaticField());
         String fieldName = field.getFieldName() + " ";
-        String fieldType = jasminUtils.getType(field.getFieldType(), classUnit) + " ";
+        String fieldType = Utils.getType(field.getFieldType(), classUnit) + " ";
         code += fieldAccessModifiers +  fieldName + fieldType;
         code += field.isInitialized() ? "=" + field.getInitialValue() : "";
 
@@ -108,9 +106,9 @@ public class OllirToJasmin {
         code += methodAcessModifiers + methodName + '(';
 
         for(Element param : method.getParams())
-            code += jasminUtils.getType(param.getType(), classUnit);
+            code += Utils.getType(param.getType(), classUnit);
 
-        String methodReturnType = jasminUtils.getType(method.getReturnType(), classUnit);
+        String methodReturnType = Utils.getType(method.getReturnType(), classUnit);
         code += ')' + methodReturnType + "\n";
 
         return code;

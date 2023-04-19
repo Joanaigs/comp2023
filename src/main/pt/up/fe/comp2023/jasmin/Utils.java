@@ -2,9 +2,11 @@ package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
 
+import java.util.Objects;
+
 public class Utils {
 
-    public String getType(Type type, ClassUnit classUnit){
+    public static String getType(Type type, ClassUnit classUnit){
         switch (type.getTypeOfElement()){
             case INT32:
                 return "I";
@@ -24,9 +26,9 @@ public class Utils {
         }
     }
 
-    public String getClassPath(String className, ClassUnit classUnit) {
+    public static String getClassPath(String className, ClassUnit classUnit) {
 
-        if (className == "this")
+        if (Objects.equals(className, "this"))
             return classUnit.getClassName();
 
         for (String importName : classUnit.getImports()) {
@@ -39,24 +41,13 @@ public class Utils {
     }
 
 
-    public String getReturnType(ElementType returnType) {
-        switch (returnType) {
-            case INT32:
-            case BOOLEAN:
-                return "i";
-            case STRING:
-                return "Ljava/lang/String;";
-            case VOID:
-                return "";
-            default:
-                return "a";
-        }
-    }
-
-    public int getLimitStack(){ return 99; }
-
-    public int getLimitLocals(){
-        return 99;
+    public static String getReturnType(ElementType returnType) {
+        return switch (returnType) {
+            case INT32, BOOLEAN -> "i";
+            case STRING -> "Ljava/lang/String;";
+            case VOID -> "";
+            default -> "a";
+        };
     }
 
 }
