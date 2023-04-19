@@ -239,9 +239,9 @@ public class MethodInstruction {
         String code = "";
 
         if (firstArg.getType().getTypeOfElement() == ElementType.THIS)
-            code += getLoadCode(firstArg) + "\tinvokespecial " + superClassName;
+            code += getLoadCode(firstArg) + "invokespecial " + superClassName;
         else
-            code += getLoadCode(firstArg) + "\tinvokespecial " + Utils.getClassPath(((ClassType) instruction.getFirstArg().getType()).getName(), classUnit);
+            code += getLoadCode(firstArg) + "invokespecial " + Utils.getClassPath(((ClassType) instruction.getFirstArg().getType()).getName(), classUnit);
 
         code += "/<init>(";
 
@@ -261,7 +261,7 @@ public class MethodInstruction {
             code += getLoadCode(element);
         }
 
-        return code + "\tnew " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
+        return code + "new " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
     }
 
     public String getLoadCode(Element e){
@@ -299,6 +299,7 @@ public class MethodInstruction {
                         break;
                     case CLASS:
                     case STRING:
+                    case OBJECTREF:
                         code += "aload" + (id <= 3 ? '_' : ' ') + id;
                         break;
                     case THIS:
