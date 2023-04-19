@@ -218,7 +218,20 @@ public class MethodInstruction {
     }
 
     private String getInvokeVirtualCode(CallInstruction instruction) {
-        return "";
+
+        String code = getLoadCode(instruction.getFirstArg());
+        for (Element element : instruction.getListOfOperands())
+            code += getLoadCode(element);
+        code += "invokevirtual "
+                + jasminUtils.getClassPath( ((ClassType) instruction.getFirstArg().getType()).getName(), classUnit)
+                + "/"
+                + ((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")
+                + "(";
+
+        for (Element element : instruction.getListOfOperands())
+            code += jasminUtils.getType(element.getType(), classUnit);
+
+        return code + ")" + jasminUtils.getType(instruction.getReturnType(), classUnit) + "\n";
     }
 
     private String getInvokeSpecialCode(CallInstruction instruction) {
@@ -226,7 +239,13 @@ public class MethodInstruction {
     }
 
     private String getNewCode(CallInstruction instruction) {
-        return "";
+        String code = "";
+
+        for (Element element : instruction.getListOfOperands()) {
+            code += getLoadCode(element);
+        }
+
+        return code + "\tnew " + jasminUtils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\n";
     }
 
     public String getLoadCode(Element e){
@@ -320,15 +339,11 @@ public class MethodInstruction {
         return code + "\n";
     }
 
-
-
     public String getIloadIstoreCode(int id, boolean load){
 
         String code = (load) ?  "iload" : "istore";
 
-        code += (id >= 4) ? " " + id : "_" + id;    // optimization
-
-        return code;
+        return code + ((id >= 4) ? " " + id : "_" + id);
     }
 
     public String getIConstCode(String constValue) {

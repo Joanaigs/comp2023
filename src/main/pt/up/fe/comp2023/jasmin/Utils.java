@@ -17,7 +17,6 @@ public class Utils {
             case ARRAYREF:
                 return "[" + getType(((ArrayType) type).getElementType(), classUnit);
             case OBJECTREF: {
-                String classTypeName = ((ClassType) type).getName();
                 return  "L" + getClassPath(classUnit.getClassName(), classUnit) + ";";
             }
             default:

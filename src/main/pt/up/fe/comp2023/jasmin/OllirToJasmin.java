@@ -121,11 +121,8 @@ public class OllirToJasmin {
         String code = ".limit stack 99\n";
         code += ".limit locals 99\n";
 
-        for (int i = 0; i < method.getInstructions().size(); i++) {
-
+        for (Instruction instruction : method.getInstructions()) {
             MethodInstruction jasminInstruction = new MethodInstruction(this.classUnit, method);
-            var instruction = method.getInstr(i);
-
             code += jasminInstruction.createInstructionCode(instruction);
         }
 
