@@ -236,8 +236,13 @@ public class MethodInstruction {
             LiteralElement literalElement = (LiteralElement) e;
             var elementType = literalElement.getType().getTypeOfElement();
             switch (elementType) {
-                case INT32, BOOLEAN -> code += getIConstCode( literalElement.getLiteral() );
-                default -> code += "ldc " + literalElement.getLiteral();
+                case INT32:
+                case BOOLEAN:
+                    code += getIConstCode( literalElement.getLiteral() );
+                    break;
+                default:
+                    code += "ldc " + literalElement.getLiteral();
+                    break;
             }
         }
         else {
@@ -253,9 +258,19 @@ public class MethodInstruction {
             else{
                 ElementType elementType = operand.getType().getTypeOfElement();
                 switch (elementType) {
-                    case INT32, BOOLEAN -> getIloadIstoreCode(id, true );
-                    case CLASS, STRING -> code += "aload" + (id <= 3 ? '_' : ' ') + id;
-                    case THIS ->code += "aload_0";
+                    case INT32:
+                    case BOOLEAN:
+                        code += getIloadIstoreCode(id, true );
+                        break;
+                    case CLASS:
+                    case STRING:
+                        code += "aload" + (id <= 3 ? '_' : ' ') + id;
+                        break;
+                    case THIS:
+                        code += "aload_0";
+                        break;
+                    case VOID:
+                        break;
                 }
             }
         }
@@ -278,12 +293,12 @@ public class MethodInstruction {
         } else {
             Operand operand = (Operand) e;
             int id = (operand.isParameter())? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
-            Type type = operand.getType();
+            Type elemType = operand.getType();
 
             if (id < 0) {
-                code += "putfield " + this.jasminUtils.getType(type, this.classUnit) + "/" + operand.getName() + " " + this.jasminUtils.getType(type, this.classUnit);
+                code += "putfield " + this.jasminUtils.getType(elemType, classUnit) + "/" + operand.getName() + " " + this.jasminUtils.getType(elemType, classUnit);
             }else
-                switch (type.getTypeOfElement()) {
+                switch (elemType.getTypeOfElement()) {
                     case INT32:
                     case BOOLEAN:
                         code += getIloadIstoreCode(id, false );
@@ -300,10 +315,11 @@ public class MethodInstruction {
                     case VOID:
                         break;
                 }
-            }
+        }
 
         return code + "\n";
     }
+
 
 
     public String getIloadIstoreCode(int id, boolean load){
