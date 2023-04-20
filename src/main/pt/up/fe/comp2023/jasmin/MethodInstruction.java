@@ -7,26 +7,31 @@ import java.util.HashMap;
 public class MethodInstruction {
 
     private final ClassUnit classUnit;
+    private boolean isAssign;
     private HashMap<String, Descriptor> varTable;
 
     MethodInstruction(ClassUnit classUnit, Method method)
     {
         this.classUnit = classUnit;
         this.varTable =  method.getVarTable();
+        this.isAssign = false;
     }
 
     public String createInstructionCode(Instruction instruction){
 
         String code = "";
-        System.out.println(instruction.getInstType());
         switch(instruction.getInstType()){
             case ASSIGN :
                 // assign
+                this.isAssign = true;
                 code += getAssignCode( (AssignInstruction) instruction);
+                this.isAssign = false;
                 break;
             case CALL:
                 // invoke methods
                 code += getInvokeCode( (CallInstruction) instruction);
+                if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
+                    if (!this.isAssign) code += "pop\n";
                 break;
             case GOTO:
                 break;
