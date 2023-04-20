@@ -1,14 +1,17 @@
-package pt.up.fe.comp2023.semantic_analysis;
+package pt.up.fe.comp2023.semantic_analysis.visitors;
 
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PostorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp2023.SymbolTable;
+import pt.up.fe.comp2023.semantic_analysis.CompilerException;
+import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
+import pt.up.fe.comp2023.semantic_analysis.Utils;
+import pt.up.fe.comp2023.semantic_analysis.visitors.AnalyserVisitor;
 
 import java.util.List;
 
 
-public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
+public class OperatorsVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor {
     private final Utils utils;
 
     public OperatorsVisitor(SymbolTable symbolTable) {

@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.semantic_analysis;
+package pt.up.fe.comp2023.semantic_analysis.visitors;
 
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;

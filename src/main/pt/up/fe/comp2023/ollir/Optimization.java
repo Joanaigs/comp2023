@@ -1,8 +1,8 @@
-package pt.up.fe.comp2023.Ollir;
+package pt.up.fe.comp2023.ollir;
 
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp2023.SymbolTable;
+import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
 
 import java.util.LinkedList;
 

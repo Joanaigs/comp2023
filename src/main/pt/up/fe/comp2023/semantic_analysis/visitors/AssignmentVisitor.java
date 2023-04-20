@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.semantic_analysis;
+package pt.up.fe.comp2023.semantic_analysis.visitors;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
@@ -6,10 +6,11 @@ import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PostorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp2023.SymbolTable;
+import pt.up.fe.comp2023.semantic_analysis.CompilerException;
+import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
+import pt.up.fe.comp2023.semantic_analysis.Utils;
 
 import java.util.List;
-import java.util.Objects;
 
 public class AssignmentVisitor extends PostorderJmmVisitor<String, String> implements AnalyserVisitor{
     private final Utils utils;

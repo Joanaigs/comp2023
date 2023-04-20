@@ -1,10 +1,10 @@
-package pt.up.fe.comp2023.Ollir;
+package pt.up.fe.comp2023.ollir;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2023.SymbolTable;
+import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
 
 import java.util.List;
 import java.util.StringJoiner;

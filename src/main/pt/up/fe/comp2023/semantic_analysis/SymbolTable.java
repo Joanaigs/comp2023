@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023;
+package pt.up.fe.comp2023.semantic_analysis;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
@@ -61,7 +61,6 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
     }
 
     public Pair<Symbol, String> getSymbol(String methodName, String varName) {
-
         if(methodName!= null){
             for(Symbol symbol:new LinkedList<>(methods.get(methodName).getLocalVariables())){
                 if(symbol.getName().equals(varName)){
