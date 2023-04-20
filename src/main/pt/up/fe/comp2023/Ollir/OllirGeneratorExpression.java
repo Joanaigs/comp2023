@@ -104,19 +104,19 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             code += (String.format("%s.%s :=.%s ", newTempVar, type, type));
             _return = String.format("%s.%s", newTempVar, type);
         }
+        String parameters="";
+        for (int i = 1; i < jmmNode.getNumChildren(); i++) {
+            parameters += ", " + visit(jmmNode.getJmmChild(i), s);
+        }
 
         if (jmmNode.getJmmChild(0).getKind().equals("Identifier") && obj.split("[.]")[0].equals(jmmNode.get("type"))) {
             if (!obj.equals("this")) obj = obj.split("[.]")[0];
             code += String.format("invokestatic(%s, \"%s\"", obj, jmmNode.get("value"));
-            for (int i = 1; i < jmmNode.getNumChildren(); i++) {
-                code += ", " + visit(jmmNode.getJmmChild(i), s);
-            }
+            code += parameters;
             code += ").V;\n";
         } else {
             code += String.format("invokevirtual(%s, \"%s\"", obj, jmmNode.get("value"));
-            for (int i = 1; i < jmmNode.getNumChildren(); i++) {
-                code += ", " + visit(jmmNode.getJmmChild(i), s);
-            }
+            code += parameters;
             code += String.format(").%s;\n", type);
         }
 
