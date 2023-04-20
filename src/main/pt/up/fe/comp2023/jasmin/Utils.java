@@ -18,9 +18,8 @@ public class Utils {
                 return "V";
             case ARRAYREF:
                 return "[" + getType(((ArrayType) type).getElementType(), classUnit);
-            case OBJECTREF: {
-                return  "L" + getClassPath(classUnit.getClassName(), classUnit) + ";";
-            }
+            case OBJECTREF:
+                return  "L" + getClassPath( ((ClassType) type).getName(), classUnit ) + ";";
             default:
                 return "";
         }
