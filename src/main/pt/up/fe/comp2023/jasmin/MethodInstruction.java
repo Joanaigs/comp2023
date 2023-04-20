@@ -97,42 +97,13 @@ public class MethodInstruction {
     private String getAssignCode(AssignInstruction instruction) {
         String code  = "";
 
-        Operand dest = (Operand) instruction.getDest();
+        Operand o1 = (Operand) instruction.getDest();
 
-        if (instruction.getRhs().getInstType() == InstructionType.BINARYOPER) {
-            BinaryOpInstruction binaryOpInstruction = (BinaryOpInstruction) instruction.getRhs();
-
-            if (binaryOpInstruction.getOperation().getOpType() == OperationType.ADD) {
-                boolean leftIsLiteral = binaryOpInstruction.getLeftOperand().isLiteral();
-                boolean rightIsLiteral = binaryOpInstruction.getRightOperand().isLiteral();
-
-                LiteralElement literal = null;
-                Operand operand = null;
-
-                if (leftIsLiteral && !rightIsLiteral) {
-                    literal = (LiteralElement) binaryOpInstruction.getLeftOperand();
-                    operand = (Operand) binaryOpInstruction.getRightOperand();
-                } else if (!leftIsLiteral && rightIsLiteral) {
-                    literal = (LiteralElement) binaryOpInstruction.getRightOperand();
-                    operand = (Operand) binaryOpInstruction.getLeftOperand();
-                }
-
-                if (literal != null && operand != null) {
-                    if (operand.getName().equals(dest.getName())) {
-                        int literalValue = Integer.parseInt((literal).getLiteral());
-
-                        if (literalValue >= -128 && literalValue <= 127) {
-                            return "\tiinc " + varTable.get(operand.getName()).getVirtualReg() + " " + literalValue + "\n";
-                        }
-                    }
-                }
-
-            }
-        }
-
-        code += createInstructionCode(instruction.getRhs()) + getStoreCode(dest);
+        code += createInstructionCode(instruction.getRhs());
+        code += getStoreCode(o1);
 
         return code;
+
 
     }
 
