@@ -61,19 +61,23 @@ public class SymbolTable implements pt.up.fe.comp.jmm.analysis.table.SymbolTable
     }
 
     public Pair<Symbol, String> getSymbol(String methodName, String varName) {
+
+        if(methodName!= null){
+            for(Symbol symbol:new LinkedList<>(methods.get(methodName).getLocalVariables())){
+                if(symbol.getName().equals(varName)){
+                    return new Pair<>(symbol, "LOCAL");
+                }
+            }
+
+            for(Symbol symbol:new LinkedList<>(methods.get(methodName).getParameters())){
+                if(symbol.getName().equals(varName)){
+                    return new Pair<>(symbol, "PARAM");
+                }
+            }
+        }
         for(Symbol symbol:fields.values()){
             if(symbol.getName().equals(varName)){
                 return new Pair<>(symbol, "FIELD");
-            }
-        }
-        for(Symbol symbol:new LinkedList<>(methods.get(methodName).getParameters())){
-            if(symbol.getName().equals(varName)){
-                return new Pair<>(symbol, "PARAM");
-            }
-        }
-        for(Symbol symbol:new LinkedList<>(methods.get(methodName).getLocalVariables())){
-            if(symbol.getName().equals(varName)){
-                return new Pair<>(symbol, "LOCAL");
             }
         }
         for (var importPath: imports) {
