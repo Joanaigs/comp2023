@@ -4,6 +4,8 @@ import org.specs.comp.ollir.*;
 
 import java.util.HashMap;
 
+import static org.specs.comp.ollir.ElementType.INT32;
+
 public class MethodInstruction {
 
     private final ClassUnit classUnit;
@@ -274,44 +276,31 @@ public class MethodInstruction {
         return code + "\n";
     }
 
-    public String getStoreCode(Element e){
+    public String getStoreCode(Element e) {
         String code = "";
 
         if (e.isLiteral()) {
             LiteralElement literalElement = (LiteralElement) e;
-            switch (literalElement.getType().getTypeOfElement()) {
-                case INT32:
-                    code += getIloadIstoreCode( Integer.parseInt(literalElement.getLiteral()), false );
-                    break;
-                default:
-                    code += "store " +  literalElement.getLiteral();
-                    break;
+            if (literalElement.getType().getTypeOfElement() == INT32) {
+                code += getIloadIstoreCode(Integer.parseInt(literalElement.getLiteral()), false);
+            } else {
+                code += "store " + literalElement.getLiteral();
             }
         } else {
             Operand operand = (Operand) e;
-            int id = (operand.isParameter())? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
+            int id = (operand.isParameter()) ? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
             Type elemType = operand.getType();
 
             if (id < 0) {
                 code += "putfield " + Utils.getType(elemType, classUnit) + "/" + operand.getName() + " " + Utils.getType(elemType, classUnit);
-            }else
+            } else {
                 switch (elemType.getTypeOfElement()) {
-                    case INT32:
-                    case BOOLEAN:
-                        code += getIloadIstoreCode(id, false );
-                        break;
-                    case CLASS:
-                    case STRING:
-                    case ARRAYREF:
-                    case OBJECTREF:
-                        code += "astore" + (id <= 3 ? '_' : ' ') + id;
-                        break;
-                    case THIS:
-                        code += "astore_0";
-                        break;
-                    case VOID:
-                        break;
+                    case INT32, BOOLEAN -> code += getIloadIstoreCode(id, false);
+                    case CLASS, STRING, ARRAYREF, OBJECTREF -> code += "astore" + (id <= 3 ? '_' : ' ') + id;
+                    case THIS -> code += "astore_0";
+                    case VOID -> { }
                 }
+            }
         }
 
         return code + "\n";
