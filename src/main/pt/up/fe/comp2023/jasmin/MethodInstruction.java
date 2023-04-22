@@ -80,14 +80,10 @@ public class MethodInstruction {
         var instructionType  = instruction.getOperation().getOpType();
 
         switch (instructionType) {
-            case ADD:
-            case SUB:
-            case MUL:
-            case DIV:
+            case ADD, SUB, MUL, DIV -> {
                 code += getArithmeticCode(instruction, instructionType);
-                break;
-            default:
-                break;
+            }
+            default ->{}
         }
         return code;
     }

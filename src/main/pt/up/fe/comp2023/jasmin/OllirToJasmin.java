@@ -8,7 +8,6 @@ public class OllirToJasmin {
 
     private final ClassUnit classUnit;
 
-
     public OllirToJasmin(ClassUnit classUnit) {
         this.classUnit = classUnit;
     }
