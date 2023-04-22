@@ -22,13 +22,11 @@ public class MethodInstruction {
         String code = "";
         switch(instruction.getInstType()){
             case ASSIGN :
-                // assign
                 this.isAssign = true;
                 code += getAssignCode( (AssignInstruction) instruction);
                 this.isAssign = false;
                 break;
             case CALL:
-                // invoke methods
                 code += getInvokeCode( (CallInstruction) instruction);
                 if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
                     if (!this.isAssign) code += "pop\n";
@@ -38,7 +36,6 @@ public class MethodInstruction {
             case BRANCH:
                 break;
             case RETURN:
-                // return
                 code += getReturnCode((ReturnInstruction) instruction);
                 break;
             case PUTFIELD:
@@ -50,11 +47,9 @@ public class MethodInstruction {
             case UNARYOPER:
                 break;
             case BINARYOPER:
-                // arithmetic operator
                 code += getBinaryOperCode( (BinaryOpInstruction) instruction);
                 break;
             case NOPER:
-                // single operator instruction
                 code += getNoperCode((SingleOpInstruction) instruction);
                 break;
         }
@@ -63,11 +58,9 @@ public class MethodInstruction {
     }
 
     public String getNoperCode(SingleOpInstruction instruction){
-        String code = "";
-        var element = instruction.getSingleOperand();
-        code += getLoadCode(element);
 
-        return code;
+        var element = instruction.getSingleOperand();
+        return getLoadCode(element);
     }
     
     public String getReturnCode(ReturnInstruction instruction){
@@ -102,14 +95,10 @@ public class MethodInstruction {
     private String getAssignCode(AssignInstruction instruction) {
         String code  = "";
 
-        Operand o1 = (Operand) instruction.getDest();
-
-        code += createInstructionCode(instruction.getRhs());
-        code += getStoreCode(o1);
+        Operand op = (Operand) instruction.getDest();
+        code += createInstructionCode(instruction.getRhs()) +  getStoreCode(op);
 
         return code;
-
-
     }
 
     private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
@@ -163,7 +152,7 @@ public class MethodInstruction {
             case invokespecial:
                 return getInvokeSpecialCode(instruction);
             case NEW:
-                return getNewCode(instruction);
+                return getInvokeNewCode(instruction);
             default:
                 return "";
         }
@@ -230,7 +219,7 @@ public class MethodInstruction {
         return code;
     }
 
-    private String getNewCode(CallInstruction instruction) {
+    private String getInvokeNewCode(CallInstruction instruction) {
         String code = "";
 
         for (Element element : instruction.getListOfOperands()) {
@@ -341,19 +330,16 @@ public class MethodInstruction {
 
     public String getIConstCode(String constValue) {
 
-        String code = "";
-
         int val = Integer.parseInt(constValue);
-        if (val >= 0 && val < 6)
-            code += "iconst_";
-        else if (val >= 0 && val < 128)
-            code += "bipush ";
-        else if (val >= 0 && val < 32768)
-            code += "sipush ";
-        else
-            code += "ldc ";
 
-        return code + constValue;
+        if (val >= 0 && val < 6)
+            return "iconst_" + constValue;
+        else if (val >= 0 && val < 128)
+            return "bipush " + constValue;
+        else if (val >= 0 && val < 32768)
+            return "sipush " + constValue;
+        else
+            return "ldc " + constValue;
     }
 
 }

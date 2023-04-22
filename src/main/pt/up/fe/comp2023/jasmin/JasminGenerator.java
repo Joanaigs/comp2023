@@ -12,8 +12,8 @@ public class JasminGenerator implements JasminBackend {
 
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
+
         String jasminCode = new OllirToJasmin(ollirResult.getOllirClass()).getCode();
-        System.out.println(jasminCode);
         var jasminResult = new JasminResult(jasminCode);
         jasminResult.compile();
 

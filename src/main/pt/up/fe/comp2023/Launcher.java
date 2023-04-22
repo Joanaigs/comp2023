@@ -7,8 +7,10 @@ import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
+import pt.up.fe.comp2023.jasmin.JasminGenerator;
 import pt.up.fe.comp2023.ollir.Optimization;
 import pt.up.fe.comp2023.semantic_analysis.SemanticAnalysis;
 import pt.up.fe.specs.util.SpecsIo;
@@ -59,6 +61,12 @@ public class Launcher {
         OllirResult ollir = optimizer.toOllir(jmmSemanticsResult);
         System.out.println(ollir.getOllirCode());
         // ... add remaining stages
+
+        //jasmin
+        JasminGenerator jasminGenerator = new JasminGenerator();
+        JasminResult jasmin = jasminGenerator.toJasmin(ollir);
+        System.out.println(jasmin.getJasminCode());
+
     }
 
     private static Map<String, String> parseArgs(String[] args) {

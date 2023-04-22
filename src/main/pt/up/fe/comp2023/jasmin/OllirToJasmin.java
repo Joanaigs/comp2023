@@ -2,6 +2,8 @@ package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
 
+import java.util.Objects;
+
 public class OllirToJasmin {
 
     private final ClassUnit classUnit;
@@ -131,7 +133,7 @@ public class OllirToJasmin {
     {
         String code = "";
 
-        if (privacy != "DEFAULT")
+        if (!Objects.equals(privacy, "DEFAULT"))
             code += privacy.toLowerCase() + " ";
         if (isFinal)
             code += "final ";
