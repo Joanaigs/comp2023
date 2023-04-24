@@ -12,10 +12,15 @@ import java.util.StringJoiner;
 public class OllirGenerator extends AJmmVisitor<String, String> {
     SymbolTable symbolTable;
     String ollirCode;
+    Integer ifs;
+
+    Integer whiles;
 
     OllirGenerator(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
         this.ollirCode = "";
+        ifs=0;
+        whiles=0;
     }
 
     @Override
@@ -26,11 +31,8 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         addVisit("InstanceMethodDeclaration", this::visitInstanceMethodDeclaration);
         addVisit("MainMethodDeclaration", this::visitMainMethodDeclaration);
         addVisit("CodeBlockStmt", this::visitCodeBlockStmt);
-        addVisit("IfStmt", this::visitIfStmt);
-        addVisit("WhileStmt", this::visitWhileStmt);
         addVisit("ExprStmt", this::visitExprStmt);
         addVisit("Assignment", this::visitAssignment);
-        addVisit("ArrayAssignStmt", this::visitAssignment);
         setDefaultVisit(this::ignore);
     }
 
@@ -62,33 +64,9 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         return s;
     }
 
-    private String visitWhileStmt(JmmNode jmmNode, String s) {
-        ollirCode += "Loop: \n";
-        OllirGeneratorExpression ollirGeneratorExpression = new OllirGeneratorExpression(symbolTable);
-        ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
-        ollirCode += ollirGeneratorExpression.getCode();
-        visit(jmmNode.getJmmChild(1), s);
-        ollirCode += "End:\n";
-        return s;
-    }
-
-    private String visitIfStmt(JmmNode jmmNode, String s) {
-        OllirGeneratorExpression ollirGeneratorExpression = new OllirGeneratorExpression(symbolTable);
-        String condition = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
-        String code = ollirGeneratorExpression.getCode();
-        ollirCode += code;
-        ollirCode += "if (!.bool" + condition + ") goto else;\n";
-        ollirCode += visit(jmmNode.getJmmChild(1));
-        ollirCode += "goto endif;\n";
-        ollirCode += "else: \n";
-        ollirCode += visit(jmmNode.getJmmChild(2));
-        ollirCode += "endif: \n";
-        return s;
-    }
-
     private String visitCodeBlockStmt(JmmNode jmmNode, String s) {
         for (JmmNode child : jmmNode.getChildren()) {
-            ollirCode += visit(child, s);
+            visit(child, s);
         }
         return s;
     }

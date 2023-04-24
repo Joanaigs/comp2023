@@ -24,13 +24,11 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     @Override
     protected void buildVisitor() {
         setDefaultVisit(this::ignore);
-        addVisit("CreateArray", this::visitCreateArray);
         addVisit("InitializeClass", this::visitInitializeClass);
         addVisit("NegateExpr", this::visitNegateExpr);
         addVisit("ParenthesisExpr", this::visitParenthesisExpr);
-        addVisit("ArrayExp", this::visitArrayExp);
         addVisit("CallFnc", this::visitCallFnc);
-        addVisit("GetLenght", this::visitGetLenght);
+        addVisit("GetLength", this::visitGetLenght);
         addVisit("BinaryOp", this::visitBinaryOp);
         addVisit("Integer", this::visitInteger);
         addVisit("Boolean", this::visitBoolean);
@@ -99,16 +97,16 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String type = Utils.typeOllir(jmmNode);
         String obj = visit(jmmNode.getJmmChild(0), s);
         String _return = "";
-        if (!jmmNode.getJmmParent().getKind().equals("ExprStmt")) {
-            String newTempVar = "t" + this.numTemVars++;
-            code += (String.format("%s.%s :=.%s ", newTempVar, type, type));
-            _return = String.format("%s.%s", newTempVar, type);
-        }
         String parameters="";
         for (int i = 1; i < jmmNode.getNumChildren(); i++) {
             parameters += ", " + visit(jmmNode.getJmmChild(i), s);
         }
 
+        if (!jmmNode.getJmmParent().getKind().equals("ExprStmt")) {
+            String newTempVar = "t" + this.numTemVars++;
+            code += (String.format("%s.%s :=.%s ", newTempVar, type, type));
+            _return = String.format("%s.%s", newTempVar, type);
+        }
         if (jmmNode.getJmmChild(0).getKind().equals("Identifier") && obj.split("[.]")[0].equals(jmmNode.get("type"))) {
             if (!obj.equals("this")) obj = obj.split("[.]")[0];
             code += String.format("invokestatic(%s, \"%s\"", obj, jmmNode.get("value"));
@@ -125,26 +123,6 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         return _return;
     }
 
-    private String visitArrayExp(JmmNode jmmNode, String s) {
-        String name = jmmNode.getJmmChild(0).get("value");
-        String index = visit(jmmNode.getJmmChild(1), s);
-        String arrayIdx = index;
-        Pair<Symbol, String> info = symbolTable.getSymbol(s, name);
-        switch (info.b) {
-            case "FIELD" -> {
-                String newTempVar = "t" + this.numTemVars++;
-                code += String.format("%s.array.i32 :=.array.i32 getfield(this, %s.array.i32).array.i32;\n", newTempVar, name);
-                return String.format("%s[%s].i32", newTempVar, arrayIdx);
-            }
-            case "PARAM" -> {
-                return String.format("$%d.%s[%s].i32", symbolTable.getSymbolIndex(s, name), name, arrayIdx);
-            }
-            case "IMPORT" -> throw new RuntimeException("Class cannot be accessed as an array");
-            default -> {
-                return String.format("%s[%s].i32", name, arrayIdx);
-            }
-        }
-    }
 
     private String visitParenthesisExpr(JmmNode jmmNode, String s) {
         return visit(jmmNode.getJmmChild(0), s);
@@ -164,13 +142,6 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         code += String.format("%s.%s :=.%s new(%s).%s;\n", newTempVar, type, type, type, type);
         code += String.format("invokespecial(%s.%s, \"<init>\").V;\n", newTempVar, type);
         return String.format("%s.%s", newTempVar, type);
-    }
-
-    private String visitCreateArray(JmmNode jmmNode, String s) {
-        String size = visit(jmmNode.getJmmChild(0), s);
-        String newTempVar = "t" + this.numTemVars++;
-        code += (String.format("%s.array.i32 :=.array.i32 new(array, %s).array.i32;\n", newTempVar, size));
-        return newTempVar + ".array.i32";
     }
 
     private String ignore(JmmNode jmmNode, String s) {
