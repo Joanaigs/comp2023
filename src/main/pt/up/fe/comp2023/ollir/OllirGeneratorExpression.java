@@ -84,7 +84,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String type = Utils.typeOllir(jmmNode);
         String typeOp = Utils.typeOllir(jmmNode.getJmmChild(0));
         code += String.format("%s.%s :=.%s %s %s.%s %s;\n", newTempVar, type, type, left, jmmNode.get("op"), typeOp, right);
-        return newTempVar + ".i32";
+        return newTempVar + "." + type;
     }
 
 
