@@ -16,6 +16,8 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
 
     Integer whiles;
 
+    Integer numTemVars = 0;
+
     OllirGenerator(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
         this.ollirCode = "";
@@ -31,8 +33,11 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         addVisit("InstanceMethodDeclaration", this::visitInstanceMethodDeclaration);
         addVisit("MainMethodDeclaration", this::visitMainMethodDeclaration);
         addVisit("CodeBlockStmt", this::visitCodeBlockStmt);
+        addVisit("IfStmt", this::visitIfStmt);
+        addVisit("WhileStmt", this::visitWhileStmt);
         addVisit("ExprStmt", this::visitExprStmt);
         addVisit("Assignment", this::visitAssignment);
+        addVisit("ArrayAssignStmt", this::visitArrayAssignStmt);
         setDefaultVisit(this::ignore);
     }
 
@@ -57,10 +62,68 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         return s;
     }
 
+    private String visitArrayAssignStmt(JmmNode jmmNode, String s) {
+        String varName = jmmNode.get("var");
+        Pair<Symbol, String> info = symbolTable.getSymbol(s, varName);
+        OllirGeneratorExpression ollirGeneratorExpression = new OllirGeneratorExpression(symbolTable);
+        String idx = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
+        String code = ollirGeneratorExpression.getCode();
+        ollirCode += code;
+        String expr = ollirGeneratorExpression.visit(jmmNode.getJmmChild(1), s);
+        code = ollirGeneratorExpression.getCode();
+        ollirCode += code;
+        String final_idx=idx;/*
+        if (!idx.matches("(((_|[a-zA-z])(_|\\d|[a-zA-Z])*)\\.(([a-zA-z])(\\d|[a-zA-Z])*))|\\d|true|false|this")) {
+            final_idx = "t" + this.numTemVars++ + ".i32";
+            ollirCode+=String.format("%s :=.i32 %s;\n", final_idx, idx);
+        }*/
+
+        switch (info.b) {
+            case "FIELD" -> {
+                ollirCode += String.format("putfield(this, %s[%s].i32, %s).V;\n", varName, final_idx, expr);
+                return s;
+            }
+            case "LOCAL" ->
+                    ollirCode += String.format("%s[%s].i32 :=.i32 %s;\n", varName,final_idx, expr);
+            case "PARAM" ->
+                    ollirCode += String.format("$%d.%s[%s].i32 :=.i32 %s;\n",symbolTable.getSymbolIndex(s, varName), varName, final_idx, expr);
+        }
+        return s;
+    }
+
     private String visitExprStmt(JmmNode jmmNode, String s) {
         OllirGeneratorExpression ollirGeneratorExpression = new OllirGeneratorExpression(symbolTable);
         ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
         ollirCode += ollirGeneratorExpression.getCode();
+        return s;
+    }
+
+    private String visitWhileStmt(JmmNode jmmNode, String s) {
+        OllirGeneratorExpression ollirGeneratorExpression = new OllirGeneratorExpression(symbolTable);
+        String condition=ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
+        ollirCode += ollirGeneratorExpression.getCode();
+        ollirCode += "if ("+condition+") goto whilebody_"+whiles+";\n";
+        ollirCode += "goto endwhile_"+whiles+";\n";
+        ollirCode += "whilebody_"+whiles+": \n";
+        visit(jmmNode.getJmmChild(1), s);
+        ollirCode += "if ("+condition+") goto whilebody_"+whiles+";\n";
+        ollirCode += "endwhile_"+whiles+":\n";
+        whiles++;
+        return s;
+    }
+
+    private String visitIfStmt(JmmNode jmmNode, String s) {
+        OllirGeneratorExpression ollirGeneratorExpression = new OllirGeneratorExpression(symbolTable);
+        String condition = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
+        String code = ollirGeneratorExpression.getCode();
+        ollirCode += code;
+        ollirCode += "if (" + condition + ") goto ifbody_"+ifs+";\n";
+        visit(jmmNode.getJmmChild(2), s);
+        ollirCode += "goto endif_"+ifs+";\n";
+        ollirCode += "ifbody_"+ifs+": \n";
+        visit(jmmNode.getJmmChild(1), s);
+        ollirCode += "endif_"+ifs+": \n";
+        ifs++;
         return s;
     }
 

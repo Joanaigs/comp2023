@@ -1,21 +1,23 @@
-import B;
+import ioPlus;
+class ArrayAccess {
 
-class ObjectAssignmentPassExtends extends B {
+	public int foo(int[] a) {
+		int result;
 
-    public static void main(String[] args) {
+		result = a[0];
+		result = a[1] + a[2];
+		result = result + a[3];
+		result = 1 + a[4];
 
-    }
+	    a[0] = 1;
+		a[1] = 2;
+		a[2] = 3;
+		a[3] = 4;
+		a[4] = 5;
 
-    public ObjectAssignmentPassExtends foo() {
-        ObjectAssignmentPassExtends a;
-        B b;
 
-        a = new ObjectAssignmentPassExtends();
-        b = new B();
+		return result;
+	}
 
-        // ObjectAssignmentPassExtends extends B
-        b = a;
 
-        return a;
-    }
 }

@@ -24,9 +24,11 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     @Override
     protected void buildVisitor() {
         setDefaultVisit(this::ignore);
+        addVisit("CreateArray", this::visitCreateArray);
         addVisit("InitializeClass", this::visitInitializeClass);
         addVisit("NegateExpr", this::visitNegateExpr);
         addVisit("ParenthesisExpr", this::visitParenthesisExpr);
+        addVisit("ArrayExp", this::visitArrayExp);
         addVisit("CallFnc", this::visitCallFnc);
         addVisit("GetLength", this::visitGetLenght);
         addVisit("BinaryOp", this::visitBinaryOp);
@@ -123,6 +125,35 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         return _return;
     }
 
+    private String visitArrayExp(JmmNode jmmNode, String s) {
+        String name = jmmNode.getJmmChild(0).get("value");
+        String index = visit(jmmNode.getJmmChild(1), s);
+        Pair<Symbol, String> info = symbolTable.getSymbol(s, name);
+        String final_idx=index;
+        /*
+        if (!index.matches("(((_|[a-zA-z])(_|\\d|[a-zA-Z])*)\\.(([a-zA-z])(\\d|[a-zA-Z])*))|\\d|true|false|this")) {
+            final_idx = "t" + this.numTemVars++ + ".i32";
+            code+=String.format("%s :=.i32 %s;\n", final_idx, index);
+        }*/
+        switch (info.b) {
+            case "FIELD" -> {
+                String newTempVar = "t" + this.numTemVars++;
+                code += String.format("%s.array.i32 :=.array.i32 getfield(this, %s.array.i32).array.i32;\n", newTempVar, name);
+                return String.format("%s.i32", newTempVar);
+            }
+            case "PARAM" -> {
+                String newTempVar = "t" + this.numTemVars++ +".i32";
+                code+=String.format("%s :=.i32 $%d.%s[%s].i32;\n",newTempVar, symbolTable.getSymbolIndex(s, name), name, final_idx);
+                return newTempVar;
+            }
+            case "IMPORT" -> throw new RuntimeException("Class cannot be accessed as an array");
+            default -> {
+                String newTempVar = "t" + this.numTemVars++ +".i32";
+                code += String.format("%s :=.i32 %s[%s].i32;\n",newTempVar, name, final_idx);
+                return newTempVar;
+            }
+        }
+    }
 
     private String visitParenthesisExpr(JmmNode jmmNode, String s) {
         return visit(jmmNode.getJmmChild(0), s);
@@ -142,6 +173,13 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         code += String.format("%s.%s :=.%s new(%s).%s;\n", newTempVar, type, type, type, type);
         code += String.format("invokespecial(%s.%s, \"<init>\").V;\n", newTempVar, type);
         return String.format("%s.%s", newTempVar, type);
+    }
+
+    private String visitCreateArray(JmmNode jmmNode, String s) {
+        String size = visit(jmmNode.getJmmChild(0), s);
+        String newTempVar = "t" + this.numTemVars++;
+        code += (String.format("%s.array.i32 :=.array.i32 new(array, %s).array.i32;\n", newTempVar, size));
+        return newTempVar + ".array.i32";
     }
 
     private String ignore(JmmNode jmmNode, String s) {
