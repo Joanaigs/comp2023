@@ -16,7 +16,7 @@ public class ConstantPropagation extends AJmmVisitor<String, String> {
     @Override
     protected void buildVisitor() {
 
-        addVisit("InstanceMethodDeclaration", this::visitInstanceMethodDeclaration);
+        addVisit("InstanceMethodDeclaration", this::visitMethodDeclaration);
         addVisit("MainMethodDeclaration", this::visitMethodDeclaration);
         addVisit("IfStmt", this::visitIfStmt);
         addVisit("WhileStmt", this::visitWhileStmt);
@@ -135,16 +135,11 @@ public class ConstantPropagation extends AJmmVisitor<String, String> {
         ignore(jmmNode, s);
         return s;
     }
-    private String visitInstanceMethodDeclaration(JmmNode jmmNode, String s) {
-        constants.clear();
-        ignore(jmmNode, s);
-        return s;
-    }
-
     private String ignore (JmmNode jmmNode, String s) {
         for (JmmNode child: jmmNode.getChildren()){
             visit(child , s);
         }
         return null;
     }
+
 }
