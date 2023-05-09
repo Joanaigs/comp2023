@@ -8,7 +8,7 @@ import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConstantPropagation extends AJmmVisitor<String, String> {
+public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
     private Map<String, String> constants=new HashMap<>();
     private boolean insideLoop=false;
 
@@ -28,9 +28,9 @@ public class ConstantPropagation extends AJmmVisitor<String, String> {
 
 
 
-    private String visitIdentifier(JmmNode jmmNode, String s) {
+    private boolean visitIdentifier(JmmNode jmmNode, String s) {
         if (insideLoop) {
-            return null;
+            return false;
         }
         String varName = jmmNode.get("value");
         if(constants.containsKey(varName)){
@@ -55,52 +55,53 @@ public class ConstantPropagation extends AJmmVisitor<String, String> {
                 newNode.put("type", jmmNode.get("type"));
             newNode.put("lineEnd", jmmNode.get("lineEnd"));
             jmmNode.replace(newNode);
+            return true;
         }
-        return null;
+        return false;
     }
 
 
-    private String visitAssignment(JmmNode jmmNode, String s) {
+    private boolean visitAssignment(JmmNode jmmNode, String s) {
         String varName = jmmNode.get("var");
         if(insideLoop){
             constants.remove(varName);
-            return null;
+            return false;
         }
-        visit(jmmNode.getJmmChild(0));
+        boolean hasChanges = visit(jmmNode.getJmmChild(0));
         if(jmmNode.getJmmChild(0).getKind().equals("Integer")){
             constants.put(varName, jmmNode.getJmmChild(0).get("value"));
-            return null;
+            return hasChanges;
         }
         else if(jmmNode.getJmmChild(0).getKind().equals("Boolean")){
             constants.put(varName, jmmNode.getJmmChild(0).get("bool"));
-            return null;
+            return hasChanges;
         }
-        return s;
+        return hasChanges;
     }
 
-    private String visitArrayAssignStmt(JmmNode jmmNode, String s) {
+    private boolean visitArrayAssignStmt(JmmNode jmmNode, String s) {
         String varName = jmmNode.get("var");
         if(insideLoop){
             constants.remove(varName);
-            return null;
+            return false;
         }
+        boolean hasChanges=visit(jmmNode.getJmmChild(0));
+        hasChanges= hasChanges || visit(jmmNode.getJmmChild(1));
         if(jmmNode.getJmmChild(1).getKind().equals("Integer")){
             constants.put(varName, jmmNode.getJmmChild(1).get("value"));
-            return null;
+            return hasChanges;
         }
         else if(jmmNode.getJmmChild(1).getKind().equals("Boolean")){
             constants.put(varName, jmmNode.getJmmChild(1).get("bool"));
-            return null;
+            return hasChanges;
         }
-        visit(jmmNode.getJmmChild(0));
-        visit(jmmNode.getJmmChild(1));
-        return s;
+        return hasChanges;
     }
 
-    private String visitWhileStmt(JmmNode jmmNode, String s) {
+    private boolean visitWhileStmt(JmmNode jmmNode, String s) {
         JmmNode cond = jmmNode.getJmmChild(0);
         JmmNode statm = jmmNode.getJmmChild(1);
-        visit(cond, s);
+        boolean hasChanges=visit(cond, s);
         if(!insideLoop) {
             this.insideLoop = true;
             visit(statm, s);
@@ -109,14 +110,14 @@ public class ConstantPropagation extends AJmmVisitor<String, String> {
         else{
             visit(statm, s);
         }
-        return s;
+        return hasChanges;
     }
 
-    private String visitIfStmt(JmmNode jmmNode, String s) {
+    private boolean visitIfStmt(JmmNode jmmNode, String s) {
         JmmNode cond = jmmNode.getJmmChild(0);
         JmmNode ifNode = jmmNode.getJmmChild(1);
         JmmNode elseNode = jmmNode.getJmmChild(2);
-        visit(cond, s);
+        boolean hasChanges = visit(cond, s);
         if(!insideLoop) {
             this.insideLoop = true;
             visit(ifNode, s);
@@ -127,19 +128,20 @@ public class ConstantPropagation extends AJmmVisitor<String, String> {
             visit(ifNode, s);
             visit(elseNode, s);
         }
-        return s;
+        return hasChanges;
     }
 
-    private String visitMethodDeclaration(JmmNode jmmNode, String s) {
+    private boolean visitMethodDeclaration(JmmNode jmmNode, String s) {
         constants.clear();
-        ignore(jmmNode, s);
-        return s;
+        boolean hasChanges=ignore(jmmNode, s);
+        return hasChanges;
     }
-    private String ignore (JmmNode jmmNode, String s) {
+    private boolean ignore (JmmNode jmmNode, String s) {
+        boolean hasChanges=false;
         for (JmmNode child: jmmNode.getChildren()){
-            visit(child , s);
+            hasChanges=hasChanges||visit(child , s);
         }
-        return null;
+        return hasChanges;
     }
 
 }

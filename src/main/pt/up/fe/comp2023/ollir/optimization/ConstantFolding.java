@@ -4,7 +4,7 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 
-public class ConstantFolding extends AJmmVisitor<String, String> {
+public class ConstantFolding extends AJmmVisitor<String, Boolean> {
 
     @Override
     protected void buildVisitor()
@@ -16,8 +16,8 @@ public class ConstantFolding extends AJmmVisitor<String, String> {
         setDefaultVisit(this::ignore);
     }
 
-    private String visitNegateExpr(JmmNode jmmNode, String s) {
-        visit(jmmNode.getJmmChild(0));
+    private Boolean visitNegateExpr(JmmNode jmmNode, String s) {
+        boolean hasChanges=visit(jmmNode.getJmmChild(0));
 
         if (jmmNode.getJmmChild(0).getKind().equals("Boolean")) {
             String bool = jmmNode.getJmmChild(0).get("bool");
@@ -26,13 +26,14 @@ public class ConstantFolding extends AJmmVisitor<String, String> {
             } else {
                 jmmNode.put("bool", "true");
             }
+            return true;
         }
-        return null;
+        return hasChanges;
     }
 
-    private String visitBinaryOp(JmmNode jmmNode, String s) {
-        visit(jmmNode.getJmmChild(0));
-        visit(jmmNode.getJmmChild(1));
+    private boolean visitBinaryOp(JmmNode jmmNode, String s) {
+        boolean hasChanges=visit(jmmNode.getJmmChild(0));
+        hasChanges= hasChanges||visit(jmmNode.getJmmChild(1));
         JmmNode left = jmmNode.getJmmChild(0);
         JmmNode right = jmmNode.getJmmChild(1);
         String result="";
@@ -58,6 +59,7 @@ public class ConstantFolding extends AJmmVisitor<String, String> {
                 newNode.put("type", jmmNode.get("type"));
             newNode.put("lineEnd", jmmNode.get("lineEnd"));
             jmmNode.replace(newNode);
+            return true;
         }else if(right.getKind().equals("Integer") && left.getKind().equals("Integer")) {
             Integer leftValue =  Integer.parseInt(left.get("value"));
             Integer rightValue =  Integer.parseInt(right.get("value"));
@@ -95,16 +97,18 @@ public class ConstantFolding extends AJmmVisitor<String, String> {
                 newNode.put("type", jmmNode.get("type"));
             newNode.put("lineEnd", jmmNode.get("lineEnd"));
             jmmNode.replace(newNode);
+            return true;
         }
 
-            return null;
+        return hasChanges;
     }
 
-    private String ignore (JmmNode jmmNode, String s) {
+    private boolean ignore (JmmNode jmmNode, String s) {
+        boolean hasChanges=false;
         for (JmmNode child: jmmNode.getChildren()){
-            visit(child , s);
+            hasChanges = hasChanges || visit(child , s);
         }
-        return null;
+        return hasChanges;
     }
 
 }

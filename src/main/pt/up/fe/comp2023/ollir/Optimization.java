@@ -22,10 +22,13 @@ public class Optimization implements pt.up.fe.comp.jmm.ollir.JmmOptimization {
     public JmmSemanticsResult optimize(JmmSemanticsResult semanticsResult) {
         boolean optimize = semanticsResult.getConfig().get("optimize") != null && semanticsResult.getConfig().get("optimize").equals("true");
         if (!optimize) return semanticsResult;
-        ConstantPropagation constantPropagation = new ConstantPropagation();
-        constantPropagation.visit(semanticsResult.getRootNode(), "");
-        ConstantFolding constantFolding = new ConstantFolding();
-        constantFolding.visit(semanticsResult.getRootNode(), "");
+        boolean hasChanges=true;
+        while (hasChanges) {
+            ConstantPropagation constantPropagation = new ConstantPropagation();
+            hasChanges = constantPropagation.visit(semanticsResult.getRootNode(), "");
+            ConstantFolding constantFolding = new ConstantFolding();
+            hasChanges = hasChanges || constantFolding.visit(semanticsResult.getRootNode(), "");
+        }
         return semanticsResult;
     }
 
