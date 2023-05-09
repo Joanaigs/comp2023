@@ -104,17 +104,22 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             parameters += ", " + visit(jmmNode.getJmmChild(i), s);
         }
 
-        if (!jmmNode.getJmmParent().getKind().equals("ExprStmt")) {
-            String newTempVar = "t" + this.numTemVars++;
-            code += (String.format("%s.%s :=.%s ", newTempVar, type, type));
-            _return = String.format("%s.%s", newTempVar, type);
-        }
         if (jmmNode.getJmmChild(0).getKind().equals("Identifier") && obj.split("[.]")[0].equals(jmmNode.get("type"))) {
+            if (!jmmNode.getJmmParent().getKind().equals("ExprStmt")) {
+                String newTempVar = "t" + this.numTemVars++;
+                code += (String.format("%s.V :=.V ", newTempVar));
+                _return = String.format("%s.V", newTempVar);
+            }
             if (!obj.equals("this")) obj = obj.split("[.]")[0];
             code += String.format("invokestatic(%s, \"%s\"", obj, jmmNode.get("value"));
             code += parameters;
             code += ").V;\n";
         } else {
+            if (!jmmNode.getJmmParent().getKind().equals("ExprStmt")) {
+                String newTempVar = "t" + this.numTemVars++;
+                code += (String.format("%s.%s :=.%s ", newTempVar, type, type));
+                _return = String.format("%s.%s", newTempVar, type);
+            }
             code += String.format("invokevirtual(%s, \"%s\"", obj, jmmNode.get("value"));
             code += parameters;
             code += String.format(").%s;\n", type);
