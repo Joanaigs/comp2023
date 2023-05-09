@@ -66,6 +66,7 @@ public class ConstantPropagation extends AJmmVisitor<String, String> {
             constants.remove(varName);
             return null;
         }
+        visit(jmmNode.getJmmChild(0));
         if(jmmNode.getJmmChild(0).getKind().equals("Integer")){
             constants.put(varName, jmmNode.getJmmChild(0).get("value"));
             return null;
@@ -74,7 +75,6 @@ public class ConstantPropagation extends AJmmVisitor<String, String> {
             constants.put(varName, jmmNode.getJmmChild(0).get("bool"));
             return null;
         }
-        visit(jmmNode.getJmmChild(0));
         return s;
     }
 

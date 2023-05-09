@@ -56,8 +56,15 @@ public class Launcher {
         // Check if there are semantic errors
         TestUtils.noErrors(jmmSemanticsResult.getReports());
 
+
+
         //ollir
         Optimization optimizer = new Optimization();
+
+        if(config.get("optimize").equals("true")){
+            optimizer.optimize(jmmSemanticsResult);
+        }
+
         OllirResult ollir = optimizer.toOllir(jmmSemanticsResult);
         System.out.println(ollir.getOllirCode());
         // ... add remaining stages
@@ -66,6 +73,7 @@ public class Launcher {
         JasminGenerator jasminGenerator = new JasminGenerator();
         JasminResult jasmin = jasminGenerator.toJasmin(ollir);
         System.out.println(jasmin.getJasminCode());
+
 
     }
 
@@ -80,7 +88,7 @@ public class Launcher {
         // Create config
         Map<String, String> config = new HashMap<>();
         config.put("inputFile", args[0]);
-        config.put("optimize", "false");
+        config.put("optimize", "true");
         config.put("registerAllocation", "-1");
         config.put("debug", "false");
 
