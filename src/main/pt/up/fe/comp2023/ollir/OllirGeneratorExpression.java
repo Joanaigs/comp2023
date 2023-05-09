@@ -126,32 +126,36 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     }
 
     private String visitArrayExp(JmmNode jmmNode, String s) {
-        String name = jmmNode.getJmmChild(0).get("value");
+        String name = visit(jmmNode.getJmmChild(0), s);
         String index = visit(jmmNode.getJmmChild(1), s);
-        Pair<Symbol, String> info = symbolTable.getSymbol(s, name);
-        String final_idx=index;
-        /*
-        if (!index.matches("(((_|[a-zA-z])(_|\\d|[a-zA-Z])*)\\.(([a-zA-z])(\\d|[a-zA-Z])*))|\\d|true|false|this")) {
-            final_idx = "t" + this.numTemVars++ + ".i32";
-            code+=String.format("%s :=.i32 %s;\n", final_idx, index);
-        }*/
-        switch (info.b) {
-            case "FIELD" -> {
-                String newTempVar = "t" + this.numTemVars++;
-                code += String.format("%s.array.i32 :=.array.i32 getfield(this, %s.array.i32).array.i32;\n", newTempVar, name);
-                return String.format("%s.i32", newTempVar);
+        if(jmmNode.getJmmChild(0).getKind().equals("Identifier")) {
+            name=jmmNode.getJmmChild(0).get("value");
+            Pair<Symbol, String> info = symbolTable.getSymbol(s, name);
+            String final_idx = index;
+            switch (info.b) {
+                case "FIELD" -> {
+                    String newTempVar = "t" + this.numTemVars++;
+                    code += String.format("%s.array.i32 :=.array.i32 getfield(this, %s).array.i32;\n", newTempVar, name);
+                    return String.format("%s.i32", newTempVar);
+                }
+                case "PARAM" -> {
+                    String newTempVar = "t" + this.numTemVars++ + ".i32";
+                    code += String.format("%s :=.i32 $%d.%s[%s].i32;\n", newTempVar, symbolTable.getSymbolIndex(s, name), name, final_idx);
+                    return newTempVar;
+                }
+                case "IMPORT" -> throw new RuntimeException("Class cannot be accessed as an array");
+                default -> {
+                    String newTempVar = "t" + this.numTemVars++ + ".i32";
+                    code += String.format("%s :=.i32 %s[%s].i32;\n", newTempVar, name, final_idx);
+                    return newTempVar;
+                }
             }
-            case "PARAM" -> {
-                String newTempVar = "t" + this.numTemVars++ +".i32";
-                code+=String.format("%s :=.i32 $%d.%s[%s].i32;\n",newTempVar, symbolTable.getSymbolIndex(s, name), name, final_idx);
-                return newTempVar;
-            }
-            case "IMPORT" -> throw new RuntimeException("Class cannot be accessed as an array");
-            default -> {
-                String newTempVar = "t" + this.numTemVars++ +".i32";
-                code += String.format("%s :=.i32 %s[%s].i32;\n",newTempVar, name, final_idx);
-                return newTempVar;
-            }
+        }
+        else{
+            name = name.split("[.]")[0];
+            String newTempVar = "t" + this.numTemVars++ + ".i32";
+            code += String.format("%s :=.i32 %s[%s].i32;\n", newTempVar, name, index);
+            return newTempVar;
         }
     }
 
