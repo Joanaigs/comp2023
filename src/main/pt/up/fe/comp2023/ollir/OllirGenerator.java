@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -190,7 +191,9 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         String ret = ollirGeneratorExpression.visit(jmmNode.getJmmChild(jmmNode.getNumChildren() - 1), methodName);
         String code = ollirGeneratorExpression.getCode();
         ollirCode += code;
-        ollirCode += String.format("ret.%s %s;\n}\n", Utils.typeOllir(symbolTable.getReturnType(methodName)), ret);
+        String[] parts = ret.split("\\."); // Splitting the string at the dot
+        String type = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
+        ollirCode += String.format("ret.%s %s;\n}\n", type, ret);
         return s;
     }
 
