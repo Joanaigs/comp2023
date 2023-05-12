@@ -8,17 +8,17 @@ import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
 
 
 public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
-    String code;
+    StringBuilder code;
     SymbolTable symbolTable;
     int numTemVars = 0;
 
     public String getCode() {
-        return code;
+        return code.toString();
     }
 
     OllirGeneratorExpression(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
-        code = "";
+        code = new StringBuilder();
     }
 
     @Override
@@ -50,7 +50,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             case "FIELD" -> {
                 String newTempVar = "t" + this.numTemVars++;
                 String type = Utils.typeOllir(info.a.getType());
-                code += String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n", newTempVar, type, type, varName, type, type);
+                code.append(String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n", newTempVar, type, type, varName, type, type));
                 return String.format("%s.%s", newTempVar, Utils.typeOllir(info.a.getType()));
             }
             case "PARAM" -> {
@@ -83,7 +83,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String newTempVar = "t" + this.numTemVars++;
         String type = Utils.typeOllir(jmmNode);
         String typeOp = Utils.typeOllir(jmmNode.getJmmChild(0));
-        code += String.format("%s.%s :=.%s %s %s.%s %s;\n", newTempVar, type, type, left, jmmNode.get("op"), typeOp, right);
+        code.append(String.format("%s.%s :=.%s %s %s.%s %s;\n", newTempVar, type, type, left, jmmNode.get("op"), typeOp, right));
         return newTempVar + "." + type;
     }
 
@@ -91,7 +91,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     private String visitGetLenght(JmmNode jmmNode, String s) {
         String array = visit(jmmNode.getJmmChild(0), s);
         String newTempVar = "t" + this.numTemVars++;
-        code += String.format("%s.i32 :=.i32 arraylength(%s).i32;\n", newTempVar, array);
+        code.append(String.format("%s.i32 :=.i32 arraylength(%s).i32;\n", newTempVar, array));
         return newTempVar + ".i32";
     }
 
@@ -107,22 +107,22 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         if (jmmNode.getJmmChild(0).getKind().equals("Identifier") && obj.split("[.]")[0].equals(jmmNode.get("type"))) {
             if (!jmmNode.getJmmParent().getKind().equals("ExprStmt")) {
                 String newTempVar = "t" + this.numTemVars++;
-                code += (String.format("%s.V :=.V ", newTempVar));
+                code.append(String.format("%s.V :=.V ", newTempVar));
                 _return = String.format("%s.V", newTempVar);
             }
             if (!obj.equals("this")) obj = obj.split("[.]")[0];
-            code += String.format("invokestatic(%s, \"%s\"", obj, jmmNode.get("value"));
-            code += parameters;
-            code += ").V;\n";
+            code.append(String.format("invokestatic(%s, \"%s\"", obj, jmmNode.get("value")));
+            code.append(parameters);
+            code.append(").V;\n");
         } else {
             if (!jmmNode.getJmmParent().getKind().equals("ExprStmt")) {
                 String newTempVar = "t" + this.numTemVars++;
-                code += (String.format("%s.%s :=.%s ", newTempVar, type, type));
+                code.append((String.format("%s.%s :=.%s ", newTempVar, type, type)));
                 _return = String.format("%s.%s", newTempVar, type);
             }
-            code += String.format("invokevirtual(%s, \"%s\"", obj, jmmNode.get("value"));
-            code += parameters;
-            code += String.format(").%s;\n", type);
+            code.append(String.format("invokevirtual(%s, \"%s\"", obj, jmmNode.get("value")));
+            code.append(parameters);
+            code.append(String.format(").%s;\n", type));
         }
 
 
@@ -140,18 +140,18 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
             switch (info.b) {
                 case "FIELD" -> {
                     String newTempVar = "t" + this.numTemVars++;
-                    code += String.format("%s.array.i32 :=.array.i32 getfield(this, %s).array.i32;\n", newTempVar, name);
+                    code.append((String.format("%s.array.i32 :=.array.i32 getfield(this, %s).array.i32;\n", newTempVar, name)));
                     return String.format("%s.i32", newTempVar);
                 }
                 case "PARAM" -> {
                     String newTempVar = "t" + this.numTemVars++ + ".i32";
-                    code += String.format("%s :=.i32 $%d.%s[%s].i32;\n", newTempVar, symbolTable.getSymbolIndex(s, name), name, final_idx);
+                    code.append(String.format("%s :=.i32 $%d.%s[%s].i32;\n", newTempVar, symbolTable.getSymbolIndex(s, name), name, final_idx));
                     return newTempVar;
                 }
                 case "IMPORT" -> throw new RuntimeException("Class cannot be accessed as an array");
                 default -> {
                     String newTempVar = "t" + this.numTemVars++ + ".i32";
-                    code += String.format("%s :=.i32 %s[%s].i32;\n", newTempVar, name, final_idx);
+                    code.append(String.format("%s :=.i32 %s[%s].i32;\n", newTempVar, name, final_idx));
                     return newTempVar;
                 }
             }
@@ -159,7 +159,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         else{
             name = name.split("[.]")[0];
             String newTempVar = "t" + this.numTemVars++ + ".i32";
-            code += String.format("%s :=.i32 %s[%s].i32;\n", newTempVar, name, index);
+            code.append(String.format("%s :=.i32 %s[%s].i32;\n", newTempVar, name, index));
             return newTempVar;
         }
     }
@@ -172,22 +172,22 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
     private String visitNegateExpr(JmmNode jmmNode, String s) {
         String expr = visit(jmmNode.getJmmChild(0), s);
         String newTempVar = "t" + this.numTemVars++;
-        code += String.format("%s.bool :=.bool !.bool %s;\n", newTempVar, expr);
+        code.append(String.format("%s.bool :=.bool !.bool %s;\n", newTempVar, expr));
         return newTempVar + ".bool";
     }
 
     private String visitInitializeClass(JmmNode jmmNode, String s) {
         String newTempVar = "t" + this.numTemVars++;
         String type = jmmNode.get("value");
-        code += String.format("%s.%s :=.%s new(%s).%s;\n", newTempVar, type, type, type, type);
-        code += String.format("invokespecial(%s.%s, \"<init>\").V;\n", newTempVar, type);
+        code.append(String.format("%s.%s :=.%s new(%s).%s;\n", newTempVar, type, type, type, type));
+        code.append(String.format("invokespecial(%s.%s, \"<init>\").V;\n", newTempVar, type));
         return String.format("%s.%s", newTempVar, type);
     }
 
     private String visitCreateArray(JmmNode jmmNode, String s) {
         String size = visit(jmmNode.getJmmChild(0), s);
         String newTempVar = "t" + this.numTemVars++;
-        code += (String.format("%s.array.i32 :=.array.i32 new(array, %s).array.i32;\n", newTempVar, size));
+        code.append(String.format("%s.array.i32 :=.array.i32 new(array, %s).array.i32;\n", newTempVar, size));
         return newTempVar + ".array.i32";
     }
 
