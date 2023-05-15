@@ -31,4 +31,16 @@ public class Utils {
         }
         return ollirType;
     }
+
+    public static void addNewNodeInfo(JmmNode jmmNode, JmmNode newNode) {
+        newNode.put("colEnd", jmmNode.get("colEnd"));
+        newNode.put("colStart", jmmNode.get("colStart"));
+        newNode.put("lineStart", jmmNode.get("lineStart"));
+        if(jmmNode.hasAttribute("scope"))
+            newNode.put("scope", jmmNode.get("scope"));
+        if(jmmNode.hasAttribute("type"))
+            newNode.put("type", jmmNode.get("type"));
+        newNode.put("lineEnd", jmmNode.get("lineEnd"));
+        jmmNode.replace(newNode);
+    }
 }

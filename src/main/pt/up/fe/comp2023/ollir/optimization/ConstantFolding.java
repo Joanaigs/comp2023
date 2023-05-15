@@ -4,13 +4,12 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 
+import static pt.up.fe.comp2023.ollir.Utils.addNewNodeInfo;
+
 public class ConstantFolding extends AJmmVisitor<String, Boolean> {
 
     @Override
-    protected void buildVisitor()
-
-    {
-
+    protected void buildVisitor() {
         addVisit("BinaryOp", this::visitBinaryOp);
         addVisit("NegateExpr", this::visitNegateExpr);
         setDefaultVisit(this::ignore);
@@ -18,7 +17,6 @@ public class ConstantFolding extends AJmmVisitor<String, Boolean> {
 
     private Boolean visitNegateExpr(JmmNode jmmNode, String s) {
         boolean hasChanges=visit(jmmNode.getJmmChild(0));
-
         if (jmmNode.getJmmChild(0).getKind().equals("Boolean")) {
             String bool = jmmNode.getJmmChild(0).get("bool");
             if (bool.equals("true")) {
@@ -31,55 +29,57 @@ public class ConstantFolding extends AJmmVisitor<String, Boolean> {
         return hasChanges;
     }
 
+    private String checkBool(JmmNode node, JmmNode left, JmmNode right) {
+        Boolean leftValue = left.get("bool").equals("true");
+        Boolean rightValue = right.get("bool").equals("true");
+        String result = "";
+        switch (node.get("op")) {
+            case "&&" -> result = leftValue && rightValue ? "true" : "false";
+            case "||" -> result = leftValue || rightValue ? "true" : "false";
+            case "&" -> result = leftValue & rightValue ? "true" : "false";
+            case "^" -> result = leftValue ^ rightValue ? "true" : "false";
+            case "|" -> result = leftValue | rightValue ? "true" : "false";
+        }
+        return result;
+    }
+
+    private String checkInteger(JmmNode node, JmmNode left, JmmNode right) {
+        Integer leftValue =  Integer.parseInt(left.get("value"));
+        Integer rightValue =  Integer.parseInt(right.get("value"));
+        String result = "";
+        result = switch (node.get("op")) {
+            case "*" -> String.valueOf(leftValue * rightValue);
+            case "/" -> String.valueOf(leftValue / rightValue);
+            case "%" -> String.valueOf(leftValue % rightValue);
+            case "+" -> String.valueOf(leftValue + rightValue);
+            case "-" -> String.valueOf(leftValue - rightValue);
+            case "<<" -> String.valueOf(leftValue << rightValue);
+            case ">>" -> String.valueOf(leftValue >> rightValue);
+            case "<" -> leftValue < rightValue ? "true" : "false";
+            case ">" -> leftValue > rightValue ? "true" : "false";
+            case "<=" -> leftValue <= rightValue ? "true" : "false";
+            case ">=" -> leftValue >= rightValue ? "true" : "false";
+            case "==" -> leftValue == rightValue ? "true" : "false";
+            case "!=" -> leftValue != rightValue ? "true" : "false";
+            default -> result;
+        };
+        return result;
+    }
+
     private boolean visitBinaryOp(JmmNode jmmNode, String s) {
         boolean hasChanges=visit(jmmNode.getJmmChild(0));
         hasChanges= hasChanges||visit(jmmNode.getJmmChild(1));
         JmmNode left = jmmNode.getJmmChild(0);
         JmmNode right = jmmNode.getJmmChild(1);
-        String result="";
 
         if(right.getKind().equals("Boolean") && left.getKind().equals("Boolean")){
-            Boolean leftValue = left.get("bool").equals("true");
-            Boolean rightValue = right.get("bool").equals("true");
-            switch (jmmNode.get("op")) {
-                case "&&" -> result = leftValue && rightValue ? "true" : "false";
-                case "||" -> result = leftValue || rightValue ? "true" : "false";
-                case "&" -> result = leftValue & rightValue ? "true" : "false";
-                case "^" -> result = leftValue ^ rightValue ? "true" : "false";
-                case "|" -> result = leftValue | rightValue ? "true" : "false";
-            }
-            JmmNode newNode= new JmmNodeImpl("Boolean");
-            newNode.put("bool", result);
-            newNode.put("colEnd", jmmNode.get("colEnd"));
-            newNode.put("colStart", jmmNode.get("colStart"));
-            newNode.put("lineStart", jmmNode.get("lineStart"));
-            if(jmmNode.hasAttribute("scope"))
-                newNode.put("scope", jmmNode.get("scope"));
-            if(jmmNode.hasAttribute("type"))
-                newNode.put("type", jmmNode.get("type"));
-            newNode.put("lineEnd", jmmNode.get("lineEnd"));
-            jmmNode.replace(newNode);
+            JmmNode newNode = new JmmNodeImpl("Boolean");
+            newNode.put("bool", checkBool(jmmNode, left, right));
+            addNewNodeInfo(jmmNode, newNode);
             return true;
         }else if(right.getKind().equals("Integer") && left.getKind().equals("Integer")) {
-            Integer leftValue =  Integer.parseInt(left.get("value"));
-            Integer rightValue =  Integer.parseInt(right.get("value"));
-            result = switch (jmmNode.get("op")) {
-                case "*" -> String.valueOf(leftValue * rightValue);
-                case "/" -> String.valueOf(leftValue / rightValue);
-                case "%" -> String.valueOf(leftValue % rightValue);
-                case "+" -> String.valueOf(leftValue + rightValue);
-                case "-" -> String.valueOf(leftValue - rightValue);
-                case "<<" -> String.valueOf(leftValue << rightValue);
-                case ">>" -> String.valueOf(leftValue >> rightValue);
-                case "<" -> leftValue < rightValue ? "true" : "false";
-                case ">" -> leftValue > rightValue ? "true" : "false";
-                case "<=" -> leftValue <= rightValue ? "true" : "false";
-                case ">=" -> leftValue >= rightValue ? "true" : "false";
-                case "==" -> leftValue == rightValue ? "true" : "false";
-                case "!=" -> leftValue != rightValue ? "true" : "false";
-                default -> result;
-            };
             JmmNode newNode;
+            String result = checkInteger(jmmNode, left, right);
             if(result.equals("true")||result.equals("false")) {
                 newNode= new JmmNodeImpl("Boolean");
                 newNode.put("bool", result);
@@ -88,18 +88,9 @@ public class ConstantFolding extends AJmmVisitor<String, Boolean> {
                 newNode = new JmmNodeImpl("Integer");
                 newNode.put("value", result);
             }
-            newNode.put("colEnd", jmmNode.get("colEnd"));
-            newNode.put("colStart", jmmNode.get("colStart"));
-            newNode.put("lineStart", jmmNode.get("lineStart"));
-            if(jmmNode.hasAttribute("scope"))
-                newNode.put("scope", jmmNode.get("scope"));
-            if(jmmNode.hasAttribute("type"))
-                newNode.put("type", jmmNode.get("type"));
-            newNode.put("lineEnd", jmmNode.get("lineEnd"));
-            jmmNode.replace(newNode);
+            addNewNodeInfo(jmmNode, newNode);
             return true;
         }
-
         return hasChanges;
     }
 

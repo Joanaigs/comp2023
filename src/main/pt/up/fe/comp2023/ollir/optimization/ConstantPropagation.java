@@ -3,19 +3,19 @@ package pt.up.fe.comp2023.ollir.optimization;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
-import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static pt.up.fe.comp2023.ollir.Utils.addNewNodeInfo;
+
 public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
-    private Map<String, String> constants=new HashMap<>();
+    private final Map<String, String> constants=new HashMap<>();
     private boolean insideLoop=false;
 
 
     @Override
     protected void buildVisitor() {
-
         addVisit("InstanceMethodDeclaration", this::visitMethodDeclaration);
         addVisit("MainMethodDeclaration", this::visitMethodDeclaration);
         addVisit("IfStmt", this::visitIfStmt);
@@ -46,15 +46,7 @@ public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
                     newNode.put("value", expr);
                 }
             }
-            newNode.put("colEnd", jmmNode.get("colEnd"));
-            newNode.put("colStart", jmmNode.get("colStart"));
-            newNode.put("lineStart", jmmNode.get("lineStart"));
-            if(jmmNode.hasAttribute("scope"))
-                newNode.put("scope", jmmNode.get("scope"));
-            if(jmmNode.hasAttribute("type"))
-                newNode.put("type", jmmNode.get("type"));
-            newNode.put("lineEnd", jmmNode.get("lineEnd"));
-            jmmNode.replace(newNode);
+            addNewNodeInfo(jmmNode, newNode);
             return true;
         }
         return false;
@@ -85,8 +77,8 @@ public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
             constants.remove(varName);
             return false;
         }
-        boolean hasChanges=visit(jmmNode.getJmmChild(0));
-        hasChanges= hasChanges || visit(jmmNode.getJmmChild(1));
+        boolean hasChanges = visit(jmmNode.getJmmChild(0));
+        hasChanges = hasChanges || visit(jmmNode.getJmmChild(1));
         if(jmmNode.getJmmChild(1).getKind().equals("Integer")){
             constants.put(varName, jmmNode.getJmmChild(1).get("value"));
             return hasChanges;
@@ -100,15 +92,15 @@ public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
 
     private boolean visitWhileStmt(JmmNode jmmNode, String s) {
         JmmNode cond = jmmNode.getJmmChild(0);
-        JmmNode statm = jmmNode.getJmmChild(1);
+        JmmNode stat = jmmNode.getJmmChild(1);
         boolean hasChanges=visit(cond, s);
         if(!insideLoop) {
             this.insideLoop = true;
-            visit(statm, s);
+            visit(stat, s);
             this.insideLoop = false;
         }
         else{
-            visit(statm, s);
+            visit(stat, s);
         }
         return hasChanges;
     }
@@ -133,8 +125,7 @@ public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
 
     private boolean visitMethodDeclaration(JmmNode jmmNode, String s) {
         constants.clear();
-        boolean hasChanges=ignore(jmmNode, s);
-        return hasChanges;
+        return ignore(jmmNode, s);
     }
     private boolean ignore (JmmNode jmmNode, String s) {
         boolean hasChanges=false;
