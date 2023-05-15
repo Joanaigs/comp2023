@@ -40,7 +40,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
 
     private String visitThis(JmmNode jmmNode, String s) {
 
-        return "this";
+        return "this."+symbolTable.getClassName();
     }
 
     private String visitIdentifier(JmmNode jmmNode, String s) {
@@ -110,7 +110,7 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
                 code.append(String.format("%s.V :=.V ", newTempVar));
                 _return = String.format("%s.V", newTempVar);
             }
-            if (!obj.equals("this")) obj = obj.split("[.]")[0];
+            if (!obj.contains("this")) obj = obj.split("[.]")[0];
             code.append(String.format("invokestatic(%s, \"%s\"", obj, jmmNode.get("value")));
             code.append(parameters);
             code.append(").V;\n");
