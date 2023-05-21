@@ -39,20 +39,12 @@ public class LivenessData {
         this.def.add(def);
     }
 
-    public void addUse(String use) {
-        this.use.add(use);
-    }
-
-    public void addIn(String in) {
-        this.in.add(in);
+    public void addUse(Set<String> use) {
+        this.use.addAll(use);
     }
 
     public void addIn(Set<String> in) {
         this.in.addAll(in);
-    }
-
-    public void addOut(String out) {
-        this.out.add(out);
     }
 
     public void addOut(Set<String> out) {

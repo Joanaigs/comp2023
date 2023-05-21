@@ -1,6 +1,5 @@
 package pt.up.fe.comp2023.ollir.optimization.liveness;
 
-
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
