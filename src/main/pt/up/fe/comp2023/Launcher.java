@@ -67,7 +67,9 @@ public class Launcher {
 
         OllirResult ollir = optimizer.toOllir(jmmSemanticsResult);
         System.out.println(ollir.getOllirCode());
-        // ... add remaining stages
+
+        optimizer.optimize(ollir);
+
 
         //jasmin
         JasminGenerator jasminGenerator = new JasminGenerator();
