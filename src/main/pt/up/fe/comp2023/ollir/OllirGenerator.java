@@ -68,8 +68,9 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         String idx = ollirGeneratorExpression.visit(jmmNode.getJmmChild(0), s);
         String code = ollirGeneratorExpression.getCode();
         ollirCode.append(code);
-        String expr = ollirGeneratorExpression.visit(jmmNode.getJmmChild(1), s);
-        code = ollirGeneratorExpression.getCode();
+        OllirGeneratorExpression ollirGeneratorExpression2 = new OllirGeneratorExpression(symbolTable);
+        String expr = ollirGeneratorExpression2.visit(jmmNode.getJmmChild(1), s);
+        code = ollirGeneratorExpression2.getCode();
         ollirCode.append(code);
         String final_idx=idx;/*
         if (!idx.matches("(((_|[a-zA-z])(_|\\d|[a-zA-Z])*)\\.(([a-zA-z])(\\d|[a-zA-Z])*))|\\d|true|false|this")) {

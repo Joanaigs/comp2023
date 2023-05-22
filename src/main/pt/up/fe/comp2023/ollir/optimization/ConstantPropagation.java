@@ -79,14 +79,6 @@ public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
         }
         boolean hasChanges = visit(jmmNode.getJmmChild(0));
         hasChanges = hasChanges || visit(jmmNode.getJmmChild(1));
-        if(jmmNode.getJmmChild(1).getKind().equals("Integer")){
-            constants.put(varName, jmmNode.getJmmChild(1).get("value"));
-            return hasChanges;
-        }
-        else if(jmmNode.getJmmChild(1).getKind().equals("Boolean")){
-            constants.put(varName, jmmNode.getJmmChild(1).get("bool"));
-            return hasChanges;
-        }
         return hasChanges;
     }
 
