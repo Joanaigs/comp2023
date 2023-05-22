@@ -7,10 +7,10 @@ import org.specs.comp.ollir.*;
 import java.util.*;
 
 public class LivenessAnalysis {
-    private LivenessUtils utils;
-    private Method method;
+    private final LivenessUtils utils;
+    private final Method method;
 
-    private Map<Instruction, LivenessData> data;
+    private final Map<Instruction, LivenessData> data;
 
     public LivenessAnalysis(Method method) {
         this.data = new HashMap<>();
@@ -18,7 +18,7 @@ public class LivenessAnalysis {
         this.utils = new LivenessUtils(method);
 
         ArrayList<Instruction> instructions = method.getInstructions();
-        method.buildCFG();
+
         for (Instruction instruction : instructions) {
             data.put(instruction, new LivenessData());
             defineDefs(instruction);
@@ -26,7 +26,14 @@ public class LivenessAnalysis {
         }
 
         lifeCycle(instructions);
-        System.out.println("");
+    }
+
+    public Method getMethod() {
+        return this.method;
+    }
+
+    public Map<Instruction, LivenessData> getData() {
+        return this.data;
     }
 
     private void lifeCycle(ArrayList<Instruction> instructions) {
@@ -117,7 +124,9 @@ public class LivenessAnalysis {
     }
 
     private Set<String> buildUses(AssignInstruction instruction) {
-        return defineUses(instruction.getRhs());
+        if(!instruction.getDest().getType().getTypeOfElement().equals(ElementType.ARRAYREF))
+            return defineUses(instruction.getRhs());
+        return new HashSet<>();
     }
 
     private Set<String> buildUses(CallInstruction instruction) {

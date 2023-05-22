@@ -59,8 +59,8 @@ public class ConstantFolding extends AJmmVisitor<String, Boolean> {
             case ">" -> leftValue > rightValue ? "true" : "false";
             case "<=" -> leftValue <= rightValue ? "true" : "false";
             case ">=" -> leftValue >= rightValue ? "true" : "false";
-            case "==" -> leftValue == rightValue ? "true" : "false";
-            case "!=" -> leftValue != rightValue ? "true" : "false";
+            case "==" -> leftValue.equals(rightValue) ? "true" : "false";
+            case "!=" -> !leftValue.equals(rightValue) ? "true" : "false";
             default -> result;
         };
         return result;

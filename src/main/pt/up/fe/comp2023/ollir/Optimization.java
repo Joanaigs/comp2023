@@ -1,12 +1,11 @@
 package pt.up.fe.comp2023.ollir;
 
-import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2023.ollir.optimization.ConstantFolding;
 import pt.up.fe.comp2023.ollir.optimization.ConstantPropagation;
-import pt.up.fe.comp2023.ollir.optimization.liveness.LivenessAnalysis;
-import pt.up.fe.comp2023.ollir.optimization.liveness.LivenessData;
+import pt.up.fe.comp2023.ollir.optimization.RegisterAllocation;
+
 import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
 
 import java.util.LinkedList;
@@ -36,9 +35,15 @@ public class Optimization implements pt.up.fe.comp.jmm.ollir.JmmOptimization {
     }
 
     @Override
-    public OllirResult optimize(OllirResult ollirResult) {
-        for(Method method: ollirResult.getOllirClass().getMethods()){
-            LivenessAnalysis livenessAnalysis = new LivenessAnalysis(method);
+    public OllirResult optimize(OllirResult ollirResult){
+        String numberLocalVariablesString = ollirResult.getConfig().get("registerAllocation");
+        int localVariableNum = numberLocalVariablesString == null? -1 : Integer.parseInt(numberLocalVariablesString);
+
+        if (localVariableNum > -1) {
+            System.out.println("Performing register allocation ...");
+            RegisterAllocation registerAllocation = new RegisterAllocation(ollirResult);
+            registerAllocation.optimize(localVariableNum);
+
         }
         return ollirResult;
     }

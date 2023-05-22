@@ -1,16 +1,13 @@
 package pt.up.fe.comp2023.ollir.optimization.liveness;
 
-import pt.up.fe.comp2023.semantic_analysis.Method;
-
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 public class LivenessData {
-    private Set<String> def;
-    private Set<String> use;
-    private Set<String> in;
-    private Set<String> out;
+    private final Set<String> def;
+    private final Set<String> use;
+    private final Set<String> in;
+    private final Set<String> out;
 
     public LivenessData() {
         this.def = new HashSet<>();

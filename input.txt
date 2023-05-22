@@ -1,17 +1,16 @@
-import io;
-import B;
-
-class A extends B {
-
-
-    public int ahhhhh(){
-        int a;
-        int b;
-        int c;
-        a=10;
-        b=20;
-        c=a+b;
-        return c;
+class RegAlloc {
+    public int soManyRegisters(int arg){
+       int a;
+       int b;
+       int c;
+       int d;
+       a = 0;
+       b = a;
+       c = b;
+       d = c;
+       return d;
     }
 
+	public static void main(String[] args) {
+	}
 }

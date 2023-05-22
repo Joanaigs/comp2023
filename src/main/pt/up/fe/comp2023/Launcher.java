@@ -83,15 +83,27 @@ public class Launcher {
         SpecsLogs.info("Executing with args: " + Arrays.toString(args));
 
         // Check if there is at least one argument
-        if (args.length != 1) {
+        if (args.length < 1) {
             throw new RuntimeException("Expected a single argument, a path to an existing input file.");
+        }
+
+        String registerAllocation = "-1";
+        String optimize = "false";
+        for (String arg : args) {
+            if (arg.startsWith("-r=")) {
+                String numberStr = arg.replaceAll("\\D", "");  // Remove all non-digit characters
+                if(numberStr!="")
+                    registerAllocation = numberStr;
+            } else if (arg.startsWith("-o")) {
+                optimize = "true";
+            }
         }
 
         // Create config
         Map<String, String> config = new HashMap<>();
         config.put("inputFile", args[0]);
-        config.put("optimize", "false");
-        config.put("registerAllocation", "-1");
+        config.put("optimize", optimize);
+        config.put("registerAllocation", registerAllocation);
         config.put("debug", "false");
 
         return config;

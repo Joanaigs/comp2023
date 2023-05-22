@@ -21,7 +21,8 @@ public class LivenessUtils {
             if(name.isEmpty())
                 return name;
             if(!isExcludeVar(name.get()) && (!element.getType().getTypeOfElement().equals(ElementType.THIS) ||
-                    (element.getType().getTypeOfElement() == ElementType.OBJECTREF && ((Operand) element).getName().equals("this")))) {
+                    (element.getType().getTypeOfElement() == ElementType.OBJECTREF && ((Operand) element).getName().equals("this")))
+                        && !element.getType().getTypeOfElement().equals(ElementType.ARRAYREF)) {
                 return name;
             }
         }
@@ -38,12 +39,4 @@ public class LivenessUtils {
         return this.excludeVars.contains(var);
     }
 
-    boolean isParameter(String var){
-        for(Element element: this.method.getParams()){
-            if((((Operand) element).getName()).equals(var)){
-                return true;
-            }
-        }
-        return false;
-    }
 }
