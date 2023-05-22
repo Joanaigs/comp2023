@@ -88,7 +88,7 @@ public class Launcher {
         // Create config
         Map<String, String> config = new HashMap<>();
         config.put("inputFile", args[0]);
-        config.put("optimize", "false");
+        config.put("optimize", "true");
         config.put("registerAllocation", "-1");
         config.put("debug", "false");
 
