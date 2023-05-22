@@ -1,16 +1,16 @@
-import io;
 import B;
 
 class A extends B {
 
 
-    public int ahhhhh(){
-        int a;
+    public int ahhhhh() {
+        int[] a;
         int b;
         int c;
-        a=10;
-        b=20;
-        c=a+b;
+        a = new int[5];
+        b = 5;
+        a[0+b] = 10;
+        c = a[0] + b;
         return c;
     }
 
