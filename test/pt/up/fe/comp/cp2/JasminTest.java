@@ -12,14 +12,10 @@ import java.util.Collections;
 public class JasminTest {
 
     @Test
-    public void ollirToJasminBasic() {
-        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminBasic.ollir");
-    }
+    public void ollirToJasminBasic() {testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminBasic.ollir");}
 
     @Test
-    public void ollirToJasminArithmetics() {
-        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminArithmetics.ollir");
-    }
+    public void ollirToJasminArithmetics() {testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminArithmetics.ollir");}
 
     @Test
     public void ollirToJasminInvoke() {
@@ -27,9 +23,7 @@ public class JasminTest {
     }
 
     @Test
-    public void ollirToJasminFields() {
-        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminFields.ollir");
-    }
+    public void ollirToJasminFields() { testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminFields.ollir");}
 
     @Test
     public void ollirToJasminSimple() {
@@ -37,9 +31,10 @@ public class JasminTest {
     }
 
     @Test
-    public void ollirToJasminHello() {
-        testOllirToJasmin("pt/up/fe/comp/cp2/apps/example_ollir/test.ollir");
-    }
+    public void ollirToJasminHello() {testOllirToJasmin("pt/up/fe/comp/cp2/apps/example_ollir/HelloWorld.ollir");}
+
+    @Test
+    public void complexArithmetics() {testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/ComplexAdd.ollir");}
 
     public static void testOllirToJasmin(String resource, String expectedOutput) {
         SpecsCheck.checkArgument(resource.endsWith(".ollir"), () -> "Expected resource to end with .ollir: " + resource);

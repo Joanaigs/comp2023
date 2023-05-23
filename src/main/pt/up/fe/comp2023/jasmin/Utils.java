@@ -6,6 +6,9 @@ import java.util.Objects;
 
 public class Utils {
 
+    static int stackLimit;
+    static int currentStack;
+
     public static String getType(Type type, ClassUnit classUnit){
         switch (type.getTypeOfElement()){
             case INT32:
@@ -49,4 +52,9 @@ public class Utils {
         };
     }
 
+    
+    private void changeStackLimits(int value) {
+        Utils.currentStack += value;
+        Utils.stackLimit = Math.max(Utils.stackLimit, this.currentStack);
+    }
 }

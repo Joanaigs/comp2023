@@ -17,6 +17,7 @@ public class JasminGenerator implements JasminBackend {
         var jasminResult = new JasminResult(jasminCode);
         jasminResult.compile();
 
+        System.out.println(jasminCode);
         return new JasminResult(ollirResult, jasminCode, Collections.emptyList());
 
     }

@@ -115,18 +115,30 @@ public class OllirToJasmin {
         return code;
     }
 
-    public String createMethodBody(Method method){
+    private String getMethodLimits(Method method) {
+        String code = "";
 
-        String code = ".limit stack 99\n";
-        code += ".limit locals 99\n";
+        int localLimit =  method.getVarTable().size() +
+                (method.getVarTable().containsKey("this") || method.isStaticMethod() ? 0 : 1);
 
-        for (Instruction instruction : method.getInstructions()) {
-            MethodInstruction jasminInstruction = new MethodInstruction(this.classUnit, method);
-            code += jasminInstruction.createInstructionCode(instruction);
-        }
+
+        code += ".limit stack " + Utils.stackLimit + "\n";
+        code += ".limit locals " + localLimit + "\n";
 
         return code;
     }
+
+    public String createMethodBody(Method method){
+
+        String instructions = "";
+        for (Instruction instruction : method.getInstructions()) {
+            MethodInstruction jasminInstruction = new MethodInstruction(this.classUnit, method);
+            instructions += jasminInstruction.createInstructionCode(instruction);
+        }
+
+        return getMethodLimits(method) + instructions;
+    }
+
 
     public String createAccessModifiers(String privacy, Boolean isFinal, Boolean isStatic)
     {

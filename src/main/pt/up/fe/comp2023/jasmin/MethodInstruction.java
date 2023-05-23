@@ -11,6 +11,7 @@ public class MethodInstruction {
     private final ClassUnit classUnit;
     private boolean isAssign;
     private HashMap<String, Descriptor> varTable;
+    private int conditionalID = 0;
 
     MethodInstruction(ClassUnit classUnit, Method method)
     {
@@ -24,6 +25,7 @@ public class MethodInstruction {
         String code = "";
         switch(instruction.getInstType()){
             case ASSIGN :
+                // isAssign é para o POP -> callInstruction e ela retornar um objeto (!void)
                 this.isAssign = true;
                 code += getAssignCode( (AssignInstruction) instruction);
                 this.isAssign = false;
@@ -31,11 +33,13 @@ public class MethodInstruction {
             case CALL:
                 code += getInvokeCode( (CallInstruction) instruction);
                 if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
-                    if (!this.isAssign) code += "pop\n";
+                    if (!this.isAssign) code += "pop\n";   // nao estou dentro,   invokevirtual (10 + 30) fica 40 na stack mas tenho de dar pop
                 break;
             case GOTO:
+                code += getGotoCode((GotoInstruction) instruction);
                 break;
             case BRANCH:
+                code += getBranchCode( (CondBranchInstruction) instruction);
                 break;
             case RETURN:
                 code += getReturnCode((ReturnInstruction) instruction);
@@ -59,13 +63,13 @@ public class MethodInstruction {
         return code;
     }
 
-    public String getNoperCode(SingleOpInstruction instruction){
+    private String getNoperCode(SingleOpInstruction instruction){
 
         var element = instruction.getSingleOperand();
         return getLoadCode(element);
     }
     
-    public String getReturnCode(ReturnInstruction instruction){
+    private String getReturnCode(ReturnInstruction instruction){
         String code = "";
 
         if(instruction.hasReturnValue()) {
@@ -83,9 +87,12 @@ public class MethodInstruction {
 
         switch (instructionType) {
             case ADD, SUB, MUL, DIV -> {
-                code += getArithmeticCode(instruction, instructionType);
+                code += getArithmeticOpCode(instruction, instructionType);
             }
-            default ->{}
+            case LTH, GTE , ANDB, NOT -> {
+                code += getBooleanOpCode(instruction, instructionType);
+            }
+                default ->{}
         }
         return code;
     }
@@ -99,7 +106,16 @@ public class MethodInstruction {
         return code;
     }
 
-    private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
+    private String getTrueLabel() {
+        return "myTrue" + this.conditionalID;
+    }
+
+    private String getEndIfLabel() {
+        return "myEndIf" + this.conditionalID;
+    }
+
+
+    private String getArithmeticOpCode(BinaryOpInstruction instruction, OperationType instructionType) {
         String leftOperand = getLoadCode(instruction.getLeftOperand());
         String rightOperand = getLoadCode(instruction.getRightOperand());
         String op;
@@ -113,6 +129,11 @@ public class MethodInstruction {
         }
 
         return leftOperand + rightOperand + op;
+    }
+
+    private String getBooleanOpCode(BinaryOpInstruction instruction, OperationType instructionType) {
+        String code = "";
+        return code;
     }
 
     private String getPutFieldCode(PutFieldInstruction instruction){
@@ -138,6 +159,16 @@ public class MethodInstruction {
         code += getLoadCode(firstOperand) + "getfield ";
 
         return code + classUnit.getClassName() + "/" + secondOperand.getName() + " " + varType +  "\n";
+    }
+
+    private String getGotoCode(GotoInstruction instruction){
+
+        return "\tgoto " + instruction.getLabel() + "\n";
+    }
+
+    private String getBranchCode(CondBranchInstruction instruction){
+
+        return "";
     }
 
     public String getInvokeCode(CallInstruction instruction) {
@@ -227,7 +258,7 @@ public class MethodInstruction {
         return code + "new " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
     }
 
-    public String getLoadCode(Element e){
+    private String getLoadCode(Element e){
         String code = "";
 
         if (e.isLiteral()) {
@@ -261,7 +292,7 @@ public class MethodInstruction {
         return code + "\n";
     }
 
-    public String getStoreCode(Element e) {
+    private String getStoreCode(Element e) {
         String code = "";
 
         if (e.isLiteral()) {
@@ -291,14 +322,14 @@ public class MethodInstruction {
         return code + "\n";
     }
 
-    public String getIloadIstoreCode(int id, boolean load){
+    private String getIloadIstoreCode(int id, boolean load){
 
         String code = (load) ?  "iload" : "istore";
 
         return code + ((id >= 4) ? " " + id : "_" + id);
     }
 
-    public String getIConstCode(String constValue) {
+    private String getIConstCode(String constValue) {
 
         int val = Integer.parseInt(constValue);
 
