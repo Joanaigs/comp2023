@@ -118,14 +118,14 @@ public class OllirToJasmin {
     private String getMethodLimits(Method method) {
         String code = "";
 
-        Set<Integer> registers = new HashSet<>();
+        Set<Integer> registers = new TreeSet<>();
         registers.add(0);
 
         for (Descriptor descriptor : method.getVarTable().values()) {
             registers.add(descriptor.getVirtualReg());
         }
-
         int localLimit =  registers.size();
+
         code += ".limit stack 99" /*/ + Utils.stackLimit */ + "\n";
         code += ".limit locals " + localLimit + "\n";
 
