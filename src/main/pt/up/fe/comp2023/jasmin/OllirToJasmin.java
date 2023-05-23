@@ -2,7 +2,10 @@ package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class OllirToJasmin {
 
@@ -118,7 +121,11 @@ public class OllirToJasmin {
     private String getMethodLimits(Method method) {
         String code = "";
 
-        int localLimit =  method.getVarTable().size() +
+        Set<Integer> registers = new HashSet<>();
+        for(Map.Entry<String, Descriptor> var: method.getVarTable().entrySet()){
+           registers.add(var.getValue().getVirtualReg());
+        }
+        int localLimit =  registers.size() +
                 (method.getVarTable().containsKey("this") || method.isStaticMethod() ? 0 : 1);
 
         code += ".limit stack "  + Utils.stackLimit + "\n";
