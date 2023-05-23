@@ -124,10 +124,10 @@ public class OllirToJasmin {
         Set<Integer> registers = new HashSet<>();
         registers.add(0);
 
-        for(Map.Entry<String, Descriptor> var: method.getVarTable().entrySet()){
-           registers.add(var.getValue().getVirtualReg());
+        for (Descriptor descriptor : method.getVarTable().values()) {
+            registers.add(descriptor.getVirtualReg());
         }
-        int localLimit =  registers.size();
+        int localLimit = registers.size();
 
         code += ".limit stack 99" /*  + Utils.stackLimit*/ + "\n";
         code += ".limit locals " + localLimit + "\n";
