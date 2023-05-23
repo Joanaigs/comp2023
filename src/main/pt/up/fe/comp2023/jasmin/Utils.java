@@ -6,6 +6,9 @@ import java.util.Objects;
 
 public class Utils {
 
+    static int stackLimit;
+    static int currentStack;
+
     public static String getType(Type type, ClassUnit classUnit){
         switch (type.getTypeOfElement()){
             case INT32:
