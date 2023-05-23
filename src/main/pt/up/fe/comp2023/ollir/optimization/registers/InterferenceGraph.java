@@ -86,7 +86,7 @@ public class InterferenceGraph {
     private int checkFirstReg(){
         int firstReg = this.livenessAnalysis.getMethod().isStaticMethod() ? 0 : 1;
         for(String var : varTable.keySet()){
-            if(varTable.get(var).getScope().equals(VarScope.PARAMETER))
+            if(varTable.get(var).getScope().equals(VarScope.PARAMETER) || var.equals("this") || varTable.get(var).getVarType().getTypeOfElement().equals(ElementType.THIS))
                 firstReg++;
         }
         return firstReg;

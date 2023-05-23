@@ -21,8 +21,7 @@ public class LivenessUtils {
             if(name.isEmpty())
                 return name;
             if(!isExcludeVar(name.get()) && (!element.getType().getTypeOfElement().equals(ElementType.THIS) ||
-                    (element.getType().getTypeOfElement() == ElementType.OBJECTREF && ((Operand) element).getName().equals("this")))
-                        && !element.getType().getTypeOfElement().equals(ElementType.ARRAYREF)) {
+                    (element.getType().getTypeOfElement() == ElementType.OBJECTREF && ((Operand) element).getName().equals("this")))) {
                 return name;
             }
         }
