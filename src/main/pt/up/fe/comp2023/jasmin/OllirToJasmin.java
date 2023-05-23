@@ -2,10 +2,7 @@ package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class OllirToJasmin {
 
@@ -121,7 +118,7 @@ public class OllirToJasmin {
     private String getMethodLimits(Method method) {
         String code = "";
 
-        Set<Integer> registers = new HashSet<>();
+        Set<Integer> registers = new TreeSet<>();
         for(Map.Entry<String, Descriptor> var: method.getVarTable().entrySet()){
            registers.add(var.getValue().getVirtualReg());
         }
