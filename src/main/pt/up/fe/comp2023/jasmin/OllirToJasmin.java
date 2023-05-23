@@ -122,7 +122,7 @@ public class OllirToJasmin {
                 (method.getVarTable().containsKey("this") || method.isStaticMethod() ? 0 : 1);
 
 
-        code += ".limit stack " + Utils.stackLimit + "\n";
+        code += ".limit stack 99" /*/ + Utils.stackLimit */ + "\n";
         code += ".limit locals " + localLimit + "\n";
 
         return code;

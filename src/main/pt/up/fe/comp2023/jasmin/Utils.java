@@ -52,4 +52,9 @@ public class Utils {
         };
     }
 
+    private void changeStackLimits(int value) {
+        Utils.currentStack += value;
+        Utils.stackLimit = Math.max(Utils.stackLimit, this.currentStack);
+    }
+
 }
