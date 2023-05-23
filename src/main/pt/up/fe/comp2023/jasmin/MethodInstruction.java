@@ -32,8 +32,8 @@ public class MethodInstruction {
                 code += getInvokeCode( (CallInstruction) instruction);
                 if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
                     if (!this.isAssign){
-                        code += "pop\n";
                         Utils.updateStackLimits(-1);
+                        code += "pop\n";
                     }
                 break;
             case GOTO:
@@ -101,12 +101,18 @@ public class MethodInstruction {
         Operand op = (Operand) instruction.getDest();
 
         code += createInstructionCode(instruction.getRhs()) +  getStoreCode(op);
+        if (varTable.get(op.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF)
+            Utils.updateStackLimits(-3);
+        else
+            Utils.updateStackLimits(-1);
+
         return code;
     }
 
     private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
         String leftOperand = getLoadCode(instruction.getLeftOperand());
         String rightOperand = getLoadCode(instruction.getRightOperand());
+        Utils.updateStackLimits(-1);
         String op;
 
         switch (instructionType) {
@@ -129,7 +135,6 @@ public class MethodInstruction {
         String varType = Utils.getType(secondOperand.getType(), this.classUnit);
 
         code += getLoadCode(firstOperand) + getLoadCode(element) + "putfield ";
-        Utils.updateStackLimits(-2);
 
         return  code + classUnit.getClassName() + "/" + secondOperand.getName() + " " + varType + "\n";
     }
@@ -150,6 +155,7 @@ public class MethodInstruction {
 
         switch (instruction.getInvocationType()) {
             case invokestatic:
+                Utils.updateStackLimits(-1);
                 return getInvokeStaticCode(instruction);
             case invokevirtual:
                 return getInvokeVirtualCode(instruction);
@@ -167,7 +173,6 @@ public class MethodInstruction {
 
         for (Element element : instruction.getListOfOperands()) {
             code += getLoadCode(element);
-            Utils.updateStackLimits(1);
         }
 
 
@@ -188,11 +193,9 @@ public class MethodInstruction {
     private String getInvokeVirtualCode(CallInstruction instruction) {
 
         String code = getLoadCode(instruction.getFirstArg());
-        Utils.updateStackLimits(1);
 
         for (Element element : instruction.getListOfOperands()) {
             code += getLoadCode(element);
-            Utils.updateStackLimits(1);
         }
 
         code += "invokevirtual "
@@ -215,11 +218,9 @@ public class MethodInstruction {
 
         if (firstArg.getType().getTypeOfElement() == ElementType.THIS) {
             code += getLoadCode(firstArg) + "invokespecial " + superClassName;
-            Utils.updateStackLimits(1);
         }
         else {
             code += getLoadCode(firstArg) + "invokespecial " + Utils.getClassPath(((ClassType) instruction.getFirstArg().getType()).getName(), classUnit);
-            Utils.updateStackLimits(1);
         }
 
         code += "/<init>(";
@@ -242,24 +243,24 @@ public class MethodInstruction {
             code += getLoadCode(instruction.getListOfOperands().get(0)) +  "newarray int\n";
         }
         else if (e.getType().getTypeOfElement().equals(ElementType.OBJECTREF)){
-            code += "new " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
             Utils.updateStackLimits(1);
+            code += "new " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
         }
-
         return code;
     }
 
     public String getLoadCode(Element e){
         String code = "";
 
+
         if (e.isLiteral()) {
+            Utils.updateStackLimits(1);
             LiteralElement literalElement = (LiteralElement) e;
             var elementType = literalElement.getType().getTypeOfElement();
             switch (elementType) {
                 case INT32,BOOLEAN -> code += getIConstCode( literalElement.getLiteral() );
                 default -> code += "ldc " + literalElement.getLiteral();
             }
-            Utils.updateStackLimits(1);
         }
         else if (e instanceof ArrayOperand) {
             ArrayOperand operand = (ArrayOperand) e;
@@ -267,16 +268,15 @@ public class MethodInstruction {
             // Load array
             int virtualReg =  varTable.get(((ArrayOperand) e).getName()).getVirtualReg();
             code +=  "aload%s\n" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg).toString();
-            Utils.updateStackLimits(1);
 
             // Load index
             code += getLoadCode(operand.getIndexOperands().get(0));
-            Utils.updateStackLimits(-1);
 
             code += "iaload\n";
         }
         else if (e instanceof Operand){
             Operand operand = (Operand) e;
+            Utils.updateStackLimits(1);
             int id = (operand.isParameter())? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
 
             if (id < 0) {
@@ -290,21 +290,19 @@ public class MethodInstruction {
                 switch (elementType) {
                     case INT32, BOOLEAN -> {
                         code += getIloadIstoreCode(id, true );
-                        Utils.updateStackLimits(1);
                     }
                     case CLASS -> {
                         code += "";
                     }
                     case STRING, OBJECTREF -> {
                         code += "aload" + (id <= 3 ? '_' : ' ') + id;
-                        Utils.updateStackLimits(1);
                     }
                     case THIS -> {
                         code += "aload_0";
-                        Utils.updateStackLimits(1);
                     }
                     case VOID -> {}
                 }
+
             }
         }
         return code + "\n";
@@ -320,10 +318,8 @@ public class MethodInstruction {
             } else {
                 code += "store " + literalElement.getLiteral();
             }
-            Utils.updateStackLimits(-1);
         }
         else if (e instanceof ArrayOperand) {
-            Utils.updateStackLimits(-3);
             code += "iastore\n";
         }
         else {
@@ -337,12 +333,9 @@ public class MethodInstruction {
                 switch (elemType.getTypeOfElement()) {
                     case INT32, BOOLEAN -> {
                         code += getIloadIstoreCode(id, false);
-                        Utils.updateStackLimits(-1);
                     }
                     case CLASS, STRING, ARRAYREF, OBJECTREF -> {
                         code += "astore" + (id <= 3 ? '_' : ' ') + id;
-                        if(elemType.getTypeOfElement().equals(ARRAYREF) || elemType.getTypeOfElement().equals(OBJECTREF))
-                            Utils.updateStackLimits(-1);
                     }
                     case THIS -> {
                         code += "astore_0";
@@ -351,10 +344,7 @@ public class MethodInstruction {
                     }
                 }
             }
-            if(varTable.get(operand.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF) Utils.updateStackLimits(-3);
-            else Utils.updateStackLimits(-1);
         }
-
 
         return code + "\n";
     }
