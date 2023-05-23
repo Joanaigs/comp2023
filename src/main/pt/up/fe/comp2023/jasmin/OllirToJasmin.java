@@ -125,7 +125,8 @@ public class OllirToJasmin {
         for(Map.Entry<String, Descriptor> var: method.getVarTable().entrySet()){
            registers.add(var.getValue().getVirtualReg());
         }
-        int localLimit =  registers.size();
+        int localLimit =  registers.size() +
+                (method.isStaticMethod() ? 0 : 1);
 
         code += ".limit stack 99" /*  + Utils.stackLimit*/ + "\n";
         code += ".limit locals " + localLimit + "\n";
