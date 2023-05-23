@@ -122,10 +122,10 @@ public class OllirToJasmin {
         String code = "";
 
         Set<Integer> registers = new HashSet<>();
-        for(Map.Entry<String, Descriptor> c: method.getVarTable().entrySet()){
-           registers.add(c.getValue().getVirtualReg());
+        for(Map.Entry<String, Descriptor> var: method.getVarTable().entrySet()){
+           registers.add(var.getValue().getVirtualReg());
         }
-        int localLimit =  method.getVarTable().size() +
+        int localLimit =  registers.size() +
                 (method.getVarTable().containsKey("this") || method.isStaticMethod() ? 0 : 1);
         code += ".limit stack 99" /*/ + Utils.stackLimit */ + "\n";
         code += ".limit locals " + localLimit + "\n";
