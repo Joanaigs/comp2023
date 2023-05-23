@@ -121,14 +121,15 @@ public class OllirToJasmin {
         int localLimit =  method.getVarTable().size() +
                 (method.getVarTable().containsKey("this") || method.isStaticMethod() ? 0 : 1);
 
-
-        code += ".limit stack 99" /*/ + Utils.stackLimit */ + "\n";
+        code += ".limit stack "  + Utils.stackLimit + "\n";
         code += ".limit locals " + localLimit + "\n";
 
         return code;
     }
 
     public String createMethodBody(Method method){
+
+        Utils.resetStackLimits();
 
         String instructions = "";
         for (Instruction instruction : method.getInstructions()) {
@@ -152,5 +153,6 @@ public class OllirToJasmin {
 
         return code;
     }
+
 
 }
