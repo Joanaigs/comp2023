@@ -47,7 +47,8 @@ public class Utils {
             case INT32, BOOLEAN -> "i";
             case STRING -> "Ljava/lang/String;";
             case VOID -> "";
-            default -> "a";
+            case ARRAYREF, OBJECTREF -> "a";
+            default -> "";
         };
     }
 

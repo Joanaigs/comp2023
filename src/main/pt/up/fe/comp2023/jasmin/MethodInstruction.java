@@ -101,10 +101,13 @@ public class MethodInstruction {
         Operand op = (Operand) instruction.getDest();
 
         code += createInstructionCode(instruction.getRhs()) +  getStoreCode(op);
+
+
         if (varTable.get(op.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF)
             Utils.updateStackLimits(-3);
         else
             Utils.updateStackLimits(-1);
+
 
         return code;
     }
@@ -161,6 +164,8 @@ public class MethodInstruction {
                 return getInvokeVirtualCode(instruction);
             case invokespecial:
                 return getInvokeSpecialCode(instruction);
+            case arraylength:
+                return getLoadCode(instruction.getFirstArg()) + "arraylength\n";
             case NEW:
                 return getInvokeNewCode(instruction);
             default:
@@ -270,9 +275,8 @@ public class MethodInstruction {
             code +=  "aload%s\n" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg).toString();
 
             // Load index
-            code += getLoadCode(operand.getIndexOperands().get(0));
+            code += getLoadCode(operand.getIndexOperands().get(0)) + "iaload\n";
 
-            code += "iaload\n";
         }
         else if (e instanceof Operand){
             Operand operand = (Operand) e;
