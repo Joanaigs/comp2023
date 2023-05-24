@@ -3,11 +3,10 @@ package pt.up.fe.comp2023.jasmin;
 import org.specs.comp.ollir.*;
 
 import java.util.Objects;
-
 public class Utils {
 
     static int stackLimit;
-    static int currentStack;
+    static int tempStack;
 
     public static String getType(Type type, ClassUnit classUnit){
         switch (type.getTypeOfElement()){
@@ -52,9 +51,15 @@ public class Utils {
         };
     }
 
-    private void changeStackLimits(int value) {
-        Utils.currentStack += value;
-        Utils.stackLimit = Math.max(Utils.stackLimit, this.currentStack);
+    public static void updateStackLimits(int value) {
+        Utils.tempStack += value;
+        Utils.stackLimit = Math.max(Utils.stackLimit, Utils.tempStack);
     }
+
+    public static void resetStackLimits() {
+        Utils.tempStack = 0;
+        Utils.stackLimit = 0;
+    }
+
 
 }

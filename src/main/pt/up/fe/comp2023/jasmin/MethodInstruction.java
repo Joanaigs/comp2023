@@ -4,7 +4,7 @@ import org.specs.comp.ollir.*;
 
 import java.util.HashMap;
 
-import static org.specs.comp.ollir.ElementType.INT32;
+import static org.specs.comp.ollir.ElementType.*;
 
 public class MethodInstruction {
 
@@ -31,7 +31,10 @@ public class MethodInstruction {
             case CALL:
                 code += getInvokeCode( (CallInstruction) instruction);
                 if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
-                    if (!this.isAssign) code += "pop\n";
+                    if (!this.isAssign){
+                        Utils.updateStackLimits(-1);
+                        code += "pop\n";
+                    }
                 break;
             case GOTO:
                 break;
@@ -64,13 +67,15 @@ public class MethodInstruction {
         var element = instruction.getSingleOperand();
         return getLoadCode(element);
     }
-    
+
     public String getReturnCode(ReturnInstruction instruction){
         String code = "";
 
         if(instruction.hasReturnValue()) {
             String loadCode = getLoadCode(instruction.getOperand());
-            String returnType = Utils.getReturnType(instruction.getOperand().getType().getTypeOfElement());
+            ElementType elementType = instruction.getOperand().getType().getTypeOfElement();
+            String returnType = Utils.getReturnType(elementType);
+
             code +=  loadCode +  returnType;
         }
 
@@ -94,7 +99,12 @@ public class MethodInstruction {
         String code  = "";
 
         Operand op = (Operand) instruction.getDest();
+
         code += createInstructionCode(instruction.getRhs()) +  getStoreCode(op);
+        if (varTable.get(op.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF)
+            Utils.updateStackLimits(-3);
+        else
+            Utils.updateStackLimits(-1);
 
         return code;
     }
@@ -102,6 +112,7 @@ public class MethodInstruction {
     private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
         String leftOperand = getLoadCode(instruction.getLeftOperand());
         String rightOperand = getLoadCode(instruction.getRightOperand());
+        Utils.updateStackLimits(-1);
         String op;
 
         switch (instructionType) {
@@ -144,6 +155,7 @@ public class MethodInstruction {
 
         switch (instruction.getInvocationType()) {
             case invokestatic:
+                Utils.updateStackLimits(-1);
                 return getInvokeStaticCode(instruction);
             case invokevirtual:
                 return getInvokeVirtualCode(instruction);
@@ -159,8 +171,9 @@ public class MethodInstruction {
     private String getInvokeStaticCode(CallInstruction instruction) {
         String code = "";
 
-        for (Element element : instruction.getListOfOperands())
+        for (Element element : instruction.getListOfOperands()) {
             code += getLoadCode(element);
+        }
 
 
         code += "invokestatic "
@@ -169,9 +182,8 @@ public class MethodInstruction {
                 + ((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")
                 + "(";
 
-        for (Element element : instruction.getListOfOperands()) {
+        for (Element element : instruction.getListOfOperands())
             code += Utils.getType(element.getType(), classUnit);
-        }
 
 
         return code + ")" + Utils.getType(instruction.getReturnType(), classUnit) + "\n";
@@ -181,8 +193,11 @@ public class MethodInstruction {
     private String getInvokeVirtualCode(CallInstruction instruction) {
 
         String code = getLoadCode(instruction.getFirstArg());
-        for (Element element : instruction.getListOfOperands())
+
+        for (Element element : instruction.getListOfOperands()) {
             code += getLoadCode(element);
+        }
+
         code += "invokevirtual "
                 + Utils.getClassPath( ((ClassType) instruction.getFirstArg().getType()).getName(), classUnit)
                 + "/"
@@ -201,10 +216,12 @@ public class MethodInstruction {
         String superClassName = (classUnit.getSuperClass() == null)? "java/lang/Object\n" : (classUnit.getSuperClass() + "\n");
         String code = "";
 
-        if (firstArg.getType().getTypeOfElement() == ElementType.THIS)
+        if (firstArg.getType().getTypeOfElement() == ElementType.THIS) {
             code += getLoadCode(firstArg) + "invokespecial " + superClassName;
-        else
+        }
+        else {
             code += getLoadCode(firstArg) + "invokespecial " + Utils.getClassPath(((ClassType) instruction.getFirstArg().getType()).getName(), classUnit);
+        }
 
         code += "/<init>(";
 
@@ -220,17 +237,24 @@ public class MethodInstruction {
     private String getInvokeNewCode(CallInstruction instruction) {
         String code = "";
 
-        for (Element element : instruction.getListOfOperands()) {
-            code += getLoadCode(element);
-        }
+        Element e = instruction.getFirstArg();
 
-        return code + "new " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
+        if (e.getType().getTypeOfElement().equals(ElementType.ARRAYREF)) {
+            code += getLoadCode(instruction.getListOfOperands().get(0)) +  "newarray int\n";
+        }
+        else if (e.getType().getTypeOfElement().equals(ElementType.OBJECTREF)){
+            Utils.updateStackLimits(1);
+            code += "new " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
+        }
+        return code;
     }
 
     public String getLoadCode(Element e){
         String code = "";
 
+
         if (e.isLiteral()) {
+            Utils.updateStackLimits(1);
             LiteralElement literalElement = (LiteralElement) e;
             var elementType = literalElement.getType().getTypeOfElement();
             switch (elementType) {
@@ -238,8 +262,21 @@ public class MethodInstruction {
                 default -> code += "ldc " + literalElement.getLiteral();
             }
         }
-        else {
+        else if (e instanceof ArrayOperand) {
+            ArrayOperand operand = (ArrayOperand) e;
+
+            // Load array
+            int virtualReg =  varTable.get(((ArrayOperand) e).getName()).getVirtualReg();
+            code +=  "aload%s\n" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg).toString();
+
+            // Load index
+            code += getLoadCode(operand.getIndexOperands().get(0));
+
+            code += "iaload\n";
+        }
+        else if (e instanceof Operand){
             Operand operand = (Operand) e;
+            Utils.updateStackLimits(1);
             int id = (operand.isParameter())? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
 
             if (id < 0) {
@@ -251,11 +288,21 @@ public class MethodInstruction {
             else{
                 ElementType elementType = operand.getType().getTypeOfElement();
                 switch (elementType) {
-                    case INT32, BOOLEAN -> code += getIloadIstoreCode(id, true );
-                    case CLASS,  STRING, OBJECTREF -> code += "aload" + (id <= 3 ? '_' : ' ') + id;
-                    case THIS -> code += "aload_0";
+                    case INT32, BOOLEAN -> {
+                        code += getIloadIstoreCode(id, true );
+                    }
+                    case CLASS -> {
+                        code += "";
+                    }
+                    case STRING, OBJECTREF -> {
+                        code += "aload" + (id <= 3 ? '_' : ' ') + id;
+                    }
+                    case THIS -> {
+                        code += "aload_0";
+                    }
                     case VOID -> {}
                 }
+
             }
         }
         return code + "\n";
@@ -271,7 +318,11 @@ public class MethodInstruction {
             } else {
                 code += "store " + literalElement.getLiteral();
             }
-        } else {
+        }
+        else if (e instanceof ArrayOperand) {
+            code += "iastore\n";
+        }
+        else {
             Operand operand = (Operand) e;
             int id = (operand.isParameter()) ? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
             Type elemType = operand.getType();
@@ -280,10 +331,17 @@ public class MethodInstruction {
                 code += "putfield " + Utils.getType(elemType, classUnit) + "/" + operand.getName() + " " + Utils.getType(elemType, classUnit);
             } else {
                 switch (elemType.getTypeOfElement()) {
-                    case INT32, BOOLEAN -> code += getIloadIstoreCode(id, false);
-                    case CLASS, STRING, ARRAYREF, OBJECTREF -> code += "astore" + (id <= 3 ? '_' : ' ') + id;
-                    case THIS -> code += "astore_0";
-                    case VOID -> { }
+                    case INT32, BOOLEAN -> {
+                        code += getIloadIstoreCode(id, false);
+                    }
+                    case CLASS, STRING, ARRAYREF, OBJECTREF -> {
+                        code += "astore" + (id <= 3 ? '_' : ' ') + id;
+                    }
+                    case THIS -> {
+                        code += "astore_0";
+                    }
+                    case VOID -> {
+                    }
                 }
             }
         }
