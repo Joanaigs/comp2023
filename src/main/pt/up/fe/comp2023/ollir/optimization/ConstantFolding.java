@@ -4,7 +4,6 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 
-import static pt.up.fe.comp2023.ollir.Utils.addNewNodeInfo;
 
 public class ConstantFolding extends AJmmVisitor<String, Boolean> {
 
@@ -75,7 +74,7 @@ public class ConstantFolding extends AJmmVisitor<String, Boolean> {
         if(right.getKind().equals("Boolean") && left.getKind().equals("Boolean")){
             JmmNode newNode = new JmmNodeImpl("Boolean");
             newNode.put("bool", checkBool(jmmNode, left, right));
-            addNewNodeInfo(jmmNode, newNode);
+            jmmNode.replace(newNode);
             return true;
         }else if(right.getKind().equals("Integer") && left.getKind().equals("Integer")) {
             JmmNode newNode;
@@ -88,7 +87,7 @@ public class ConstantFolding extends AJmmVisitor<String, Boolean> {
                 newNode = new JmmNodeImpl("Integer");
                 newNode.put("value", result);
             }
-            addNewNodeInfo(jmmNode, newNode);
+            jmmNode.replace(newNode);
             return true;
         }
         return hasChanges;

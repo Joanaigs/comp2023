@@ -7,7 +7,6 @@ import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import java.util.HashMap;
 import java.util.Map;
 
-import static pt.up.fe.comp2023.ollir.Utils.addNewNodeInfo;
 
 public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
     private final Map<String, String> constants=new HashMap<>();
@@ -46,7 +45,7 @@ public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
                     newNode.put("value", expr);
                 }
             }
-            addNewNodeInfo(jmmNode, newNode);
+            jmmNode.replace(newNode);
             return true;
         }
         return false;
