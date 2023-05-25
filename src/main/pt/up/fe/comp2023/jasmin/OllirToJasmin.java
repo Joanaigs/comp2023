@@ -129,8 +129,8 @@ public class OllirToJasmin {
         }
         int localLimit =  registers.size();
 
-        code += ".limit stack 3\n"; //+ Utils.stackLimit + "\n";
-        code += ".limit locals 2\n"; // + localLimit + "\n";
+        code += ".limit stack " + Utils.stackLimit + "\n";
+        code += ".limit locals " + localLimit + "\n";
 
         return code;
     }
