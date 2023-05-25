@@ -5,12 +5,15 @@ import org.specs.comp.ollir.*;
 import java.util.HashMap;
 
 import static org.specs.comp.ollir.ElementType.*;
+import static org.specs.comp.ollir.InstructionType.BINARYOPER;
+import static org.specs.comp.ollir.InstructionType.UNARYOPER;
 
 public class MethodInstruction {
 
     private final ClassUnit classUnit;
     private boolean isAssign;
     private HashMap<String, Descriptor> varTable;
+    private int conditionalID;
 
     MethodInstruction(ClassUnit classUnit, Method method)
     {
@@ -37,8 +40,10 @@ public class MethodInstruction {
                     }
                 break;
             case GOTO:
+                code += getGotoCode((GotoInstruction) instruction);
                 break;
             case BRANCH:
+                code += getBranchCode( (CondBranchInstruction) instruction);
                 break;
             case RETURN:
                 code += getReturnCode((ReturnInstruction) instruction);
@@ -90,6 +95,9 @@ public class MethodInstruction {
             case ADD, SUB, MUL, DIV -> {
                 code += getArithmeticCode(instruction, instructionType);
             }
+            case EQ, GTH, GTE, LTH, LTE, NEQ -> {
+                code += getBooleanCode(instruction, instructionType);
+            }
             default ->{}
         }
         return code;
@@ -98,11 +106,9 @@ public class MethodInstruction {
     private String getAssignCode(AssignInstruction instruction) {
         String code  = "";
 
+        // duvida no update
         Operand op = (Operand) instruction.getDest();
-
         code += createInstructionCode(instruction.getRhs()) +  getStoreCode(op);
-
-
         if (varTable.get(op.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF)
             Utils.updateStackLimits(-3);
         else
@@ -112,7 +118,9 @@ public class MethodInstruction {
         return code;
     }
 
+
     private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
+
         String leftOperand = getLoadCode(instruction.getLeftOperand());
         String rightOperand = getLoadCode(instruction.getRightOperand());
         Utils.updateStackLimits(-1);
@@ -127,6 +135,122 @@ public class MethodInstruction {
         }
 
         return leftOperand + rightOperand + op;
+    }
+
+    private String getGotoCode(GotoInstruction instruction){
+        return "goto " + instruction.getLabel() + "\n";
+    }
+
+    private String getTrueLabel() {
+        return "myTrue" + this.conditionalID;
+    }
+
+    private String getEndIfLabel() {
+        return "myEndIf" + this.conditionalID;
+    }
+
+    private Instruction getCondition(CondBranchInstruction instruction) {
+        Instruction condition;
+
+        if (instruction instanceof SingleOpCondInstruction) {
+            SingleOpCondInstruction singleOpCondInstruction = (SingleOpCondInstruction) instruction;
+            condition = singleOpCondInstruction.getCondition();
+        } else {
+            OpCondInstruction opCondInstruction = (OpCondInstruction) instruction;
+            condition = opCondInstruction.getCondition();
+        }
+        return condition;
+    }
+
+    private String getBranchCode(CondBranchInstruction instruction) {
+
+        String code = "", op = "";
+        Instruction condition = getCondition(instruction);
+
+        if (condition.getInstType() == BINARYOPER){
+
+            BinaryOpInstruction binaryOpInstruction = (BinaryOpInstruction) condition;
+
+            switch(binaryOpInstruction.getOperation().getOpType()){
+                case ANDB -> {
+                    code += createInstructionCode(condition);
+                    op = "ifne";
+                }
+                case LTH -> {
+                    Element leftOperand = binaryOpInstruction.getLeftOperand();
+                    Element rightOperand = binaryOpInstruction.getRightOperand();
+                    int literalValue = 0;
+
+                    // literal < 0
+                    if (rightOperand instanceof LiteralElement) {
+                        literalValue = Integer.parseInt(((LiteralElement) rightOperand).getLiteral());
+
+                        if (literalValue == 0) {
+                            code += getLoadCode(leftOperand);
+                            op = "iflt";
+                        }
+                        else{
+                            code += getLoadCode(leftOperand) + getLoadCode(rightOperand);
+                            op = "if_icmplt";
+                        }
+                    }
+                    // 0 < literal
+                    else if (leftOperand instanceof LiteralElement){
+                        literalValue = Integer.parseInt(((LiteralElement) leftOperand).getLiteral());
+
+                        if (literalValue == 0) {
+                            code += getLoadCode(rightOperand);
+                            op = "ifgt";
+                        }
+                        else{
+                            code += getLoadCode(leftOperand) + getLoadCode(rightOperand);
+                            op = "if_icmplt";
+                        }
+                    }
+
+                }
+                default -> {
+                    return "";
+                }
+            }
+
+        }
+        else if (condition.getInstType() == UNARYOPER){
+            UnaryOpInstruction unaryOpInstruction = (UnaryOpInstruction) condition;
+            if (unaryOpInstruction.getOperation().getOpType() == OperationType.NOTB) {
+                code += getLoadCode(unaryOpInstruction.getOperand());
+                op = "ifeq";
+            }
+            else op = "ifne";
+        }
+        else{
+            code += createInstructionCode(condition);
+            op = "ifne";
+        }
+
+
+        return code +  op + " " + instruction.getLabel() + "\n";
+    }
+
+
+    private String getBooleanCode(BinaryOpInstruction instruction, OperationType instructionType) {
+        String leftOperand = getLoadCode(instruction.getLeftOperand());
+        String rightOperand = getLoadCode(instruction.getRightOperand());
+
+        String op;
+        switch (instructionType) {
+            case LTH -> op = "if_icmplt";
+            case ANDB -> op = "iand";
+            case NOTB -> op = "ifeq";
+            default  -> op = "";
+        }
+
+        String code = getTrueLabel() + "\n" + "iconst_0\n";
+        code += "goto NEXT" + conditionalID + "\n";
+        code += getTrueLabel() + "\n" + "iconst_1\n";
+        code += "NEXT" + conditionalID++ + ":";
+
+        return leftOperand + rightOperand + op + code;
     }
 
     private String getPutFieldCode(PutFieldInstruction instruction){
@@ -272,7 +396,7 @@ public class MethodInstruction {
 
             // Load array
             int virtualReg =  varTable.get(((ArrayOperand) e).getName()).getVirtualReg();
-            code +=  "aload%s\n" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg).toString();
+            code +=  "aload\n" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg).toString();
 
             // Load index
             code += getLoadCode(operand.getIndexOperands().get(0)) + "iaload\n";
@@ -298,7 +422,7 @@ public class MethodInstruction {
                     case CLASS -> {
                         code += "";
                     }
-                    case STRING, OBJECTREF -> {
+                    case STRING, OBJECTREF, ARRAYREF-> {
                         code += "aload" + (id <= 3 ? '_' : ' ') + id;
                     }
                     case THIS -> {
