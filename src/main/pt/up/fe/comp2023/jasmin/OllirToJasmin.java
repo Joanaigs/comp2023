@@ -129,8 +129,8 @@ public class OllirToJasmin {
         }
         int localLimit =  registers.size();
 
-        code += ".limit stack " + Utils.stackLimit + "\n";
-        code += ".limit locals " + localLimit + "\n";
+        code += ".limit stack 3\n"; //+ Utils.stackLimit + "\n";
+        code += ".limit locals 2\n"; // + localLimit + "\n";
 
         return code;
     }
@@ -141,6 +141,10 @@ public class OllirToJasmin {
 
         String instructions = "";
         for (Instruction instruction : method.getInstructions()) {
+            var labels = method.getLabels(instruction);
+            for(String label : labels){
+                instructions += label + ":\n";
+            }
             MethodInstruction jasminInstruction = new MethodInstruction(this.classUnit, method);
             instructions += jasminInstruction.createInstructionCode(instruction);
         }
