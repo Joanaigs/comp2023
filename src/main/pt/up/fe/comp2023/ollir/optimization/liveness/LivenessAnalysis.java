@@ -40,7 +40,8 @@ public class LivenessAnalysis {
         int changes = instructions.size();
         while(changes>0){
             changes = instructions.size();
-            for (Instruction instruction : instructions) {
+            for (int i=instructions.size()-1; i>=0; i--) {
+                Instruction instruction = instructions.get(i);
                 Set<String> inBefore = new HashSet<>(data.get(instruction).getIn());
                 Set<String> outBefore = new HashSet<>(data.get(instruction).getOut());
 
