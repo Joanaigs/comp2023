@@ -141,6 +141,10 @@ public class OllirToJasmin {
 
         String instructions = "";
         for (Instruction instruction : method.getInstructions()) {
+            var labels = method.getLabels(instruction);
+            for(String label : labels){
+                instructions += label + ":\n";
+            }
             MethodInstruction jasminInstruction = new MethodInstruction(this.classUnit, method);
             instructions += jasminInstruction.createInstructionCode(instruction);
         }

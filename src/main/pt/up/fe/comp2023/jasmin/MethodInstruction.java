@@ -15,6 +15,7 @@ public class MethodInstruction {
     private HashMap<String, Descriptor> varTable;
     private int conditionalID;
 
+
     MethodInstruction(ClassUnit classUnit, Method method)
     {
         this.classUnit = classUnit;
@@ -95,7 +96,7 @@ public class MethodInstruction {
             case ADD, SUB, MUL, DIV -> {
                 code += getArithmeticCode(instruction, instructionType);
             }
-            case EQ, GTH, GTE, LTH, LTE, NEQ -> {
+            case EQ, GTH, GTE, LTH, LTE, NEQ, AND, ANDB, NOT, NOTB-> {
                 code += getBooleanCode(instruction, instructionType);
             }
             default ->{}
@@ -141,14 +142,6 @@ public class MethodInstruction {
         return "goto " + instruction.getLabel() + "\n";
     }
 
-    private String getTrueLabel() {
-        return "myTrue" + this.conditionalID;
-    }
-
-    private String getEndIfLabel() {
-        return "myEndIf" + this.conditionalID;
-    }
-
     private Instruction getCondition(CondBranchInstruction instruction) {
         Instruction condition;
 
@@ -172,7 +165,7 @@ public class MethodInstruction {
             BinaryOpInstruction binaryOpInstruction = (BinaryOpInstruction) condition;
 
             switch(binaryOpInstruction.getOperation().getOpType()){
-                case ANDB -> {
+                case ANDB, AND -> {
                     code += createInstructionCode(condition);
                     op = "ifne";
                 }
@@ -183,9 +176,10 @@ public class MethodInstruction {
 
                     // literal < 0
                     if (rightOperand instanceof LiteralElement) {
-                        literalValue = Integer.parseInt(((LiteralElement) rightOperand).getLiteral());
+                        LiteralElement literal = ((LiteralElement) rightOperand);
+                        literalValue = Integer.parseInt(literal.getLiteral());
 
-                        if (literalValue == 0) {
+                        if (literal != null && literalValue == 0) {
                             code += getLoadCode(leftOperand);
                             op = "iflt";
                         }
@@ -196,9 +190,10 @@ public class MethodInstruction {
                     }
                     // 0 < literal
                     else if (leftOperand instanceof LiteralElement){
-                        literalValue = Integer.parseInt(((LiteralElement) leftOperand).getLiteral());
+                        LiteralElement literal = ((LiteralElement) leftOperand);
+                        literalValue = Integer.parseInt(literal.getLiteral());
 
-                        if (literalValue == 0) {
+                        if (literal != null && literalValue == 0) {
                             code += getLoadCode(rightOperand);
                             op = "ifgt";
                         }
@@ -217,7 +212,7 @@ public class MethodInstruction {
         }
         else if (condition.getInstType() == UNARYOPER){
             UnaryOpInstruction unaryOpInstruction = (UnaryOpInstruction) condition;
-            if (unaryOpInstruction.getOperation().getOpType() == OperationType.NOTB) {
+            if (unaryOpInstruction.getOperation().getOpType() == OperationType.NOTB || unaryOpInstruction.getOperation().getOpType() == OperationType.NOT) {
                 code += getLoadCode(unaryOpInstruction.getOperand());
                 op = "ifeq";
             }
@@ -239,18 +234,14 @@ public class MethodInstruction {
 
         String op;
         switch (instructionType) {
-            case LTH -> op = "if_icmplt";
-            case ANDB -> op = "iand";
-            case NOTB -> op = "ifeq";
+            case LTH -> op = "if_icmpge ";
+            case GTE -> op = "if_icmplt ";
+            case ANDB, AND -> op = "iand ";
+            case NOTB, NOT -> op = "ifeq ";
             default  -> op = "";
         }
 
-        String code = getTrueLabel() + "\n" + "iconst_0\n";
-        code += "goto NEXT" + conditionalID + "\n";
-        code += getTrueLabel() + "\n" + "iconst_1\n";
-        code += "NEXT" + conditionalID++ + ":";
-
-        return leftOperand + rightOperand + op + code;
+        return leftOperand + rightOperand + op + "\n";
     }
 
     private String getPutFieldCode(PutFieldInstruction instruction){
