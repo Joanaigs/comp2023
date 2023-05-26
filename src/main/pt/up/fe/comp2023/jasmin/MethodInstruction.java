@@ -25,9 +25,9 @@ public class MethodInstruction {
 
         String code = "";
         switch(instruction.getInstType()){
-            case ASSIGN :
+            case ASSIGN:
                 this.isAssign = true;
-                code += getAssignCode( (AssignInstruction) instruction);
+                code += getAssignCode((AssignInstruction) instruction);
                 this.isAssign = false;
                 break;
             case CALL:
@@ -39,11 +39,9 @@ public class MethodInstruction {
                     }
                 break;
             case GOTO:
-                code += getGotoCode((GotoInstruction) instruction);
-                break;
+                return getGotoCode((GotoInstruction) instruction);
             case BRANCH:
-                code += getBranchCode( (CondBranchInstruction) instruction);
-                break;
+                return getBranchCode( (CondBranchInstruction) instruction);
             case RETURN:
                 code += getReturnCode((ReturnInstruction) instruction);
                 break;
@@ -67,25 +65,6 @@ public class MethodInstruction {
         return code;
     }
 
-    public String getNoperCode(SingleOpInstruction instruction){
-
-        var element = instruction.getSingleOperand();
-        return getLoadCode(element);
-    }
-
-    public String getReturnCode(ReturnInstruction instruction){
-        String code = "";
-
-        if(instruction.hasReturnValue()) {
-            String loadCode = getLoadCode(instruction.getOperand());
-            ElementType elementType = instruction.getOperand().getType().getTypeOfElement();
-            String returnType = Utils.getReturnType(elementType);
-
-            code +=  loadCode +  returnType;
-        }
-
-        return code + "return\n";
-    }
 
     private boolean checkOpLiteral(Operand lhsOperand, Operand rhsOperand, LiteralElement literalElement, OperationType operationType) {
         if (lhsOperand.getName().equals(rhsOperand.getName())) {
@@ -136,6 +115,25 @@ public class MethodInstruction {
     }
 
 
+    public String getReturnCode(ReturnInstruction instruction){
+        String code = "";
+
+        if(instruction.hasReturnValue()) {
+            String loadCode = getLoadCode(instruction.getOperand());
+            ElementType elementType = instruction.getOperand().getType().getTypeOfElement();
+            String returnType = Utils.getReturnType(elementType);
+
+            code +=  loadCode +  returnType;
+        }
+
+        return code + "return\n";
+    }
+
+    public String getNoperCode(SingleOpInstruction instruction){
+
+        var element = instruction.getSingleOperand();
+        return getLoadCode(element);
+    }
 
     private String getGotoCode(GotoInstruction instruction){
         return "goto " + instruction.getLabel() + "\n";
@@ -145,6 +143,10 @@ public class MethodInstruction {
 
         Instruction condition = instruction.getCondition();
         return createInstructionCode(condition) + "ifne " + instruction.getLabel() + "\n";
+    }
+
+    private String getUnaryOperCode(UnaryOpInstruction instruction) {
+        return getLoadCode(instruction.getOperand()) +  getBooleanOpResultCode("ifeq");
     }
 
     private String getBinaryOperCode(BinaryOpInstruction instruction) {
@@ -161,10 +163,6 @@ public class MethodInstruction {
             default ->{}
         }
         return code;
-    }
-
-    private String getUnaryOperCode(UnaryOpInstruction instruction) {
-        return getLoadCode(instruction.getOperand()) +  getBooleanOpResultCode("ifeq");
     }
 
     private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
@@ -387,7 +385,7 @@ public class MethodInstruction {
 
             // Load array
             int virtualReg =  varTable.get(((ArrayOperand) e).getName()).getVirtualReg();
-            code +=  "aload\n" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg).toString();
+            code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";
 
             // Load index
             code += getLoadCode(operand.getIndexOperands().get(0)) + "iaload\n";
