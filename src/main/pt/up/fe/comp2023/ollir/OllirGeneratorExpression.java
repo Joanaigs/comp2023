@@ -81,7 +81,6 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String left = visit(jmmNode.getJmmChild(0), s);
         String right = visit(jmmNode.getJmmChild(1), s);
         if(jmmNode.getJmmParent().getKind().equals("Assignment")){
-            String type = Utils.typeOllir(jmmNode);
             String typeOp = Utils.typeOllir(jmmNode.getJmmChild(0));
             return String.format("%s %s.%s %s", left, jmmNode.get("op"), typeOp, right);
         }

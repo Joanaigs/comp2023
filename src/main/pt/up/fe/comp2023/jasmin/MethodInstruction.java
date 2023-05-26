@@ -104,20 +104,46 @@ public class MethodInstruction {
         return code;
     }
 
+    private boolean checkOpLiteral(Operand lhsOperand, Operand rhsOperand, LiteralElement literalElement) {
+        if (lhsOperand.getName().equals(rhsOperand.getName())) {
+            int literalValue = Integer.parseInt(literalElement.getLiteral());
+            return (literalValue >= -128 && literalValue <= 127);
+        }
+        return false;
+    }
+
     private String getAssignCode(AssignInstruction instruction) {
         String code  = "";
 
         // duvida no update
         Operand op = (Operand) instruction.getDest();
-        code += createInstructionCode(instruction.getRhs()) +  getStoreCode(op);
+        code += createInstructionCode(instruction.getRhs()) + getStoreCode(op);
         if (varTable.get(op.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF)
             Utils.updateStackLimits(-3);
-        else
-            Utils.updateStackLimits(-1);
+        else {
+            if (instruction.getRhs() instanceof BinaryOpInstruction binaryOpInstruction) {
+                if (binaryOpInstruction.getOperation().getOpType().equals(OperationType.ADD)) {
+                    Element leftOp = binaryOpInstruction.getLeftOperand();
+                    Element rightOp = binaryOpInstruction.getRightOperand();
+                    Operand operand = null;
+                    LiteralElement literal = null;
+                    if (leftOp.isLiteral() && !rightOp.isLiteral()) {
+                        literal = (LiteralElement) leftOp;
+                        operand = (Operand) rightOp;
 
+                    } else if (!leftOp.isLiteral() && rightOp.isLiteral()) {
+                        literal = (LiteralElement) rightOp;
+                        operand = (Operand) leftOp;
+                    }
 
+                    if(operand != null && checkOpLiteral(op, operand, literal))
+                        return "iinc " + varTable.get(operand.getName()).getVirtualReg() + " " + Integer.parseInt(literal.getLiteral()) + "\n";
+                }
+            }
+        }
         return code;
     }
+
 
 
     private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
