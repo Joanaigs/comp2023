@@ -105,11 +105,7 @@ public class MethodInstruction {
     }
 
     private boolean checkOpLiteral(Operand lhsOperand, Operand rhsOperand, LiteralElement literalElement) {
-        if (lhsOperand.getName().equals(rhsOperand.getName())) {
-            int literalValue = Integer.parseInt(literalElement.getLiteral());
-            return (literalValue >= -128 && literalValue <= 127);
-        }
-        return false;
+        return lhsOperand.getName().equals(rhsOperand.getName());
     }
 
     private String getAssignCode(AssignInstruction instruction) {
@@ -122,7 +118,7 @@ public class MethodInstruction {
             Utils.updateStackLimits(-3);
         else {
             if (instruction.getRhs() instanceof BinaryOpInstruction binaryOpInstruction) {
-                if (binaryOpInstruction.getOperation().getOpType().equals(OperationType.ADD)) {
+                if (binaryOpInstruction.getOperation().getOpType().equals(OperationType.ADD) || binaryOpInstruction.getOperation().getOpType().equals(OperationType.SUB)) {
                     Element leftOp = binaryOpInstruction.getLeftOperand();
                     Element rightOp = binaryOpInstruction.getRightOperand();
                     Operand operand = null;
