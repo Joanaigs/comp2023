@@ -3,13 +3,7 @@ package pt.up.fe.comp2023.ollir.optimization;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class DeadCodeElimination extends AJmmVisitor<String,Boolean> {
-    private final Map<String, String> constants=new HashMap<>();
-    private boolean insideLoop=false;
-
 
     @Override
     protected void buildVisitor() {
@@ -41,15 +35,15 @@ public class DeadCodeElimination extends AJmmVisitor<String,Boolean> {
         if (condition.getKind().equals("Boolean")) {
             String value = condition.get("bool");
             if (value.equals("true")) {
-                hasChanges= hasChanges|| deleateIf(jmmNode, ifStatement);
-                hasChanges= hasChanges||visit(ifStatement);
+                hasChanges = deleateIf(jmmNode, ifStatement);
+                hasChanges = hasChanges||visit(ifStatement);
             } else if (value.equals("false")) {
-                hasChanges= hasChanges|| deleateIf(jmmNode, elseStatement);
-                hasChanges= hasChanges||visit(elseStatement);
+                hasChanges = deleateIf(jmmNode, elseStatement);
+                hasChanges = hasChanges||visit(elseStatement);
             }
         }
         else{
-            hasChanges= hasChanges||visit(ifStatement);
+            hasChanges= visit(ifStatement);
             hasChanges= hasChanges||visit(elseStatement);
         }
         return hasChanges;
