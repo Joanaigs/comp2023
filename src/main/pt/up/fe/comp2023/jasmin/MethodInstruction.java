@@ -107,7 +107,7 @@ public class MethodInstruction {
     private boolean checkOpLiteral(Operand lhsOperand, Operand rhsOperand, LiteralElement literalElement) {
         if (lhsOperand.getName().equals(rhsOperand.getName())) {
             int literalValue = Integer.parseInt(literalElement.getLiteral());
-            return (literalValue > 0 && literalValue <= 127);
+            return (literalValue == 1 );
         }
         return false;
     }
