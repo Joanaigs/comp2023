@@ -85,7 +85,6 @@ public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
     private boolean visitWhileStmt(JmmNode jmmNode, String s) {
         JmmNode cond = jmmNode.getJmmChild(0);
         JmmNode stat = jmmNode.getJmmChild(1);
-        boolean hasChanges=visit(cond, s);
         if(!insideLoop) {
             this.insideLoop = true;
             visit(stat, s);
@@ -94,7 +93,7 @@ public class ConstantPropagation extends AJmmVisitor<String,Boolean> {
         else{
             visit(stat, s);
         }
-        return hasChanges;
+        return visit(cond, s);
     }
 
     private boolean visitIfStmt(JmmNode jmmNode, String s) {
