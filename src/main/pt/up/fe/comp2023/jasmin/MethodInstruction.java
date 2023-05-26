@@ -5,15 +5,13 @@ import org.specs.comp.ollir.*;
 import java.util.HashMap;
 
 import static org.specs.comp.ollir.ElementType.*;
-import static org.specs.comp.ollir.InstructionType.BINARYOPER;
-import static org.specs.comp.ollir.InstructionType.UNARYOPER;
 
 public class MethodInstruction {
 
     private final ClassUnit classUnit;
     private boolean isAssign;
     private HashMap<String, Descriptor> varTable;
-    private int conditionalID;
+    private static int conditionalID;
 
 
     MethodInstruction(ClassUnit classUnit, Method method)
@@ -56,6 +54,7 @@ public class MethodInstruction {
                 code += getGetFieldCode( (GetFieldInstruction) instruction);
                 break;
             case UNARYOPER:
+                code += getUnaryOperCode( (UnaryOpInstruction) instruction);
                 break;
             case BINARYOPER:
                 code += getBinaryOperCode( (BinaryOpInstruction) instruction);
@@ -86,22 +85,6 @@ public class MethodInstruction {
         }
 
         return code + "return\n";
-    }
-
-    private String getBinaryOperCode(BinaryOpInstruction instruction) {
-        String code = "";
-        var instructionType  = instruction.getOperation().getOpType();
-
-        switch (instructionType) {
-            case ADD, SUB, MUL, DIV -> {
-                code += getArithmeticCode(instruction, instructionType);
-            }
-            case EQ, GTH, GTE, LTH, LTE, NEQ, AND, ANDB, NOT, NOTB-> {
-                code += getBooleanCode(instruction, instructionType);
-            }
-            default ->{}
-        }
-        return code;
     }
 
     private boolean checkOpLiteral(Operand lhsOperand, Operand rhsOperand, LiteralElement literalElement, OperationType operationType) {
@@ -154,6 +137,36 @@ public class MethodInstruction {
 
 
 
+    private String getGotoCode(GotoInstruction instruction){
+        return "goto " + instruction.getLabel() + "\n";
+    }
+
+    private String getBranchCode(CondBranchInstruction instruction) {
+
+        Instruction condition = instruction.getCondition();
+        return createInstructionCode(condition) + "ifne " + instruction.getLabel() + "\n";
+    }
+
+    private String getBinaryOperCode(BinaryOpInstruction instruction) {
+        String code = "";
+        var instructionType  = instruction.getOperation().getOpType();
+
+        switch (instructionType) {
+            case ADD, SUB, MUL, DIV -> {
+                code += getArithmeticCode(instruction, instructionType);
+            }
+            case EQ, NEQ, GTH, GTE, LTH, LTE, AND, ANDB -> {
+                code += getBooleanCode(instruction, instructionType);
+            }
+            default ->{}
+        }
+        return code;
+    }
+
+    private String getUnaryOperCode(UnaryOpInstruction instruction) {
+        return getLoadCode(instruction.getOperand()) +  getBooleanOpResultCode("ifeq");
+    }
+
     private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
 
         String leftOperand = getLoadCode(instruction.getLeftOperand());
@@ -172,110 +185,64 @@ public class MethodInstruction {
         return leftOperand + rightOperand + op;
     }
 
-    private String getGotoCode(GotoInstruction instruction){
-        return "goto " + instruction.getLabel() + "\n";
+    private String getBooleanOpResultCode(String op){
+        StringBuilder code = new StringBuilder();
+
+        code.append(op + " TRUE" + conditionalID + "\n" );
+        code.append("iconst_0\n");
+        code.append("goto FALSE" + conditionalID +"\n");
+        code.append("TRUE" + conditionalID + ":\n");
+        code.append("iconst_1\n");
+        code.append("FALSE" + conditionalID + ":\n");
+        //update
+        conditionalID++;
+
+        return code.toString();
     }
 
-    private Instruction getCondition(CondBranchInstruction instruction) {
-        Instruction condition;
+    private int getBooleanBothLiteralCode(LiteralElement leftOperand, LiteralElement rightOperand, OperationType operationType){
 
-        if (instruction instanceof SingleOpCondInstruction) {
-            SingleOpCondInstruction singleOpCondInstruction = (SingleOpCondInstruction) instruction;
-            condition = singleOpCondInstruction.getCondition();
-        } else {
-            OpCondInstruction opCondInstruction = (OpCondInstruction) instruction;
-            condition = opCondInstruction.getCondition();
+        boolean left  = leftOperand.getLiteral().equals("1");
+        boolean right = rightOperand.getLiteral().equals("1");
+        boolean result;
+
+        switch (operationType) {
+            case AND, ANDB -> result = left && right;
+            case OR, ORB -> result = left || right;
+            case EQ ->  result = left  ==  right;
+            case NEQ -> result = left != right;
+            case GTE, GTH ->  result =  Integer.parseInt(leftOperand.getLiteral()) > Integer.parseInt(rightOperand.getLiteral());
+            case LTE, LTH ->  result =  Integer.parseInt(leftOperand.getLiteral()) < Integer.parseInt(rightOperand.getLiteral());
+            default ->
+                result = false;
         }
-        return condition;
+
+        return (result)? 1: 0;
     }
 
-    private String getBranchCode(CondBranchInstruction instruction) {
 
-        String code = "", op = "";
-        Instruction condition = getCondition(instruction);
+    private String getBooleanCode(BinaryOpInstruction instruction, OperationType operationType) {
 
-        if (condition.getInstType() == BINARYOPER){
+        String code = "";
+        Element leftOperand = instruction.getLeftOperand();
+        Element rightOperand = instruction.getRightOperand();
 
-            BinaryOpInstruction binaryOpInstruction = (BinaryOpInstruction) condition;
-
-            switch(binaryOpInstruction.getOperation().getOpType()){
-                case ANDB, AND -> {
-                    code += createInstructionCode(condition);
-                    op = "ifne";
-                }
-                case LTH -> {
-                    Element leftOperand = binaryOpInstruction.getLeftOperand();
-                    Element rightOperand = binaryOpInstruction.getRightOperand();
-                    int literalValue = 0;
-
-                    // literal < 0
-                    if (rightOperand instanceof LiteralElement) {
-                        LiteralElement literal = ((LiteralElement) rightOperand);
-                        literalValue = Integer.parseInt(literal.getLiteral());
-
-                        if (literal != null && literalValue == 0) {
-                            code += getLoadCode(leftOperand);
-                            op = "iflt";
-                        }
-                        else{
-                            code += getLoadCode(leftOperand) + getLoadCode(rightOperand);
-                            op = "if_icmplt";
-                        }
-                    }
-                    // 0 < literal
-                    else if (leftOperand instanceof LiteralElement){
-                        LiteralElement literal = ((LiteralElement) leftOperand);
-                        literalValue = Integer.parseInt(literal.getLiteral());
-
-                        if (literal != null && literalValue == 0) {
-                            code += getLoadCode(rightOperand);
-                            op = "ifgt";
-                        }
-                        else{
-                            code += getLoadCode(leftOperand) + getLoadCode(rightOperand);
-                            op = "if_icmplt";
-                        }
-                    }
-
-                }
-                default -> {
-                    return "";
-                }
+        if (leftOperand.isLiteral() && rightOperand.isLiteral()) {
+            int value = getBooleanBothLiteralCode( (LiteralElement) leftOperand, (LiteralElement) rightOperand, operationType);
+            code += "iconst_" + value + "\n";
+        }
+        else {
+            code += getLoadCode(leftOperand) + getLoadCode(rightOperand);
+            switch (operationType) {
+                case ANDB, AND -> code += "iand\n";
+                case LTH, LTE -> code += getBooleanOpResultCode("if_icmplt");
+                case GTH, GTE -> code += getBooleanOpResultCode("if_icmpgt");
+                case EQ  -> code += getBooleanOpResultCode("ifeq");
+                case NEQ -> code += getBooleanOpResultCode("ifneq");
+                default -> code += "";
             }
-
         }
-        else if (condition.getInstType() == UNARYOPER){
-            UnaryOpInstruction unaryOpInstruction = (UnaryOpInstruction) condition;
-            if (unaryOpInstruction.getOperation().getOpType() == OperationType.NOTB || unaryOpInstruction.getOperation().getOpType() == OperationType.NOT) {
-                code += getLoadCode(unaryOpInstruction.getOperand());
-                op = "ifeq";
-            }
-            else op = "ifne";
-        }
-        else{
-            code += createInstructionCode(condition);
-            op = "ifne";
-        }
-
-
-        return code +  op + " " + instruction.getLabel() + "\n";
-    }
-
-
-    private String getBooleanCode(BinaryOpInstruction instruction, OperationType instructionType) {
-        String leftOperand = getLoadCode(instruction.getLeftOperand());
-        String rightOperand = getLoadCode(instruction.getRightOperand());
-
-        String op;
-        switch (instructionType) {
-            case LTH -> op = "if_icmpge ";
-            case GTE -> op = "if_icmplt ";
-            case ANDB, AND -> op = "iand ";
-            case NOTB, NOT -> op = "ifeq ";
-            default  -> op = "";
-        }
-
-        return leftOperand + rightOperand + op + "\n";
+        return code;
     }
 
     private String getPutFieldCode(PutFieldInstruction instruction){
@@ -328,7 +295,6 @@ public class MethodInstruction {
         for (Element element : instruction.getListOfOperands()) {
             code += getLoadCode(element);
         }
-
 
         code += "invokestatic "
                 + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit)
