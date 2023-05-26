@@ -139,8 +139,13 @@ public class MethodInstruction {
                         operand = (Operand) leftOp;
                     }
 
-                    if(operand != null && checkOpLiteral(op, operand, literal, binaryOpInstruction.getOperation().getOpType()))
-                        return "iinc " + varTable.get(operand.getName()).getVirtualReg() + " " + Integer.parseInt(literal.getLiteral()) + "\n";
+                    OperationType operationType = binaryOpInstruction.getOperation().getOpType();
+                    if(operand != null && checkOpLiteral(op, operand, literal, operationType)){
+                        String posOrNeg = " ";
+                        if(operationType.equals(OperationType.SUB))
+                            posOrNeg = " -";
+                        return "iinc " + varTable.get(operand.getName()).getVirtualReg() + posOrNeg + Integer.parseInt(literal.getLiteral()) + "\n";
+                    }
                 }
             }
         }
