@@ -104,10 +104,13 @@ public class MethodInstruction {
         return code;
     }
 
-    private boolean checkOpLiteral(Operand lhsOperand, Operand rhsOperand, LiteralElement literalElement) {
+    private boolean checkOpLiteral(Operand lhsOperand, Operand rhsOperand, LiteralElement literalElement, OperationType operationType) {
         if (lhsOperand.getName().equals(rhsOperand.getName())) {
             int literalValue = Integer.parseInt(literalElement.getLiteral());
-            return (literalValue == 1 );
+            if(operationType.equals(OperationType.ADD))
+                return (literalValue >= 0 && literalValue <= 127);
+            else if(operationType.equals(OperationType.SUB))
+                return (literalValue >= 0 && literalValue <= 128);
         }
         return false;
     }
@@ -136,7 +139,7 @@ public class MethodInstruction {
                         operand = (Operand) leftOp;
                     }
 
-                    if(operand != null && checkOpLiteral(op, operand, literal))
+                    if(operand != null && checkOpLiteral(op, operand, literal, binaryOpInstruction.getOperation().getOpType()))
                         return "iinc " + varTable.get(operand.getName()).getVirtualReg() + " " + Integer.parseInt(literal.getLiteral()) + "\n";
                 }
             }
