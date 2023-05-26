@@ -4,6 +4,7 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2023.ollir.optimization.ConstantFolding;
 import pt.up.fe.comp2023.ollir.optimization.ConstantPropagation;
+import pt.up.fe.comp2023.ollir.optimization.DeadCodeElimination;
 import pt.up.fe.comp2023.ollir.optimization.RegisterAllocation;
 
 import pt.up.fe.comp2023.semantic_analysis.SymbolTable;
@@ -26,8 +27,10 @@ public class Optimization implements pt.up.fe.comp.jmm.ollir.JmmOptimization {
         if (!optimize) return semanticsResult;
         boolean hasChanges=true;
         while (hasChanges) {
+            DeadCodeElimination deadCodeElimination = new DeadCodeElimination();
+            hasChanges = deadCodeElimination.visit(semanticsResult.getRootNode(), "");
             ConstantPropagation constantPropagation = new ConstantPropagation();
-            hasChanges = constantPropagation.visit(semanticsResult.getRootNode(), "");
+            hasChanges = hasChanges || constantPropagation.visit(semanticsResult.getRootNode(), "");
             ConstantFolding constantFolding = new ConstantFolding();
             hasChanges = hasChanges || constantFolding.visit(semanticsResult.getRootNode(), "");
         }
