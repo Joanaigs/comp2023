@@ -43,7 +43,6 @@ public class Optimization implements pt.up.fe.comp.jmm.ollir.JmmOptimization {
         int localVariableNum = numberLocalVariablesString == null? -1 : Integer.parseInt(numberLocalVariablesString);
 
         if (localVariableNum > -1) {
-            System.out.println("Performing register allocation ...");
             RegisterAllocation registerAllocation = new RegisterAllocation(ollirResult);
             registerAllocation.optimize(localVariableNum);
 
