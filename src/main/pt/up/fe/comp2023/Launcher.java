@@ -67,14 +67,15 @@ public class Launcher {
 
         OllirResult ollir = optimizer.toOllir(jmmSemanticsResult);
         System.out.println(ollir.getOllirCode());
+        if(!config.get("registerAllocation").equals("-1")){
+            optimizer.optimize(ollir);
+        }
 
-        optimizer.optimize(ollir);
 
 
         //jasmin
         JasminGenerator jasminGenerator = new JasminGenerator();
-        JasminResult jasmin = jasminGenerator.toJasmin(ollir);
-        System.out.println(jasmin.getJasminCode());
+        jasminGenerator.toJasmin(ollir);
 
 
     }
@@ -91,8 +92,8 @@ public class Launcher {
         String optimize = "false";
         for (String arg : args) {
             if (arg.startsWith("-r=")) {
-                String numberStr = arg.replaceAll("\\D", "");  // Remove all non-digit characters
-                if(numberStr!="")
+                String numberStr = arg.replaceAll(".*=", "");  // Remove all non-digit characters
+                if (!numberStr.isEmpty())
                     registerAllocation = numberStr;
             } else if (arg.startsWith("-o")) {
                 optimize = "true";
