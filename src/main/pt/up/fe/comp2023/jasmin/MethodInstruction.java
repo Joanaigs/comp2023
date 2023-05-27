@@ -22,7 +22,7 @@ public class MethodInstruction {
     }
 
     public String createInstructionCode(Instruction instruction){
-        Utils.updateStackLimits(0);
+
         String code = "";
         switch(instruction.getInstType()){
             case ASSIGN:
@@ -153,7 +153,7 @@ public class MethodInstruction {
     }
 
     private String getBinaryOperCode(BinaryOpInstruction instruction) {
-        Utils.updateStackLimits(0);
+
         String code = "";
         var instructionType  = instruction.getOperation().getOpType();
 
