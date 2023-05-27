@@ -46,7 +46,6 @@ public class Utils {
         return switch (returnType) {
             case INT32, BOOLEAN -> "i";
             case STRING -> "Ljava/lang/String;";
-            case VOID -> "";
             case ARRAYREF, OBJECTREF -> "a";
             default -> "";
         };

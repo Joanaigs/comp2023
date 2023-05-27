@@ -16,14 +16,14 @@ public class OllirToJasmin {
     }
 
     public String getCode() {
-        String code = "";
+        StringBuilder codeBuilder = new StringBuilder();
 
-        code += createClass();
-        code += createExtendedClass();
-        code += createFields();
-        code += createMethods();
+        codeBuilder.append(createClass())
+                .append(createExtendedClass())
+                .append(createFields())
+                .append(createMethods());
 
-        return code;
+        return codeBuilder.toString();
     }
 
     public String createClass(){
@@ -31,9 +31,8 @@ public class OllirToJasmin {
         String classPrivacy = classUnit.getClassAccessModifier().name();
         String isPublic = (classPrivacy.equals("DEFAULT"))? "public " : "";
         String acessModifiers = createAccessModifiers(classPrivacy, classUnit.isStaticClass(), classUnit.isFinalClass());
-        String atualClass = ".class " + isPublic + acessModifiers + className + '\n';
 
-        return atualClass;
+        return ".class " + isPublic + acessModifiers + className + '\n';
     }
 
     public String createExtendedClass(){
@@ -46,13 +45,13 @@ public class OllirToJasmin {
     }
 
     public String createFields() {
-        String code = "";
+        StringBuilder code = new StringBuilder();
 
         for (Field field : classUnit.getFields())
-            code += createOneField(field) +  '\n';
+            code.append(createOneField(field)).append('\n');
 
 
-        return code + "\n";
+        return (code.append("\n")).toString();
     }
 
     public String createOneField(Field field) {
@@ -71,13 +70,13 @@ public class OllirToJasmin {
 
     public String createMethods() {
 
-        String code = "";
+        StringBuilder code = new StringBuilder();
 
         for (Method method : classUnit.getMethods()) {
-            code += createOneMethod(method);
+            code.append(createOneMethod(method));
         }
 
-        return code;
+        return code.toString();
     }
 
     public String createOneMethod(Method method){
@@ -102,20 +101,20 @@ public class OllirToJasmin {
 
     public String createMethodHeader(Method method){
 
-        String code = ".method ";
+        StringBuilder code = new StringBuilder(".method ");
 
         String methodPrivacy = method.getMethodAccessModifier().name();
         String methodAcessModifiers = createAccessModifiers(methodPrivacy, method.isFinalMethod(), method.isStaticMethod());
         String methodName = method.getMethodName();
-        code += methodAcessModifiers + methodName + '(';
+        code.append(methodAcessModifiers).append(methodName).append('(');
 
         for(Element param : method.getParams())
-            code += Utils.getType(param.getType(), classUnit);
+            code.append(Utils.getType(param.getType(), classUnit));
 
         String methodReturnType = Utils.getType(method.getReturnType(), classUnit);
-        code += ')' + methodReturnType + "\n";
+        code.append(')').append(methodReturnType).append("\n");
 
-        return code;
+        return code.toString();
     }
 
     private String getMethodLimits(Method method) {
@@ -139,14 +138,14 @@ public class OllirToJasmin {
 
         Utils.resetStackLimits();
 
-        String instructions = "";
+        StringBuilder instructions = new StringBuilder();
         for (Instruction instruction : method.getInstructions()) {
             var labels = method.getLabels(instruction);
             for(String label : labels){
-                instructions += label + ":\n";
+                instructions.append(label).append(":\n");
             }
             MethodInstruction jasminInstruction = new MethodInstruction(this.classUnit, method);
-            instructions += jasminInstruction.createInstructionCode(instruction);
+            instructions.append(jasminInstruction.createInstructionCode(instruction));
         }
 
         return getMethodLimits(method) + instructions;

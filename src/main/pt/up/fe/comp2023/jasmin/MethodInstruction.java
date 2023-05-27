@@ -472,11 +472,8 @@ public class MethodInstruction {
                     case CLASS, STRING, ARRAYREF, OBJECTREF -> {
                         code += "astore" + (id <= 3 ? '_' : ' ') + id;
                     }
-                    case THIS -> {
-                        code += "astore_0";
-                    }
-                    case VOID -> {
-                    }
+                    case THIS -> code += "astore_0";
+                    default -> code += "";
                 }
             }
         }
