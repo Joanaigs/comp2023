@@ -3,7 +3,6 @@ package pt.up.fe.comp2023.jasmin;
 import org.specs.comp.ollir.*;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,14 +15,11 @@ public class OllirToJasmin {
     }
 
     public String getCode() {
-        StringBuilder codeBuilder = new StringBuilder();
 
-        codeBuilder.append(createClass())
-                .append(createExtendedClass())
-                .append(createFields())
-                .append(createMethods());
-
-        return codeBuilder.toString();
+        return  createClass() +
+                createExtendedClass() +
+                createFields() +
+                createMethods();
     }
 
     public String createClass(){
@@ -55,18 +51,21 @@ public class OllirToJasmin {
     }
 
     public String createOneField(Field field) {
-
-        String code = ".field ";
+        StringBuilder codeBuilder = new StringBuilder(".field ");
 
         String fieldPrivacy = field.getFieldAccessModifier().name();
         String fieldAccessModifiers = createAccessModifiers(fieldPrivacy, field.isFinalField(), field.isStaticField());
         String fieldName = field.getFieldName() + " ";
         String fieldType = Utils.getType(field.getFieldType(), classUnit) + " ";
-        code += fieldAccessModifiers +  fieldName + fieldType;
-        code += field.isInitialized() ? "=" + field.getInitialValue() : "";
 
-        return code;
+        codeBuilder.append(fieldAccessModifiers)
+                    .append(fieldName)
+                    .append(fieldType)
+                    .append(field.isInitialized() ? "=" + field.getInitialValue() : "");
+
+        return codeBuilder.toString();
     }
+
 
     public String createMethods() {
 
@@ -79,19 +78,20 @@ public class OllirToJasmin {
         return code.toString();
     }
 
-    public String createOneMethod(Method method){
-        String code = "";
+    public String createOneMethod(Method method) {
+        StringBuilder codeBuilder = new StringBuilder();
 
-        if(method.isConstructMethod())
-            code += createConstructMethod();
-        else{
-            code += createMethodHeader(method);
-            code += createMethodBody(method);
-            code += ".end method\n";
+        if (method.isConstructMethod()) {
+            codeBuilder.append(createConstructMethod());
+        } else {
+            codeBuilder.append(createMethodHeader(method))
+                        .append(createMethodBody(method))
+                        .append(".end method\n");
         }
 
-        return code;
+        return codeBuilder.toString();
     }
+
 
     public String createConstructMethod(){
         String extendedClass = (classUnit.getSuperClass() == null)? "java/lang/Object" : classUnit.getSuperClass();
@@ -118,21 +118,22 @@ public class OllirToJasmin {
     }
 
     private String getMethodLimits(Method method) {
-        String code = "";
+        StringBuilder codeBuilder = new StringBuilder();
 
         Set<Integer> registers = new HashSet<>();
         registers.add(0);
 
-        for(Map.Entry<String, Descriptor> var: method.getVarTable().entrySet()){
-           registers.add(var.getValue().getVirtualReg());
+        for (Descriptor descriptor : method.getVarTable().values()) {
+            registers.add(descriptor.getVirtualReg());
         }
-        int localLimit =  registers.size();
+        int localLimit = registers.size();
 
-        code += ".limit stack " + Utils.stackLimit + "\n";
-        code += ".limit locals " + localLimit + "\n";
+        codeBuilder.append(".limit stack ").append(Utils.stackLimit).append("\n");
+        codeBuilder.append(".limit locals ").append(localLimit).append("\n");
 
-        return code;
+        return codeBuilder.toString();
     }
+
 
     public String createMethodBody(Method method){
 
