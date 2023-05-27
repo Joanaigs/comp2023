@@ -51,19 +51,19 @@ public class OllirToJasmin {
     }
 
     public String createOneField(Field field) {
-        StringBuilder codeBuilder = new StringBuilder(".field ");
+        StringBuilder code = new StringBuilder(".field ");
 
         String fieldPrivacy = field.getFieldAccessModifier().name();
         String fieldAccessModifiers = createAccessModifiers(fieldPrivacy, field.isFinalField(), field.isStaticField());
         String fieldName = field.getFieldName() + " ";
         String fieldType = Utils.getType(field.getFieldType(), classUnit) + " ";
 
-        codeBuilder.append(fieldAccessModifiers)
+        code.append(fieldAccessModifiers)
                     .append(fieldName)
                     .append(fieldType)
                     .append(field.isInitialized() ? "=" + field.getInitialValue() : "");
 
-        return codeBuilder.toString();
+        return code.toString();
     }
 
 
@@ -79,17 +79,17 @@ public class OllirToJasmin {
     }
 
     public String createOneMethod(Method method) {
-        StringBuilder codeBuilder = new StringBuilder();
+        StringBuilder code = new StringBuilder();
 
         if (method.isConstructMethod()) {
-            codeBuilder.append(createConstructMethod());
+            code.append(createConstructMethod());
         } else {
-            codeBuilder.append(createMethodHeader(method))
+            code.append(createMethodHeader(method))
                         .append(createMethodBody(method))
                         .append(".end method\n");
         }
 
-        return codeBuilder.toString();
+        return code.toString();
     }
 
 
@@ -118,7 +118,7 @@ public class OllirToJasmin {
     }
 
     private String getMethodLimits(Method method) {
-        StringBuilder codeBuilder = new StringBuilder();
+        StringBuilder code = new StringBuilder();
 
         Set<Integer> registers = new HashSet<>();
         registers.add(0);
@@ -128,10 +128,10 @@ public class OllirToJasmin {
         }
         int localLimit = registers.size();
 
-        codeBuilder.append(".limit stack ").append(Utils.stackLimit).append("\n");
-        codeBuilder.append(".limit locals ").append(localLimit).append("\n");
+        code.append(".limit stack ").append(Utils.stackLimit).append("\n")
+                .append(".limit locals ").append(localLimit).append("\n");
 
-        return codeBuilder.toString();
+        return code.toString();
     }
 
 
