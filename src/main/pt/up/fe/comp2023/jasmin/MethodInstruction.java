@@ -180,17 +180,16 @@ public class MethodInstruction {
     }
 
     private String getBooleanOpResultCode(String op){
-        StringBuilder code = new StringBuilder();
 
-        code.append(op + " TRUE" + conditionalID + "\n" )
-            .append("iconst_0\n")
-            .append("goto FALSE" + conditionalID +"\n")
-            .append("TRUE" + conditionalID + ":\n")
-            .append("iconst_1\n")
-            .append("FALSE" + conditionalID + ":\n");
+        String code = op + " TRUE" + conditionalID + "\n" +
+                "iconst_0\n" + "goto FALSE" +
+                conditionalID + "\n" + "TRUE" +
+                conditionalID + ":\n" +
+                "iconst_1\n" +
+                "FALSE" + conditionalID + ":\n";
 
         conditionalID++;
-        return code.toString();
+        return code;
     }
 
     private int getBooleanBothLiteralCode(LiteralElement leftOperand, LiteralElement rightOperand, OperationType operationType){
@@ -213,7 +212,7 @@ public class MethodInstruction {
 
     private String getBooleanIfConditionCode(OperationType operationType, boolean leftZero, boolean rightZero){
 
-        String code = "";
+        String code;
 
         switch (operationType) {
             case ANDB, AND ->  code = "iand\n";
@@ -355,24 +354,24 @@ public class MethodInstruction {
 
         var firstArg = instruction.getFirstArg();
         String superClassName = (classUnit.getSuperClass() == null)? "java/lang/Object\n" : (classUnit.getSuperClass() + "\n");
-        String code = "";
+        StringBuilder code = new StringBuilder();
 
         if (firstArg.getType().getTypeOfElement() == ElementType.THIS) {
-            code += getLoadCode(firstArg) + "invokespecial " + superClassName;
+            code.append(getLoadCode(firstArg)).append("invokespecial ").append(superClassName);
         }
         else {
-            code += getLoadCode(firstArg) + "invokespecial " + Utils.getClassPath(((ClassType) instruction.getFirstArg().getType()).getName(), classUnit);
+            code.append(getLoadCode(firstArg)).append("invokespecial ").append(Utils.getClassPath(((ClassType) instruction.getFirstArg().getType()).getName(), classUnit));
         }
 
-        code += "/<init>(";
+        code.append("/<init>(");
 
         for (Element element : instruction.getListOfOperands()) {
-            code += Utils.getType(element.getType(), classUnit);
+            code.append(Utils.getType(element.getType(), classUnit));
         }
 
-        code += ")" + Utils.getType(instruction.getReturnType(), classUnit) + "\n";
+        code.append(")").append(Utils.getType(instruction.getReturnType(), classUnit)).append("\n");
 
-        return code;
+        return code.toString();
     }
 
     private String getInvokeNewCode(CallInstruction instruction) {
@@ -403,8 +402,7 @@ public class MethodInstruction {
             }
             Utils.updateStackLimits(1);
         }
-        else if (e instanceof ArrayOperand) {
-            ArrayOperand operand = (ArrayOperand) e;
+        else if (e instanceof ArrayOperand operand) {
 
             int virtualReg =  varTable.get(((ArrayOperand) e).getName()).getVirtualReg();
             code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";  // Load array
@@ -412,8 +410,7 @@ public class MethodInstruction {
             Utils.updateStackLimits(1);
 
         }
-        else if (e instanceof Operand){
-            Operand operand = (Operand) e;
+        else if (e instanceof Operand operand){
             int id = (operand.isParameter())? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
 
             if (id < 0) {
@@ -469,12 +466,8 @@ public class MethodInstruction {
                 code += "putfield " + Utils.getType(elemType, classUnit) + "/" + operand.getName() + " " + Utils.getType(elemType, classUnit);
             } else {
                 switch (elemType.getTypeOfElement()) {
-                    case INT32, BOOLEAN -> {
-                        code += getIloadIstoreCode(id, false);
-                    }
-                    case CLASS, STRING, ARRAYREF, OBJECTREF -> {
-                        code += "astore" + (id <= 3 ? '_' : ' ') + id;
-                    }
+                    case INT32, BOOLEAN -> code += getIloadIstoreCode(id, false);
+                    case CLASS, STRING, ARRAYREF, OBJECTREF -> code += "astore" + (id <= 3 ? '_' : ' ') + id;
                     case THIS -> code += "astore_0";
                     default -> code += "";
                 }
