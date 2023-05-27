@@ -206,8 +206,7 @@ public class MethodInstruction {
             case NEQ -> result = left != right;
             case GTE, GTH ->  result =  Integer.parseInt(leftOperand.getLiteral()) > Integer.parseInt(rightOperand.getLiteral());
             case LTE, LTH ->  result =  Integer.parseInt(leftOperand.getLiteral()) < Integer.parseInt(rightOperand.getLiteral());
-            default ->
-                result = false;
+            default -> result = false;
         }
         return (result)? 1: 0;
     }
