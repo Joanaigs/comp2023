@@ -81,39 +81,36 @@ public class MethodInstruction {
             int virtualReg =  varTable.get((op).getName()).getVirtualReg();
             code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";  // Load array
             code += getLoadCode(operand.getIndexOperands().get(0)); // Load index
+            Utils.updateStackLimits(2);
             code += createInstructionCode(instruction.getRhs());
             code += "iastore\n";
-            Utils.updateStackLimits(2);
+            Utils.updateStackLimits(-1);
             return code;
         }
 
         code += createInstructionCode(instruction.getRhs()) + getStoreCode(op);
 
-        if (varTable.get(op.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF)
-            Utils.updateStackLimits(-3);
-        else {
-            if (instruction.getRhs() instanceof BinaryOpInstruction binaryOpInstruction) {
-                if (binaryOpInstruction.getOperation().getOpType().equals(OperationType.ADD) || binaryOpInstruction.getOperation().getOpType().equals(OperationType.SUB)) {
-                    Element leftOp = binaryOpInstruction.getLeftOperand();
-                    Element rightOp = binaryOpInstruction.getRightOperand();
-                    Operand operand = null;
-                    LiteralElement literal = null;
-                    if (leftOp.isLiteral() && !rightOp.isLiteral()) {
-                        literal = (LiteralElement) leftOp;
-                        operand = (Operand) rightOp;
+        if (instruction.getRhs() instanceof BinaryOpInstruction binaryOpInstruction) {
+            if (binaryOpInstruction.getOperation().getOpType().equals(OperationType.ADD) || binaryOpInstruction.getOperation().getOpType().equals(OperationType.SUB)) {
+                Element leftOp = binaryOpInstruction.getLeftOperand();
+                Element rightOp = binaryOpInstruction.getRightOperand();
+                Operand operand = null;
+                LiteralElement literal = null;
+                if (leftOp.isLiteral() && !rightOp.isLiteral()) {
+                    literal = (LiteralElement) leftOp;
+                    operand = (Operand) rightOp;
 
-                    } else if (!leftOp.isLiteral() && rightOp.isLiteral()) {
-                        literal = (LiteralElement) rightOp;
-                        operand = (Operand) leftOp;
-                    }
+                } else if (!leftOp.isLiteral() && rightOp.isLiteral()) {
+                    literal = (LiteralElement) rightOp;
+                    operand = (Operand) leftOp;
+                }
 
-                    OperationType operationType = binaryOpInstruction.getOperation().getOpType();
-                    if(operand != null && checkOpLiteral(op, operand, literal, operationType)){
-                        String posOrNeg = " ";
-                        if(operationType.equals(OperationType.SUB))
-                            posOrNeg = " -";
-                        return "iinc " + varTable.get(operand.getName()).getVirtualReg() + posOrNeg + Integer.parseInt(literal.getLiteral()) + "\n";
-                    }
+                OperationType operationType = binaryOpInstruction.getOperation().getOpType();
+                if(operand != null && checkOpLiteral(op, operand, literal, operationType)){
+                    String posOrNeg = " ";
+                    if(operationType.equals(OperationType.SUB))
+                        posOrNeg = " -";
+                    return "iinc " + varTable.get(operand.getName()).getVirtualReg() + posOrNeg + Integer.parseInt(literal.getLiteral()) + "\n";
                 }
             }
         }
@@ -400,6 +397,7 @@ public class MethodInstruction {
                 case INT32,BOOLEAN -> code += getIConstCode( literalElement.getLiteral() );
                 default -> code += "ldc " + literalElement.getLiteral();
             }
+            Utils.updateStackLimits(1);
         }
         else if (e instanceof ArrayOperand) {
             ArrayOperand operand = (ArrayOperand) e;
@@ -407,6 +405,7 @@ public class MethodInstruction {
             int virtualReg =  varTable.get(((ArrayOperand) e).getName()).getVirtualReg();
             code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";  // Load array
             code += getLoadCode(operand.getIndexOperands().get(0)) + "iaload\n"; // Load index
+            Utils.updateStackLimits(1);
 
         }
         else if (e instanceof Operand){
