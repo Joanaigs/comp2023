@@ -256,14 +256,10 @@ public class MethodInstruction {
                     else if(rightZero) code += getBooleanOpResultCode("ifl"+ sufix);
                     else code += getBooleanOpResultCode("if_icmplt");
                 }
-                case GTH -> {
-                    if (leftZero) code += getBooleanOpResultCode("iflt");
-                    else if(rightZero) code += getBooleanOpResultCode("ifqt");
-                    code += getBooleanOpResultCode("if_icmpgt");
-                }
-                case  GTE -> {
-                    if (leftZero) code += getBooleanOpResultCode("ifle");
-                    else if(rightZero) code += getBooleanOpResultCode("ifqe");
+                case GTH, GTE -> {
+                    String sufix = operationType == (OperationType.GTH)? "t" : "e";
+                    if (leftZero) code += getBooleanOpResultCode("ifl"+sufix);
+                    else if(rightZero) code += getBooleanOpResultCode("ifq"+sufix);
                     code += getBooleanOpResultCode("if_icmpgt");
                 }
                 case EQ  -> code += getBooleanOpResultCode("ifeq");
