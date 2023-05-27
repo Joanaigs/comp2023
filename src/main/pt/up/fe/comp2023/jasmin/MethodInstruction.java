@@ -74,7 +74,6 @@ public class MethodInstruction {
     private String getAssignCode(AssignInstruction instruction) {
         String code  = "";
 
-        // duvida no update
         Operand op = (Operand) instruction.getDest();
 
         if(op instanceof ArrayOperand operand){
@@ -119,17 +118,16 @@ public class MethodInstruction {
 
 
     public String getReturnCode(ReturnInstruction instruction){
-        String code = "";
 
         if(instruction.hasReturnValue()) {
             String loadCode = getLoadCode(instruction.getOperand());
             ElementType elementType = instruction.getOperand().getType().getTypeOfElement();
             String returnType = Utils.getReturnType(elementType);
 
-            code +=  loadCode +  returnType;
+            return  loadCode +  returnType + "return\n";
         }
 
-        return code + "return\n";
+        return  "return\n";
     }
 
     public String getNoperCode(SingleOpInstruction instruction){
@@ -154,15 +152,13 @@ public class MethodInstruction {
 
     private String getBinaryOperCode(BinaryOpInstruction instruction) {
 
-        String code = "";
         var instructionType  = instruction.getOperation().getOpType();
 
-        switch (instructionType) {
-            case ADD, SUB, MUL, DIV ->  code += getArithmeticCode(instruction, instructionType);
-            case EQ, NEQ, GTH, GTE, LTH, LTE, AND, ANDB -> code += getBooleanCode(instruction, instructionType);
-            default ->{}
-        }
-        return code;
+        return switch (instructionType) {
+            case ADD, SUB, MUL, DIV -> getArithmeticCode(instruction, instructionType);
+            case EQ, NEQ, GTH, GTE, LTH, LTE, AND, ANDB -> getBooleanCode(instruction, instructionType);
+            default -> "";
+        };
     }
 
     private String getArithmeticCode(BinaryOpInstruction instruction, OperationType instructionType) {
@@ -192,9 +188,8 @@ public class MethodInstruction {
             .append("TRUE" + conditionalID + ":\n")
             .append("iconst_1\n")
             .append("FALSE" + conditionalID + ":\n");
-        //update
-        conditionalID++;
 
+        conditionalID++;
         return code.toString();
     }
 
@@ -214,10 +209,34 @@ public class MethodInstruction {
             default ->
                 result = false;
         }
-
         return (result)? 1: 0;
     }
 
+    private String getBooleanIfConditionCode(OperationType operationType, boolean leftZero, boolean rightZero){
+
+        String code = "";
+
+        switch (operationType) {
+            case ANDB, AND ->  code = "iand\n";
+            case LTH, LTE -> {
+                String sufix = operationType == (OperationType.LTH)? "t" : "e";
+                if(leftZero) code = getBooleanOpResultCode("ifg" + sufix);
+                else if(rightZero) code = getBooleanOpResultCode("ifl"+ sufix);
+                else code = getBooleanOpResultCode("if_icmplt");
+            }
+            case GTH, GTE -> {
+                String sufix = operationType == (OperationType.GTH)? "t" : "e";
+                if (leftZero) code = getBooleanOpResultCode("ifl"+sufix);
+                else if(rightZero) code = getBooleanOpResultCode("ifq"+sufix);
+                else code = getBooleanOpResultCode("if_icmpgt");
+            }
+            case EQ  -> code = getBooleanOpResultCode("ifeq");
+            case NEQ -> code = getBooleanOpResultCode("ifneq");
+            default -> code = "";
+        }
+
+        return code;
+    }
 
 
     private String getBooleanCode(BinaryOpInstruction instruction, OperationType operationType) {
@@ -229,7 +248,7 @@ public class MethodInstruction {
 
         if (leftOperand.isLiteral() && rightOperand.isLiteral()) {
             int value = getBooleanBothLiteralCode( (LiteralElement) leftOperand, (LiteralElement) rightOperand, operationType);
-            code += "iconst_" + value + "\n";
+            code = "iconst_" + value + "\n";
             Utils.updateStackLimits(1);
         }
         else {
@@ -248,24 +267,7 @@ public class MethodInstruction {
             if(!rightZero) code += getLoadCode(rightOperand);
             Utils.updateStackLimits(-1);
 
-            switch (operationType) {
-                case ANDB, AND -> code += "iand\n";
-                case LTH, LTE -> {
-                    String sufix = operationType == (OperationType.LTH)? "t" : "e";
-                    if(leftZero) code += getBooleanOpResultCode("ifg" + sufix);
-                    else if(rightZero) code += getBooleanOpResultCode("ifl"+ sufix);
-                    else code += getBooleanOpResultCode("if_icmplt");
-                }
-                case GTH, GTE -> {
-                    String sufix = operationType == (OperationType.GTH)? "t" : "e";
-                    if (leftZero) code += getBooleanOpResultCode("ifl"+sufix);
-                    else if(rightZero) code += getBooleanOpResultCode("ifq"+sufix);
-                    code += getBooleanOpResultCode("if_icmpgt");
-                }
-                case EQ  -> code += getBooleanOpResultCode("ifeq");
-                case NEQ -> code += getBooleanOpResultCode("ifneq");
-                default -> code += "";
-            }
+            code += getBooleanIfConditionCode(operationType, leftZero, rightZero);
 
         }
         return code;
@@ -392,7 +394,6 @@ public class MethodInstruction {
     public String getLoadCode(Element e){
         String code = "";
 
-
         if (e.isLiteral()) {
 
             LiteralElement literalElement = (LiteralElement) e;
@@ -429,10 +430,6 @@ public class MethodInstruction {
                     case INT32, BOOLEAN -> {
                         code += getIloadIstoreCode(id, true );
                         Utils.updateStackLimits(1);
-
-                    }
-                    case CLASS -> {
-                        code += "";
                     }
                     case STRING, OBJECTREF, ARRAYREF-> {
                         code += "aload" + (id <= 3 ? '_' : ' ') + id;
@@ -442,7 +439,7 @@ public class MethodInstruction {
                         code += "aload_0";
                         Utils.updateStackLimits(1);
                     }
-                    case VOID -> {}
+                    default -> code += "";
                 }
 
             }
