@@ -10,7 +10,7 @@ public class MethodInstruction {
 
     private final ClassUnit classUnit;
     private boolean isAssign;
-    private HashMap<String, Descriptor> varTable;
+    private final HashMap<String, Descriptor> varTable;
     private static int conditionalID = 0;
 
 
@@ -29,7 +29,7 @@ public class MethodInstruction {
                 this.isAssign = true;
                 code += getAssignCode((AssignInstruction) instruction);
                 this.isAssign = false;
-                break;
+                return code;
             case CALL:
                 code += getInvokeCode( (CallInstruction) instruction);
                 if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
@@ -37,32 +37,26 @@ public class MethodInstruction {
                         Utils.updateStackLimits(-1);
                         code += "pop\n";
                     }
-                break;
+                return code;
             case GOTO:
                 return getGotoCode((GotoInstruction) instruction);
             case BRANCH:
                 return getBranchCode( (CondBranchInstruction) instruction);
             case RETURN:
-                code += getReturnCode((ReturnInstruction) instruction);
-                break;
+                return getReturnCode((ReturnInstruction) instruction);
             case PUTFIELD:
-                code += getPutFieldCode((PutFieldInstruction) instruction);
-                break;
+                return getPutFieldCode((PutFieldInstruction) instruction);
             case GETFIELD:
-                code += getGetFieldCode( (GetFieldInstruction) instruction);
-                break;
+                return getGetFieldCode( (GetFieldInstruction) instruction);
             case UNARYOPER:
-                code += getUnaryOperCode( (UnaryOpInstruction) instruction);
-                break;
+                return getUnaryOperCode( (UnaryOpInstruction) instruction);
             case BINARYOPER:
-                code += getBinaryOperCode( (BinaryOpInstruction) instruction);
-                break;
+                return getBinaryOperCode( (BinaryOpInstruction) instruction);
             case NOPER:
-                code += getNoperCode((SingleOpInstruction) instruction);
-                break;
+                return getNoperCode((SingleOpInstruction) instruction);
+            default:
+                return code;
         }
-
-        return code;
     }
 
 
@@ -83,9 +77,8 @@ public class MethodInstruction {
         // duvida no update
         Operand op = (Operand) instruction.getDest();
 
-        if(op instanceof ArrayOperand){
+        if(op instanceof ArrayOperand operand){
             int virtualReg =  varTable.get((op).getName()).getVirtualReg();
-            ArrayOperand operand = (ArrayOperand) op;
             code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";  // Load array
             code += getLoadCode(operand.getIndexOperands().get(0)); // Load index
             code += createInstructionCode(instruction.getRhs());
@@ -167,12 +160,8 @@ public class MethodInstruction {
         var instructionType  = instruction.getOperation().getOpType();
 
         switch (instructionType) {
-            case ADD, SUB, MUL, DIV -> {
-                code += getArithmeticCode(instruction, instructionType);
-            }
-            case EQ, NEQ, GTH, GTE, LTH, LTE, AND, ANDB -> {
-                code += getBooleanCode(instruction, instructionType);
-            }
+            case ADD, SUB, MUL, DIV ->  code += getArithmeticCode(instruction, instructionType);
+            case EQ, NEQ, GTH, GTE, LTH, LTE, AND, ANDB -> code += getBooleanCode(instruction, instructionType);
             default ->{}
         }
         return code;
@@ -199,12 +188,12 @@ public class MethodInstruction {
     private String getBooleanOpResultCode(String op){
         StringBuilder code = new StringBuilder();
 
-        code.append(op + " TRUE" + conditionalID + "\n" );
-        code.append("iconst_0\n");
-        code.append("goto FALSE" + conditionalID +"\n");
-        code.append("TRUE" + conditionalID + ":\n");
-        code.append("iconst_1\n");
-        code.append("FALSE" + conditionalID + ":\n");
+        code.append(op + " TRUE" + conditionalID + "\n" )
+            .append("iconst_0\n")
+            .append("goto FALSE" + conditionalID +"\n")
+            .append("TRUE" + conditionalID + ":\n")
+            .append("iconst_1\n")
+            .append("FALSE" + conditionalID + ":\n");
         //update
         conditionalID++;
 
@@ -261,14 +250,10 @@ public class MethodInstruction {
 
             switch (operationType) {
                 case ANDB, AND -> code += "iand\n";
-                case LTH -> {
-                    if(leftZero) code += getBooleanOpResultCode("ifgt");
-                    else if(rightZero) code += getBooleanOpResultCode("iflt");
-                    else code += getBooleanOpResultCode("if_icmplt");
-                }
-                case LTE ->{
-                    if(leftZero) code += getBooleanOpResultCode("ifge");
-                    else if(rightZero) code += getBooleanOpResultCode("ifle");
+                case LTH, LTE -> {
+                    String sufix = operationType == (OperationType.LTH)? "t" : "e";
+                    if(leftZero) code += getBooleanOpResultCode("ifg" + sufix);
+                    else if(rightZero) code += getBooleanOpResultCode("ifl"+ sufix);
                     else code += getBooleanOpResultCode("if_icmplt");
                 }
                 case GTH -> {
@@ -335,44 +320,37 @@ public class MethodInstruction {
     }
 
     private String getInvokeStaticCode(CallInstruction instruction) {
-        String code = "";
+        StringBuilder code = new StringBuilder();
 
         for (Element element : instruction.getListOfOperands()) {
-            code += getLoadCode(element);
+            code.append(getLoadCode(element));
         }
 
-        code += "invokestatic "
-                + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit)
-                + "/"
-                + ((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")
-                + "(";
+        code.append("invokestatic ").append(Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit)).append("/").append(((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")).append("(");
 
         for (Element element : instruction.getListOfOperands())
-            code += Utils.getType(element.getType(), classUnit);
+            code.append(Utils.getType(element.getType(), classUnit));
 
-
-        return code + ")" + Utils.getType(instruction.getReturnType(), classUnit) + "\n";
+        code.append(")").append(Utils.getType(instruction.getReturnType(), classUnit)).append("\n");
+        return code.toString();
 
     }
 
     private String getInvokeVirtualCode(CallInstruction instruction) {
 
-        String code = getLoadCode(instruction.getFirstArg());
+        StringBuilder code = new StringBuilder(getLoadCode(instruction.getFirstArg()));
 
         for (Element element : instruction.getListOfOperands()) {
-            code += getLoadCode(element);
+            code.append(getLoadCode(element));
         }
 
-        code += "invokevirtual "
-                + Utils.getClassPath( ((ClassType) instruction.getFirstArg().getType()).getName(), classUnit)
-                + "/"
-                + ((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")
-                + "(";
+        code.append("invokevirtual ").append(Utils.getClassPath(((ClassType) instruction.getFirstArg().getType()).getName(), classUnit)).append("/").append(((LiteralElement) instruction.getSecondArg()).getLiteral().replace("\"", "")).append("(");
 
         for (Element element : instruction.getListOfOperands())
-            code += Utils.getType(element.getType(), classUnit);
+            code.append(Utils.getType(element.getType(), classUnit));
 
-        return code + ")" + Utils.getType(instruction.getReturnType(), classUnit) + "\n";
+        code.append(")").append(Utils.getType(instruction.getReturnType(), classUnit)).append("\n");
+        return code.toString();
     }
 
     private String getInvokeSpecialCode(CallInstruction instruction) {
