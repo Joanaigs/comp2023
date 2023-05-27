@@ -11,7 +11,7 @@ public class MethodInstruction {
     private final ClassUnit classUnit;
     private boolean isAssign;
     private HashMap<String, Descriptor> varTable;
-    private static int conditionalID;
+    private static int conditionalID = 0;
 
 
     MethodInstruction(ClassUnit classUnit, Method method)
@@ -93,8 +93,8 @@ public class MethodInstruction {
             Utils.updateStackLimits(2);
             return code;
         }
-        code += createInstructionCode(instruction.getRhs()) + getStoreCode(op);
 
+        code += createInstructionCode(instruction.getRhs()) + getStoreCode(op);
 
         if (varTable.get(op.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF)
             Utils.updateStackLimits(-3);
@@ -232,26 +232,60 @@ public class MethodInstruction {
     }
 
 
+
     private String getBooleanCode(BinaryOpInstruction instruction, OperationType operationType) {
 
         String code = "";
         Element leftOperand = instruction.getLeftOperand();
         Element rightOperand = instruction.getRightOperand();
 
+
         if (leftOperand.isLiteral() && rightOperand.isLiteral()) {
             int value = getBooleanBothLiteralCode( (LiteralElement) leftOperand, (LiteralElement) rightOperand, operationType);
             code += "iconst_" + value + "\n";
         }
         else {
-            code += getLoadCode(leftOperand) + getLoadCode(rightOperand);
+
+            boolean  leftZero = false, rightZero= false;
+            if (leftOperand instanceof LiteralElement) {
+                int literalValue = Integer.parseInt(((LiteralElement) leftOperand).getLiteral());
+                leftZero = (literalValue ==0 );
+            }
+            else if(rightOperand instanceof  LiteralElement){
+                int literalValue = Integer.parseInt(((LiteralElement) rightOperand).getLiteral());
+                rightZero = (literalValue == 0);
+            }
+
+            if(!leftZero) code += getLoadCode(leftOperand);
+            if(!rightZero) code += getLoadCode(rightOperand);
+
             switch (operationType) {
                 case ANDB, AND -> code += "iand\n";
-                case LTH, LTE -> code += getBooleanOpResultCode("if_icmplt");
-                case GTH, GTE -> code += getBooleanOpResultCode("if_icmpgt");
+                case LTH -> {
+                    if(leftZero) code += getBooleanOpResultCode("ifgt");
+                    else if(rightZero) code += getBooleanOpResultCode("iflt");
+                    else code += getBooleanOpResultCode("if_icmplt");
+                }
+                case LTE ->{
+                    if(leftZero) code += getBooleanOpResultCode("ifge");
+                    else if(rightZero) code += getBooleanOpResultCode("ifle");
+                    else code += getBooleanOpResultCode("if_icmplt");
+                }
+                case GTH -> {
+                    if (leftZero) code += getBooleanOpResultCode("iflt");
+                    else if(rightZero) code += getBooleanOpResultCode("ifqt");
+                    code += getBooleanOpResultCode("if_icmpgt");
+                }
+                case  GTE -> {
+                    if (leftZero) code += getBooleanOpResultCode("ifle");
+                    else if(rightZero) code += getBooleanOpResultCode("ifqe");
+                    code += getBooleanOpResultCode("if_icmpgt");
+                }
                 case EQ  -> code += getBooleanOpResultCode("ifeq");
                 case NEQ -> code += getBooleanOpResultCode("ifneq");
                 default -> code += "";
             }
+
         }
         return code;
     }
