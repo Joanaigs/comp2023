@@ -22,7 +22,7 @@ public class MethodInstruction {
     }
 
     public String createInstructionCode(Instruction instruction){
-
+        Utils.updateStackLimits(0);
         String code = "";
         switch(instruction.getInstType()){
             case ASSIGN:
@@ -153,6 +153,7 @@ public class MethodInstruction {
     }
 
     private String getBinaryOperCode(BinaryOpInstruction instruction) {
+        Utils.updateStackLimits(0);
         String code = "";
         var instructionType  = instruction.getOperation().getOpType();
 
@@ -168,7 +169,6 @@ public class MethodInstruction {
 
         String leftOperand = getLoadCode(instruction.getLeftOperand());
         String rightOperand = getLoadCode(instruction.getRightOperand());
-        Utils.updateStackLimits(-1);
         String op;
 
         switch (instructionType) {
@@ -178,6 +178,7 @@ public class MethodInstruction {
             case DIV  -> op= "idiv\n";
             default  -> op = "";
         }
+        Utils.updateStackLimits(-1);
 
         return leftOperand + rightOperand + op;
     }
@@ -229,6 +230,7 @@ public class MethodInstruction {
         if (leftOperand.isLiteral() && rightOperand.isLiteral()) {
             int value = getBooleanBothLiteralCode( (LiteralElement) leftOperand, (LiteralElement) rightOperand, operationType);
             code += "iconst_" + value + "\n";
+            Utils.updateStackLimits(1);
         }
         else {
 
@@ -244,6 +246,7 @@ public class MethodInstruction {
 
             if(!leftZero) code += getLoadCode(leftOperand);
             if(!rightZero) code += getLoadCode(rightOperand);
+            Utils.updateStackLimits(-1);
 
             switch (operationType) {
                 case ANDB, AND -> code += "iand\n";
@@ -331,7 +334,8 @@ public class MethodInstruction {
 
     private String getInvokeVirtualCode(CallInstruction instruction) {
 
-        StringBuilder code = new StringBuilder(getLoadCode(instruction.getFirstArg()));
+        StringBuilder code = new StringBuilder();
+        code.append(getLoadCode(instruction.getFirstArg()));
 
         for (Element element : instruction.getListOfOperands()) {
             code.append(getLoadCode(element));
@@ -390,7 +394,7 @@ public class MethodInstruction {
 
 
         if (e.isLiteral()) {
-            Utils.updateStackLimits(1);
+
             LiteralElement literalElement = (LiteralElement) e;
             var elementType = literalElement.getType().getTypeOfElement();
             switch (elementType) {
@@ -410,7 +414,6 @@ public class MethodInstruction {
         }
         else if (e instanceof Operand){
             Operand operand = (Operand) e;
-            Utils.updateStackLimits(1);
             int id = (operand.isParameter())? operand.getParamId() : this.varTable.get(operand.getName()).getVirtualReg();
 
             if (id < 0) {
@@ -418,21 +421,26 @@ public class MethodInstruction {
                 String className = this.classUnit.getClassName();
                 String operandName = operand.getName();
                 code += "aload_0\n" + "getfield " + className + "/" + operandName;
+                Utils.updateStackLimits(1);
             }
             else{
                 ElementType elementType = operand.getType().getTypeOfElement();
                 switch (elementType) {
                     case INT32, BOOLEAN -> {
                         code += getIloadIstoreCode(id, true );
+                        Utils.updateStackLimits(1);
+
                     }
                     case CLASS -> {
                         code += "";
                     }
                     case STRING, OBJECTREF, ARRAYREF-> {
                         code += "aload" + (id <= 3 ? '_' : ' ') + id;
+                        Utils.updateStackLimits(1);
                     }
                     case THIS -> {
                         code += "aload_0";
+                        Utils.updateStackLimits(1);
                     }
                     case VOID -> {}
                 }
@@ -476,6 +484,8 @@ public class MethodInstruction {
                 }
             }
         }
+
+        Utils.updateStackLimits(-1);
 
         return code + "\n";
     }
