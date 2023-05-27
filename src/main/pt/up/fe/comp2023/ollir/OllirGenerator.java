@@ -72,21 +72,16 @@ public class OllirGenerator extends AJmmVisitor<String, String> {
         String expr = ollirGeneratorExpression2.visit(jmmNode.getJmmChild(1), s);
         code = ollirGeneratorExpression2.getCode();
         ollirCode.append(code);
-        String final_idx=idx;/*
-        if (!idx.matches("(((_|[a-zA-z])(_|\\d|[a-zA-Z])*)\\.(([a-zA-z])(\\d|[a-zA-Z])*))|\\d|true|false|this")) {
-            final_idx = "t" + this.numTemVars++ + ".i32";
-            ollirCode+=String.format("%s :=.i32 %s;\n", final_idx, idx);
-        }*/
 
         switch (info.b) {
             case "FIELD" -> {
-                ollirCode.append(String.format("putfield(this, %s[%s].i32, %s).V;\n", varName, final_idx, expr));
+                ollirCode.append(String.format("putfield(this, %s[%s].i32, %s).V;\n", varName, idx, expr));
                 return s;
             }
             case "LOCAL" ->
-                    ollirCode.append(String.format("%s[%s].i32 :=.i32 %s;\n", varName, final_idx, expr));
+                    ollirCode.append(String.format("%s[%s].i32 :=.i32 %s;\n", varName, idx, expr));
             case "PARAM" ->
-                    ollirCode.append(String.format("$%d.%s[%s].i32 :=.i32 %s;\n", symbolTable.getSymbolIndex(s, varName), varName, final_idx, expr));
+                    ollirCode.append(String.format("$%d.%s[%s].i32 :=.i32 %s;\n", symbolTable.getSymbolIndex(s, varName), varName, idx, expr));
         }
         return s;
     }

@@ -103,9 +103,9 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         String type = Utils.typeOllir(jmmNode);
         String obj = visit(jmmNode.getJmmChild(0), s);
         String _return = "";
-        String parameters="";
+        StringBuilder parameters= new StringBuilder();
         for (int i = 1; i < jmmNode.getNumChildren(); i++) {
-            parameters += ", " + visit(jmmNode.getJmmChild(i), s);
+            parameters.append(", ").append(visit(jmmNode.getJmmChild(i), s));
         }
 
         if (jmmNode.getJmmChild(0).getKind().equals("Identifier") && obj.split("[.]")[0].equals(jmmNode.get("type"))) {
@@ -140,7 +140,6 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
         if(jmmNode.getJmmChild(0).getKind().equals("Identifier")) {
             name=jmmNode.getJmmChild(0).get("value");
             Pair<Symbol, String> info = symbolTable.getSymbol(s, name);
-            String final_idx = index;
             switch (info.b) {
                 case "FIELD" -> {
                     String newTempVar = "t" + this.numTemVars++;
@@ -149,13 +148,13 @@ public class OllirGeneratorExpression extends AJmmVisitor<String, String> {
                 }
                 case "PARAM" -> {
                     String newTempVar = "t" + this.numTemVars++ + ".i32";
-                    code.append(String.format("%s :=.i32 $%d.%s[%s].i32;\n", newTempVar, symbolTable.getSymbolIndex(s, name), name, final_idx));
+                    code.append(String.format("%s :=.i32 $%d.%s[%s].i32;\n", newTempVar, symbolTable.getSymbolIndex(s, name), name, index));
                     return newTempVar;
                 }
                 case "IMPORT" -> throw new RuntimeException("Class cannot be accessed as an array");
                 default -> {
                     String newTempVar = "t" + this.numTemVars++ + ".i32";
-                    code.append(String.format("%s :=.i32 %s[%s].i32;\n", newTempVar, name, final_idx));
+                    code.append(String.format("%s :=.i32 %s[%s].i32;\n", newTempVar, name, index));
                     return newTempVar;
                 }
             }
