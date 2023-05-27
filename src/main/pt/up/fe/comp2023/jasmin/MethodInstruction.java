@@ -82,7 +82,20 @@ public class MethodInstruction {
 
         // duvida no update
         Operand op = (Operand) instruction.getDest();
+
+        if(op instanceof ArrayOperand){
+            int virtualReg =  varTable.get((op).getName()).getVirtualReg();
+            ArrayOperand operand = (ArrayOperand) op;
+            code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";  // Load array
+            code += getLoadCode(operand.getIndexOperands().get(0)); // Load index
+            code += createInstructionCode(instruction.getRhs());
+            code += "iastore\n";
+            Utils.updateStackLimits(2);
+            return code;
+        }
         code += createInstructionCode(instruction.getRhs()) + getStoreCode(op);
+
+
         if (varTable.get(op.getName()).getVarType().getTypeOfElement() == ElementType.ARRAYREF)
             Utils.updateStackLimits(-3);
         else {
@@ -383,12 +396,9 @@ public class MethodInstruction {
         else if (e instanceof ArrayOperand) {
             ArrayOperand operand = (ArrayOperand) e;
 
-            // Load array
             int virtualReg =  varTable.get(((ArrayOperand) e).getName()).getVirtualReg();
-            code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";
-
-            // Load index
-            code += getLoadCode(operand.getIndexOperands().get(0)) + "iaload\n";
+            code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";  // Load array
+            code += getLoadCode(operand.getIndexOperands().get(0)) + "iaload\n"; // Load index
 
         }
         else if (e instanceof Operand){
