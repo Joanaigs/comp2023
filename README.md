@@ -1,8 +1,66 @@
 # Compilers Project
 
+
+## Students
+
+| Name             | Number        | Contribution | 
+| ---------------- | ------------- | ------------ |
+| Inês Cardoso     |  up202005435  | 33%          |
+| Joana Santos     |  up202006279  | 33%          |
+| Mariana Carvalho |  up202007620  | 33%          |
+
+### Self-assessment
+
+Throughout the development of this project we received positive feedback about the delivery of each checkpoint, both in terms of code quality and logic.
+For this final delivery, we maintained the quality presented previously. As we've successfully fulfilled all the required points, we believe our project should be graded 20/20.
+
+
+## Checkpoint 1
+In checkpoint 1 we added more operators to the grammar and added tests to check their priority and precedence.
+
+| Operatores            | Precedence               |
+|-----------------------|--------------------------|
+| postfix	              | expr++ expr--            |
+| unary                 | 	++expr --expr +expr -expr |
+| multiplicative        | 	* / %                   |
+| additive              | 	+ -                     |
+| shift                 | 	<< >>                   |
+| relational	           | < > <= >=                |
+| equality              | 	== !=                   |
+| bitwise AND	          | &                        |
+| bitwise exclusive OR	 | ^                        |
+| bitwise  inclusive OR | &#124;                   |
+| logical AND              | 	&&                      |
+| logical OR	              | &#124;&#124;             |
+
+We also added the following objets types to type Declaration: 'byte','short','int','long','float','double','boolean','char'
+
+## Checkpoint 3
+
+
+### Optimizations
+
+#### AST
+* Constant Propagation
+* Constant Folding
+* Dead code Elimination
+
+#### Ollir
+* Register Allocation
+
+#### Jasmin
+* Use of iload_x, istore_x, astore_x, aload_x (e.g., instead of iload x)
+* Use of iconst_0, bipush, sipush, ldc (load constants to the stack with the approriate instruction)
+* Use of iinc
+* Compare against zero, instead of two values - Use of iflt, ifne, etc
+
+
+
+## Project Requirements
+
 For this project, you need to install [Java](https://jdk.java.net/), [Gradle](https://gradle.org/install/), and [Git](https://git-scm.com/downloads/) (and optionally, a [Git GUI client](https://git-scm.com/downloads/guis), such as TortoiseGit or GitHub Desktop). Please check the [compatibility matrix](https://docs.gradle.org/current/userguide/compatibility.html) for Java and Gradle versions.
 
-## Project setup
+## Project Setup
 
 There are some import folders in the repository. Your development source code is inside the subfolder named ``src/main``. Specifically, your initially application is in the folder ``src/main/pt/up/fe/comp2023``, and the grammar is in the subfolder ``src/main/antlr/comp2023/grammar``. Finally, the subfolder named ``test`` contains your unit tests.
 
@@ -33,35 +91,15 @@ We have included the interface ``pt.up.fe.comp.jmm.parser.JmmParser``, for which
 
 To configure the name of the class of the JmmParser implementation that should be automatically used for tests, use the file ``config.properties`` (more details below).
 
-### Compilation Stages 
+### Compilation Stages
 
 The project is divided in four compilation stages, that you will be developing during the semester. The stages are Parser, Analysis, Optimization and Backend, and for each of these stages there is a corresponding Java interface that you will have to implement (e.g. for the Parser stage, you have to implement the interface JmmParser).
 
 
 ### config.properties
 
-The testing framework, which uses the class ``pt.up.fe.comp.TestUtils``, has methods to test each of the four compilation stages (e.g., ``TestUtils.parse()`` for testing the Parser stage). 
+The testing framework, which uses the class ``pt.up.fe.comp.TestUtils``, has methods to test each of the four compilation stages (e.g., ``TestUtils.parse()`` for testing the Parser stage).
 
 In order for the test class to find your implementations for the stages, it uses the file ``config.properties`` that is in root of your repository. It has four fields, one for each stage (i.e. ``ParserClass``, ``AnalysisClass``, ``OptimizationClass``, ``BackendClass``), and initially it only has one value, ``pt.up.fe.comp2023.SimpleParser``, associated with the first stage.
 
 During the development of your compiler you will update this file in order to setup the classes that implement each of the compilation stages.
-
-## Checkpoint 1 
-In checkpoint 1 we added more operators to the grammar and added tests to check their priority and precedence.
-
-| Operatores            | Precedence               |
-|-----------------------|--------------------------|
-| postfix	              | expr++ expr--            |
-| unary                 | 	++expr --expr +expr -expr |
-| multiplicative        | 	* / %                   |
-| additive              | 	+ -                     |
-| shift                 | 	<< >>                   |
-| relational	           | < > <= >=                |
-| equality              | 	== !=                   |
-| bitwise AND	          | &                        |
-| bitwise exclusive OR	 | ^                        |
-| bitwise  inclusive OR | &#124;                   |
-| logical AND              | 	&&                      |
-| logical OR	              | &#124;&#124;             |
-
-We also added the following objets types to type Declaration: 'byte','short','int','long','float','double','boolean','char'
