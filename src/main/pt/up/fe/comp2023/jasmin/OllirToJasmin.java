@@ -16,22 +16,22 @@ public class OllirToJasmin {
 
     public String getCode() {
 
-        return  createClass() +
+        return createClass() +
                 createExtendedClass() +
                 createFields() +
                 createMethods();
     }
 
-    public String createClass(){
+    public String createClass() {
         String className = classUnit.getClassName();
         String classPrivacy = classUnit.getClassAccessModifier().name();
-        String isPublic = (classPrivacy.equals("DEFAULT"))? "public " : "";
+        String isPublic = (classPrivacy.equals("DEFAULT")) ? "public " : "";
         String acessModifiers = createAccessModifiers(classPrivacy, classUnit.isStaticClass(), classUnit.isFinalClass());
 
         return ".class " + isPublic + acessModifiers + className + '\n';
     }
 
-    public String createExtendedClass(){
+    public String createExtendedClass() {
 
         if (classUnit.getSuperClass() == null)
             return ".super java/lang/Object\n";
@@ -93,13 +93,13 @@ public class OllirToJasmin {
     }
 
 
-    public String createConstructMethod(){
-        String extendedClass = (classUnit.getSuperClass() == null)? "java/lang/Object" : classUnit.getSuperClass();
+    public String createConstructMethod() {
+        String extendedClass = (classUnit.getSuperClass() == null) ? "java/lang/Object" : classUnit.getSuperClass();
 
-        return "\n.method public <init>()V\naload_0\ninvokespecial " + extendedClass +  "/<init>()V\nreturn\n.end method\n";
+        return "\n.method public <init>()V\naload_0\ninvokespecial " + extendedClass + "/<init>()V\nreturn\n.end method\n";
     }
 
-    public String createMethodHeader(Method method){
+    public String createMethodHeader(Method method) {
 
         StringBuilder code = new StringBuilder(".method ");
 
@@ -108,7 +108,7 @@ public class OllirToJasmin {
         String methodName = method.getMethodName();
         code.append(methodAcessModifiers).append(methodName).append('(');
 
-        for(Element param : method.getParams())
+        for (Element param : method.getParams())
             code.append(Utils.getType(param.getType(), classUnit));
 
         String methodReturnType = Utils.getType(method.getReturnType(), classUnit);
@@ -135,14 +135,14 @@ public class OllirToJasmin {
     }
 
 
-    public String createMethodBody(Method method){
+    public String createMethodBody(Method method) {
 
         Utils.resetStackLimits();
 
         StringBuilder instructions = new StringBuilder();
         for (Instruction instruction : method.getInstructions()) {
             var labels = method.getLabels(instruction);
-            for(String label : labels){
+            for (String label : labels) {
                 instructions.append(label).append(":\n");
             }
             MethodInstruction jasminInstruction = new MethodInstruction(this.classUnit, method);
@@ -152,8 +152,7 @@ public class OllirToJasmin {
         return getMethodLimits(method) + instructions;
     }
 
-    public String createAccessModifiers(String privacy, Boolean isFinal, Boolean isStatic)
-    {
+    public String createAccessModifiers(String privacy, Boolean isFinal, Boolean isStatic) {
         String code = "";
 
         if (!Objects.equals(privacy, "DEFAULT"))
@@ -165,6 +164,6 @@ public class OllirToJasmin {
 
         return code;
     }
-
-
 }
+
+
