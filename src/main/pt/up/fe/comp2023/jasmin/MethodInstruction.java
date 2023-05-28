@@ -72,22 +72,24 @@ public class MethodInstruction {
     }
 
     private String getAssignCode(AssignInstruction instruction) {
-        String code  = "";
+        StringBuilder code = new StringBuilder();
 
         Operand op = (Operand) instruction.getDest();
 
-        if(op instanceof ArrayOperand operand){
-            int virtualReg =  varTable.get((op).getName()).getVirtualReg();
-            code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";  // Load array
-            code += getLoadCode(operand.getIndexOperands().get(0)); // Load index
+        if (op instanceof ArrayOperand operand) {
+            int virtualReg = varTable.get(op.getName()).getVirtualReg();
+            code.append("aload").append((virtualReg > 3) ? " " + virtualReg : "_" + virtualReg).append("\n")
+                .append(getLoadCode(operand.getIndexOperands().get(0))).append("\n");
             Utils.updateStackLimits(2);
-            code += createInstructionCode(instruction.getRhs());
-            code += "iastore\n";
+
+            code.append(createInstructionCode(instruction.getRhs()))
+                .append("iastore\n");
             Utils.updateStackLimits(-1);
-            return code;
+
+            return code.toString();
         }
 
-        code += createInstructionCode(instruction.getRhs()) + getStoreCode(op);
+        code.append(createInstructionCode(instruction.getRhs())).append(getStoreCode(op));
 
         if (instruction.getRhs() instanceof BinaryOpInstruction binaryOpInstruction) {
             if (binaryOpInstruction.getOperation().getOpType().equals(OperationType.ADD) || binaryOpInstruction.getOperation().getOpType().equals(OperationType.SUB)) {
@@ -98,22 +100,19 @@ public class MethodInstruction {
                 if (leftOp.isLiteral() && !rightOp.isLiteral()) {
                     literal = (LiteralElement) leftOp;
                     operand = (Operand) rightOp;
-
                 } else if (!leftOp.isLiteral() && rightOp.isLiteral()) {
                     literal = (LiteralElement) rightOp;
                     operand = (Operand) leftOp;
                 }
 
                 OperationType operationType = binaryOpInstruction.getOperation().getOpType();
-                if(operand != null && checkOpLiteral(op, operand, literal, operationType)){
-                    String posOrNeg = " ";
-                    if(operationType.equals(OperationType.SUB))
-                        posOrNeg = " -";
+                if (operand != null && checkOpLiteral(op, operand, literal, operationType)) {
+                    String posOrNeg = (operationType.equals(OperationType.SUB)? " -" : " ");
                     return "iinc " + varTable.get(operand.getName()).getVirtualReg() + posOrNeg + Integer.parseInt(literal.getLiteral()) + "\n";
                 }
             }
         }
-        return code;
+        return code.toString();
     }
 
 
@@ -137,6 +136,7 @@ public class MethodInstruction {
     }
 
     private String getGotoCode(GotoInstruction instruction){
+
         return "goto " + instruction.getLabel() + "\n";
     }
 

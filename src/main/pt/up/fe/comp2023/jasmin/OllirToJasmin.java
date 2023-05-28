@@ -46,7 +46,6 @@ public class OllirToJasmin {
         for (Field field : classUnit.getFields())
             code.append(createOneField(field)).append('\n');
 
-
         return (code.append("\n")).toString();
     }
 
@@ -58,10 +57,8 @@ public class OllirToJasmin {
         String fieldName = field.getFieldName() + " ";
         String fieldType = Utils.getType(field.getFieldType(), classUnit) + " ";
 
-        code.append(fieldAccessModifiers)
-                    .append(fieldName)
-                    .append(fieldType)
-                    .append(field.isInitialized() ? "=" + field.getInitialValue() : "");
+        code.append(fieldAccessModifiers).append(fieldName).append(fieldType)
+            .append(field.isInitialized() ? "=" + field.getInitialValue() : "");
 
         return code.toString();
     }
@@ -85,8 +82,8 @@ public class OllirToJasmin {
             code.append(createConstructMethod());
         } else {
             code.append(createMethodHeader(method))
-                        .append(createMethodBody(method))
-                        .append(".end method\n");
+                .append(createMethodBody(method))
+                .append(".end method\n");
         }
 
         return code.toString();
@@ -106,6 +103,8 @@ public class OllirToJasmin {
         String methodPrivacy = method.getMethodAccessModifier().name();
         String methodAcessModifiers = createAccessModifiers(methodPrivacy, method.isFinalMethod(), method.isStaticMethod());
         String methodName = method.getMethodName();
+
+
         code.append(methodAcessModifiers).append(methodName).append('(');
 
         for(Element param : method.getParams())
@@ -129,7 +128,7 @@ public class OllirToJasmin {
         int localLimit = registers.size();
 
         code.append(".limit stack ").append(Utils.stackLimit).append("\n")
-                .append(".limit locals ").append(localLimit).append("\n");
+            .append(".limit locals ").append(localLimit).append("\n");
 
         return code.toString();
     }
@@ -154,16 +153,15 @@ public class OllirToJasmin {
 
     public String createAccessModifiers(String privacy, Boolean isFinal, Boolean isStatic)
     {
-        String code = "";
 
         if (!Objects.equals(privacy, "DEFAULT"))
-            code += privacy.toLowerCase() + " ";
+            return privacy.toLowerCase() + " ";
         if (isFinal)
-            code += "final ";
+            return "final ";
         if (isStatic)
-            code += "static ";
+            return "static ";
 
-        return code;
+        return "";
     }
 
 
