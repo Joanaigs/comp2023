@@ -9,22 +9,15 @@ public class Utils {
     static int tempStack;
 
     public static String getType(Type type, ClassUnit classUnit){
-        switch (type.getTypeOfElement()){
-            case INT32:
-                return "I";
-            case BOOLEAN:
-                return "Z";
-            case STRING:
-                return "Ljava/lang/String;";
-            case VOID:
-                return "V";
-            case ARRAYREF:
-                return "[" + getType(((ArrayType) type).getElementType(), classUnit);
-            case OBJECTREF:
-                return  "L" + getClassPath( ((ClassType) type).getName(), classUnit ) + ";";
-            default:
-                return "";
-        }
+        return switch (type.getTypeOfElement()) {
+            case INT32 -> "I";
+            case BOOLEAN -> "Z";
+            case STRING -> "Ljava/lang/String;";
+            case VOID -> "V";
+            case ARRAYREF -> "[" + getType(((ArrayType) type).getElementType(), classUnit);
+            case OBJECTREF -> "L" + getClassPath(((ClassType) type).getName(), classUnit) + ";";
+            default -> "";
+        };
     }
 
     public static String getClassPath(String className, ClassUnit classUnit) {

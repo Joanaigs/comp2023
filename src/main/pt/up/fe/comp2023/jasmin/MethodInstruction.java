@@ -271,29 +271,34 @@ public class MethodInstruction {
         return code;
     }
 
-    private String getPutFieldCode(PutFieldInstruction instruction){
-        String code = "";
+    private String getPutFieldCode(PutFieldInstruction instruction) {
+        StringBuilder code = new StringBuilder();
 
         Operand firstOperand = (Operand) instruction.getFirstOperand();
         Operand secondOperand = (Operand) instruction.getSecondOperand();
         Element element = instruction.getThirdOperand();
         String varType = Utils.getType(secondOperand.getType(), this.classUnit);
 
-        code += getLoadCode(firstOperand) + getLoadCode(element) + "putfield ";
+        code.append(getLoadCode(firstOperand)).append(getLoadCode(element))
+            .append("putfield ").append(classUnit.getClassName()).append("/").append(secondOperand.getName())
+            .append(" ").append(varType).append("\n");
 
-        return  code + classUnit.getClassName() + "/" + secondOperand.getName() + " " + varType + "\n";
+        return code.toString();
     }
 
+
     private String getGetFieldCode(GetFieldInstruction instruction) {
-        String code = "";
+        StringBuilder code = new StringBuilder();
 
         Operand firstOperand = (Operand) instruction.getFirstOperand();
         Operand secondOperand = (Operand) instruction.getSecondOperand();
         String varType = Utils.getType(secondOperand.getType(), this.classUnit);
 
-        code += getLoadCode(firstOperand) + "getfield ";
+        code.append(getLoadCode(firstOperand))
+            .append("getfield ").append(classUnit.getClassName()).append("/").append(secondOperand.getName())
+            .append(" ").append(varType).append("\n");
 
-        return code + classUnit.getClassName() + "/" + secondOperand.getName() + " " + varType +  "\n";
+        return code.toString();
     }
 
     public String getInvokeCode(CallInstruction instruction) {
@@ -380,11 +385,11 @@ public class MethodInstruction {
         Element e = instruction.getFirstArg();
 
         if (e.getType().getTypeOfElement().equals(ElementType.ARRAYREF)) {
-            code += getLoadCode(instruction.getListOfOperands().get(0)) +  "newarray int\n";
+            code = getLoadCode(instruction.getListOfOperands().get(0)) +  "newarray int\n";
         }
         else if (e.getType().getTypeOfElement().equals(ElementType.OBJECTREF)){
             Utils.updateStackLimits(1);
-            code += "new " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
+            code = "new " + Utils.getClassPath(((Operand) instruction.getFirstArg()).getName(), classUnit) + "\ndup\n";
         }
         return code;
     }
@@ -393,20 +398,20 @@ public class MethodInstruction {
         String code = "";
 
         if (e.isLiteral()) {
-
             LiteralElement literalElement = (LiteralElement) e;
             var elementType = literalElement.getType().getTypeOfElement();
             switch (elementType) {
-                case INT32,BOOLEAN -> code += getIConstCode( literalElement.getLiteral() );
-                default -> code += "ldc " + literalElement.getLiteral();
+                case INT32,BOOLEAN -> code = getIConstCode( literalElement.getLiteral() );
+                default -> code = "ldc " + literalElement.getLiteral();
             }
             Utils.updateStackLimits(1);
         }
         else if (e instanceof ArrayOperand operand) {
 
             int virtualReg =  varTable.get(((ArrayOperand) e).getName()).getVirtualReg();
-            code +=  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n";  // Load array
-            code += getLoadCode(operand.getIndexOperands().get(0)) + "iaload\n"; // Load index
+            // Load array and index
+            code =  "aload" + ((virtualReg > 3)? " " + virtualReg :  "_" + virtualReg) + "\n"
+                 + getLoadCode(operand.getIndexOperands().get(0)) + "iaload\n";
             Utils.updateStackLimits(1);
 
         }
@@ -417,25 +422,25 @@ public class MethodInstruction {
                 // field element
                 String className = this.classUnit.getClassName();
                 String operandName = operand.getName();
-                code += "aload_0\n" + "getfield " + className + "/" + operandName;
+                code = "aload_0\n" + "getfield " + className + "/" + operandName;
                 Utils.updateStackLimits(1);
             }
             else{
                 ElementType elementType = operand.getType().getTypeOfElement();
                 switch (elementType) {
                     case INT32, BOOLEAN -> {
-                        code += getIloadIstoreCode(id, true );
+                        code = getIloadIstoreCode(id, true );
                         Utils.updateStackLimits(1);
                     }
                     case STRING, OBJECTREF, ARRAYREF-> {
-                        code += "aload" + (id <= 3 ? '_' : ' ') + id;
+                        code = "aload" + (id <= 3 ? '_' : ' ') + id;
                         Utils.updateStackLimits(1);
                     }
                     case THIS -> {
-                        code += "aload_0";
+                        code = "aload_0";
                         Utils.updateStackLimits(1);
                     }
-                    default -> code += "";
+                    default -> code = "";
                 }
 
             }
@@ -444,18 +449,18 @@ public class MethodInstruction {
     }
 
     public String getStoreCode(Element e) {
-        String code = "";
+        String code;
 
         if (e.isLiteral()) {
             LiteralElement literalElement = (LiteralElement) e;
             if (literalElement.getType().getTypeOfElement() == INT32) {
-                code += getIloadIstoreCode(Integer.parseInt(literalElement.getLiteral()), false);
+                code = getIloadIstoreCode(Integer.parseInt(literalElement.getLiteral()), false);
             } else {
-                code += "store " + literalElement.getLiteral();
+                code = "store " + literalElement.getLiteral();
             }
         }
         else if (e instanceof ArrayOperand) {
-            code += "iastore\n";
+            code = "iastore\n";
         }
         else {
             Operand operand = (Operand) e;
@@ -463,13 +468,13 @@ public class MethodInstruction {
             Type elemType = operand.getType();
 
             if (id < 0) {
-                code += "putfield " + Utils.getType(elemType, classUnit) + "/" + operand.getName() + " " + Utils.getType(elemType, classUnit);
+                code = "putfield " + Utils.getType(elemType, classUnit) + "/" + operand.getName() + " " + Utils.getType(elemType, classUnit);
             } else {
                 switch (elemType.getTypeOfElement()) {
-                    case INT32, BOOLEAN -> code += getIloadIstoreCode(id, false);
-                    case CLASS, STRING, ARRAYREF, OBJECTREF -> code += "astore" + (id <= 3 ? '_' : ' ') + id;
-                    case THIS -> code += "astore_0";
-                    default -> code += "";
+                    case INT32, BOOLEAN -> code = getIloadIstoreCode(id, false);
+                    case CLASS, STRING, ARRAYREF, OBJECTREF -> code = "astore" + (id <= 3 ? '_' : ' ') + id;
+                    case THIS -> code = "astore_0";
+                    default -> code = "";
                 }
             }
         }
