@@ -93,6 +93,7 @@ public class InterferenceGraph {
     }
 
     private void allocateRegisters(int numColors, Map<String, Set<String>> graph_copy) {
+        int firstReg = checkFirstReg();
         while(!this.stack.empty()){
             String var = this.stack.pop();
             Set<Integer> usedRegisters = new HashSet<>();
@@ -100,7 +101,6 @@ public class InterferenceGraph {
                 usedRegisters.add(this.registers.get(neighbor));
             }
 
-            int firstReg = checkFirstReg();
             for (int i = firstReg; i <= numColors + firstReg; i++) {
                 if(!usedRegisters.contains(i)){
                     this.registers.put(var, i);
