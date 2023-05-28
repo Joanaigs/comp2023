@@ -1,12 +1,18 @@
 package pt.up.fe.comp2023;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.jasmin.JasminGenerator;
@@ -71,11 +77,35 @@ public class Launcher {
         }
 
 
-
         //jasmin
         JasminGenerator jasminGenerator = new JasminGenerator();
-        jasminGenerator.toJasmin(ollir);
+        JasminResult jasminResult = jasminGenerator.toJasmin(ollir);
 
+        // create directory
+        Path resultsDirectory = Paths.get("generated-files/");
+        try {
+            if (!Files.exists(resultsDirectory)) {
+                Files.createDirectory(resultsDirectory);
+            }
+        } catch (IOException e) {
+            System.out.println("Error creating the " + resultsDirectory + " directory.");
+            return;
+        }
+
+        Path path = Paths.get("generated-files/" + jasminResult.getClassName() + "/");
+
+        // write .j on that file
+        try {
+            FileWriter fileWriter = new FileWriter(path + ".j");
+            fileWriter.write(jasminResult.getJasminCode());
+            fileWriter.close();
+            System.out.println("Jasmin file saved successfully!");
+        } catch (IOException e) {
+            System.out.println("Error while writing the .j file.");
+        }
+
+        // .class file
+        jasminResult.compile(path.toFile());
 
     }
 
