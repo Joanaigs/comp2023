@@ -21,44 +21,44 @@ public class MethodInstruction {
         this.isAssign = false;
     }
 
-    public String createInstructionCode(Instruction instruction){
+    public String createInstructionCode(Instruction instruction) {
+        StringBuilder code = new StringBuilder();
 
-        String code = "";
-        switch(instruction.getInstType()){
+        switch (instruction.getInstType()) {
             case ASSIGN:
                 this.isAssign = true;
-                code += getAssignCode((AssignInstruction) instruction);
+                code.append(getAssignCode((AssignInstruction) instruction));
                 this.isAssign = false;
-                return code;
+                return code.toString();
             case CALL:
-                code += getInvokeCode( (CallInstruction) instruction);
-                if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
-                    if (!this.isAssign){
+                code.append(getInvokeCode((CallInstruction) instruction));
+                if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID) {
+                    if (!this.isAssign) {
                         Utils.updateStackLimits(-1);
-                        code += "pop\n";
+                        code.append("pop\n");
                     }
-                return code;
+                }
+                return code.toString();
             case GOTO:
                 return getGotoCode((GotoInstruction) instruction);
             case BRANCH:
-                return getBranchCode( (CondBranchInstruction) instruction);
+                return getBranchCode((CondBranchInstruction) instruction);
             case RETURN:
                 return getReturnCode((ReturnInstruction) instruction);
             case PUTFIELD:
                 return getPutFieldCode((PutFieldInstruction) instruction);
             case GETFIELD:
-                return getGetFieldCode( (GetFieldInstruction) instruction);
+                return getGetFieldCode((GetFieldInstruction) instruction);
             case UNARYOPER:
-                return getUnaryOperCode( (UnaryOpInstruction) instruction);
+                return getUnaryOperCode((UnaryOpInstruction) instruction);
             case BINARYOPER:
-                return getBinaryOperCode( (BinaryOpInstruction) instruction);
+                return getBinaryOperCode((BinaryOpInstruction) instruction);
             case NOPER:
                 return getNoperCode((SingleOpInstruction) instruction);
             default:
-                return code;
+                return code.toString();
         }
     }
-
 
     private boolean checkOpLiteral(Operand lhsOperand, Operand rhsOperand, LiteralElement literalElement, OperationType operationType) {
         if (lhsOperand.getName().equals(rhsOperand.getName())) {
@@ -192,7 +192,7 @@ public class MethodInstruction {
         return code;
     }
 
-    private int getBooleanBothLiteralCode(LiteralElement leftOperand, LiteralElement rightOperand, OperationType operationType){
+    private String getBooleanBothLiteralCode(LiteralElement leftOperand, LiteralElement rightOperand, OperationType operationType){
 
         boolean left  = leftOperand.getLiteral().equals("1");
         boolean right = rightOperand.getLiteral().equals("1");
@@ -207,7 +207,7 @@ public class MethodInstruction {
             case LTE, LTH ->  result =  Integer.parseInt(leftOperand.getLiteral()) < Integer.parseInt(rightOperand.getLiteral());
             default -> result = false;
         }
-        return (result)? 1: 0;
+        return "iconst_" + ((result)? 1: 0) + "\n";
     }
 
     private String getBooleanIfConditionCode(OperationType operationType, boolean leftZero, boolean rightZero){
@@ -239,14 +239,13 @@ public class MethodInstruction {
 
     private String getBooleanCode(BinaryOpInstruction instruction, OperationType operationType) {
 
-        String code = "";
+        StringBuilder code = new StringBuilder();
         Element leftOperand = instruction.getLeftOperand();
         Element rightOperand = instruction.getRightOperand();
 
 
         if (leftOperand.isLiteral() && rightOperand.isLiteral()) {
-            int value = getBooleanBothLiteralCode( (LiteralElement) leftOperand, (LiteralElement) rightOperand, operationType);
-            code = "iconst_" + value + "\n";
+            code.append(getBooleanBothLiteralCode( (LiteralElement) leftOperand, (LiteralElement) rightOperand, operationType));
             Utils.updateStackLimits(1);
         }
         else {
@@ -261,14 +260,14 @@ public class MethodInstruction {
                 rightZero = (literalValue == 0);
             }
 
-            if(!leftZero) code += getLoadCode(leftOperand);
-            if(!rightZero) code += getLoadCode(rightOperand);
+            if(!leftZero) code.append(getLoadCode(leftOperand));
+            if(!rightZero) code.append(getLoadCode(rightOperand));
             Utils.updateStackLimits(-1);
 
-            code += getBooleanIfConditionCode(operationType, leftZero, rightZero);
+            code.append(getBooleanIfConditionCode(operationType, leftZero, rightZero));
 
         }
-        return code;
+        return code.toString();
     }
 
     private String getPutFieldCode(PutFieldInstruction instruction) {

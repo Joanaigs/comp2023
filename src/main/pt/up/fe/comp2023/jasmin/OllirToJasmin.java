@@ -153,17 +153,21 @@ public class OllirToJasmin {
     }
 
     public String createAccessModifiers(String privacy, Boolean isFinal, Boolean isStatic) {
-        String code = "";
+        StringBuilder code = new StringBuilder();
 
-        if (!Objects.equals(privacy, "DEFAULT"))
-            code += privacy.toLowerCase() + " ";
-        if (isFinal)
-            code += "final ";
-        if (isStatic)
-            code += "static ";
+        if (!Objects.equals(privacy, "DEFAULT")) {
+            code.append(privacy.toLowerCase()).append(" ");
+        }
+        if (isFinal) {
+            code.append("final ");
+        }
+        if (isStatic) {
+            code.append("static ");
+        }
 
-        return code;
+        return code.toString();
     }
+
 }
 
 
